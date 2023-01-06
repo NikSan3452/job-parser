@@ -1,0 +1,9 @@
+django
+
+requests
+
+django-allauth
+
+python-dotenv
+
+beautifulsoup4
