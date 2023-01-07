@@ -2,13 +2,13 @@ from django.db import models
 
 class City(models.Model):
     city = models.CharField(
-        max_length=50, verbose_name="Населенный пункт", unique=True
+        max_length=50, verbose_name="Город", unique=True
     )
     slug = models.SlugField(max_length=50, unique=True)
 
     class Meta:
-        verbose_name = "Населенный пункт"
-        verbose_name_plural = "Населенные пункты"
+        verbose_name = "Город"
+        verbose_name_plural = "Города"
 
     def __str__(self) -> str:
         return self.city
@@ -34,7 +34,7 @@ class Vacancy(models.Model):
     company = models.CharField(max_length=250, verbose_name="Компания")
     description = models.TextField(max_length=5000, verbose_name="Описание вакансии")
     city = models.ForeignKey(
-        City, on_delete=models.CASCADE, verbose_name="Населенный пункт"
+        City, on_delete=models.CASCADE, verbose_name="Город"
     )
     language = models.ForeignKey(
         Language, on_delete=models.CASCADE, verbose_name="Язык программирования"
