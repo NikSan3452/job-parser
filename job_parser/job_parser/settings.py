@@ -41,16 +41,24 @@ INSTALLED_APPS = [
     "allauth.socialaccount.providers.google",
     "allauth.socialaccount.providers.github",
     "widget_tweaks",
+    "crispy_forms",
+    "crispy_bootstrap5",
+    "debug_toolbar",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+
+    # 'django.middleware.cache.UpdateCacheMiddleware',
     "django.middleware.common.CommonMiddleware",
+    # 'django.middleware.cache.FetchFromCacheMiddleware',
+
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "debug_toolbar.middleware.DebugToolbarMiddleware", # debug-toolbar
 ]
 
 ROOT_URLCONF = "job_parser.urls"
@@ -74,24 +82,6 @@ TEMPLATES = [
         },
     },
 ]
-
-# django-allauth
-AUTHENTICATION_BACKENDS = [
-    "django.contrib.auth.backends.ModelBackend",
-    "allauth.account.auth_backends.AuthenticationBackend",
-]
-
-SITE_ID = 2
-
-# SOCIALACCOUNT_PROVIDERS = {
-#     'google': {
-#         'APP': {
-#             'client_id': '123',
-#             'secret': '456',
-#             'key': "
-#         }
-#     }
-# }
 
 WSGI_APPLICATION = "job_parser.wsgi.application"
 
@@ -153,4 +143,33 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# django-allauth
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+SITE_ID = 2
 LOGIN_REDIRECT_URL = "/"
+ACCOUNT_SIGNUP_REDIRECT_URL = "/"
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_AUTHENTICATION_METHOD = 'username'
+ACCOUNT_EMAIL_REQUIRED = False
+
+# django-crispy-forms
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+# debug-toolbar
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
+# # caches
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+#         'LOCATION': os.path.join(BASE_DIR, 'job_parser_caches'),
+#     }
+# }
+
+# CACHE_MIDDLEWARE_SECONDS = 60

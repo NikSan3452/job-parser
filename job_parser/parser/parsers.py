@@ -1,78 +1,66 @@
 import requests
-from bs4 import BeautifulSoup as bs
+import json
+import time
+import datetime
 
 
-# TODO Реализовать смену user-agent
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36",
-    "Accept": "text/html, application/xhtml+xml, application/xml;q=0.9,*/*;q=0.8",
-}
+class HeadHunterParser:
+    def __init__(self, area=1, job="Python"):
+        self.area = area
+        self.job = job
+        self.date_to = datetime.date.today()
+        self.date_from = self.date_to - datetime.timedelta(days=3)
 
+        self.url = "https://api.hh.ru/vacancies"
+        self.job_list = []
 
-def get_jobs_from_superjob(url, city=None, language=None):
-    domain = "https://superjob.ru"
-    response = requests.get(url=url, headers=headers)
+    def get_jobs(self, page=0):
+        params = {
+            "text": f"NAME:{self.job}",  # Текст фильтра
+            "area": self.area,  # Город
+            "page": page,  # Индекс страницы поиска
+            "per_page": 100,  # Кол-во вакансий на 1 странице
+            "date_from": self.date_from,  # Дата от
+            "date_to": self.date_to,  # Дата до
+        }
+        with requests.Session() as session:
+            response = session.get(url=self.url, params=params)
+            if response.status_code == 200:
+                data = response.content.decode()
+        return data
 
-    jobs = []
-    errors = []
-    if url:
-        if response.status_code == 200:
-            soup = bs(response.content, "html.parser")
-            main_div = soup.find("div", attrs={"class": "_2zPWM _9n5R- _1GAZu"})
-            if main_div:
-                div_lst = main_div.find_all(
-                    "div",
-                    attrs={
-                        "class": "_2zPWM f-test-vacancy-item _3HN9U gMlhN _1yHIx I2gCw _1Qy3a"
-                    },
-                )
-                for div in div_lst:
-                    title = div.find(
-                        "span",
-                        attrs={
-                            "class": "_2s70W _31udi _7mW5l _17ECX _1B2ot _3EXZS _3pAka ofdOE"
-                        },
-                    )
+    def read_jobs(self):
+        # Считываем первые 2000 вакансий
+        for page in range(0, 20):
+            data = self.get_jobs(page)
+            json_data = json.loads(data)
+            self.job_list.append(json_data)
 
-                    href = title.a["href"]
+            # Проверка на последнюю страницу, если вакансий меньше 2000
+            if (json_data["pages"] - page) <= 1:
+                break
+            time.sleep(0.25)
+        return self.job_list
 
-                    company_div = div.find(
-                        "span",
-                        attrs={
-                            "class": "_3nMqD f-test-text-vacancy-item-company-name _3NJ1T _3EXZS _3pAka _3GChV _2GgYH"
-                        },
-                    )
+    def get_city_list(self):
+        url = "https://api.hh.ru/areas"
+        
+        with requests.Session() as session:
+            response = session.get(url=url)
+            if response.status_code == 200:
+                data = response.json()
 
-                    if company_div is None:
-                        company = "Не указано"
-                    else:
-                        company = company_div.text
+        cities = {}
+        for region in data[0]["areas"]:
+            for city in region["areas"]:
+                cities[city["id"]] = city["name"].lower()
 
-                    desc_div = div.find(
-                        "span", attrs={"class": "_1G5lt _3EXZS _3pAka _3GChV _2GgYH"}
-                    )
-                    desc = desc_div.text
-
-                    jobs.append(
-                        {
-                            "title": title.text,
-                            "url": domain + href,
-                            "company": company,
-                            "description": desc,
-                            "city_id": city,
-                            "language_id": language,
-                        }
-                    )
-            else:
-                errors.append({"url": url, "title": "Div doesn`t exists"})
-        else:
-            errors.append({"url": url, "title": "Page do not response"})
-
-    return jobs, errors
+        # with open("cities.json", "w", encoding="utf-8") as f:
+        #     f.write(str(cities))
+        return cities
 
 
 if __name__ == "__main__":
-    url = "https://superjob.ru/vacancy/search/?keywords=java"
-    jobs, errors = get_jobs_from_superjob(url)
-    with open("work.txt", "w", encoding="utf-8") as file:
-        file.write(str(jobs))
+    hh = HeadHunterParser()
+    hh.read_jobs()
+    hh.get_city_list()

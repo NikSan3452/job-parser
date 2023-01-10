@@ -1,20 +1,14 @@
 from django.contrib import admin
 
-from parser.models import City, Language, Vacancy
+from parser.models import City, Vacancy
 
 
 @admin.register(City)
 class CityAdmin(admin.ModelAdmin):
-    fields = ("city", "slug")
-    prepopulated_fields = {"slug": ("city",)}
-
-
-@admin.register(Language)
-class LanguageAdmin(admin.ModelAdmin):
-    fields = ("language", "slug")
-    prepopulated_fields = {"slug": ("language",)}
+    fields = ("city",)
+    # prepopulated_fields = {"slug": ("city",)}
 
 
 @admin.register(Vacancy)
 class VacancyAdmin(admin.ModelAdmin):
-    fields = ("url", "title", "company", "description", "city", "language")
+    fields = ("url", "name", 'salary', "employer", "description", "area", 'published_at')
