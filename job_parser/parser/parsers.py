@@ -1,7 +1,8 @@
-import requests
-import json
-import time
+import asyncio
+import orjson
 import datetime
+import aiofiles
+import httpx
 
 
 class HeadHunterParser:
@@ -9,12 +10,12 @@ class HeadHunterParser:
         self.area = area
         self.job = job
         self.date_to = datetime.date.today()
-        self.date_from = self.date_to - datetime.timedelta(days=3)
+        self.date_from = self.date_to - datetime.timedelta(days=10)
 
         self.url = "https://api.hh.ru/vacancies"
         self.job_list = []
 
-    def get_jobs(self, page=0):
+    async def get_jobs(self, page=0):
         params = {
             "text": f"NAME:{self.job}",  # Текст фильтра
             "area": self.area,  # Город
@@ -23,44 +24,54 @@ class HeadHunterParser:
             "date_from": self.date_from,  # Дата от
             "date_to": self.date_to,  # Дата до
         }
-        with requests.Session() as session:
-            response = session.get(url=self.url, params=params)
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url=self.url, params=params)
             if response.status_code == 200:
                 data = response.content.decode()
+
         return data
 
-    def read_jobs(self):
+    async def read_jobs(self):
         # Считываем первые 2000 вакансий
         for page in range(0, 20):
-            data = self.get_jobs(page)
-            json_data = json.loads(data)
+            data = await self.get_jobs(page)
+            json_data = orjson.loads(data)
             self.job_list.append(json_data)
 
             # Проверка на последнюю страницу, если вакансий меньше 2000
             if (json_data["pages"] - page) <= 1:
                 break
-            time.sleep(0.25)
+
         return self.job_list
 
-    def get_city_list(self):
+    async def get_city_list(self):
         url = "https://api.hh.ru/areas"
-        
-        with requests.Session() as session:
-            response = session.get(url=url)
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url=url)
             if response.status_code == 200:
-                data = response.json()
+                encoded_data = response.content.decode()
+                data = orjson.loads(encoded_data)
 
         cities = {}
         for region in data[0]["areas"]:
             for city in region["areas"]:
                 cities[city["id"]] = city["name"].lower()
 
-        # with open("cities.json", "w", encoding="utf-8") as f:
-        #     f.write(str(cities))
+        async with aiofiles.open("cities.json", "w", encoding="utf-8") as f:
+            await f.write(str(cities))
         return cities
 
 
 if __name__ == "__main__":
-    hh = HeadHunterParser()
-    hh.read_jobs()
-    hh.get_city_list()
+
+    async def main():
+        hh = HeadHunterParser()
+
+        task1 = asyncio.create_task(hh.read_jobs())
+        task2 = asyncio.create_task(hh.get_city_list())
+
+        await task1
+        await task2
+
+    asyncio.run(main())
