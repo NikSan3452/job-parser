@@ -2,12 +2,10 @@ from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.views import View
 from django.views.generic.base import TemplateView
-from django.http import HttpResponse
 
-from parser.parsers import HeadHunterParser
 from parser.forms import SearchingForm
-from parser.models import City
 from parser.mixins import VacancyDataMixin
+import parsers
 
 
 class HomePageView(TemplateView):
@@ -31,13 +29,9 @@ class VacancyList(View, VacancyDataMixin):
         if job_from_request:
             job_from_request = job_from_request.lower()
 
-        # Проверяем город на наличием в БД и получем его id
-        city_from_db = await City.objects.filter(city=city_from_request).afirst()
-        if city_from_db is None:
-            return HttpResponse("Такого города нет в базе данных")
-        # Находим вакансии по паре город-специальность
-        hh = HeadHunterParser(job=job_from_request, area=city_from_db.hh_id)
-
+        # # Находим вакансии по паре город-специальность
+        # result = await run_parser.main(city=city_from_request, job=job_from_request)
+        
         if (  # Если список вакансий пуст
             VacancyDataMixin.job_list is None
             # или город из формы не равен городу из предыдущего запроса
@@ -45,11 +39,13 @@ class VacancyList(View, VacancyDataMixin):
             # или вакансия из формы не равна вакансии из предыдущего запроса
             or job_from_request != VacancyDataMixin.job
         ):  # Получаем список вакансий
-            VacancyDataMixin.job_list = (await hh.read_jobs())[0]["items"]
+            VacancyDataMixin.job_list = await parsers.run(
+                city=city_from_request, job=job_from_request
+            )
             # Присваиваем временным переменным значения текущего города и вакансии
             VacancyDataMixin.city = city_from_request
             VacancyDataMixin.job = job_from_request
-
+            
         context = {
             "object_list": VacancyDataMixin.job_list,
             "city": VacancyDataMixin.city,

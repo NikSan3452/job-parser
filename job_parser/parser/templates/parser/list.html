@@ -15,19 +15,20 @@
         {% for obj in object_list %}
         <div class="card my-3">
             <h5 class="card-header bg-primary bg-opacity-10">
-                <a class="text-decoration-none" href="{{ obj.alternate_url }}" target ="_blank">{{ obj.name }}</a>
+                <a class="text-decoration-none" href="{{ obj.url }}" target ="_blank">{{ obj.title }}</a>
             </h5>
             <div class="card-body">
+                <p>Вакансия с сайта: {{ obj.job_board }}</p>
                 <p>
-                    {% if obj.salary.from %} Зарплата от {{obj.salary.from}} {% endif %}
-                    {% if obj.salary.to %} до {{obj.salary.to}} {% endif %} {{ obj.salary.currency }}
+                    {% if obj.salary_from %} Зарплата от {{obj.salary_from}} {% endif %}
+                    {% if obj.salary_to %} до {{obj.salary_to}} {% endif %} {% if obj.salary_from or obj.salary_to %}{{ obj.salary_currency }}{% endif %}
                 </p>
                 <p class="card-text">
-                    {% if obj.snippet.responsibility  %}
-                        {{ obj.snippet.responsibility }}
+                    {% if obj.responsibility  %}
+                        {{ obj.responsibility }}
                     {% endif %}
                 </p>
-                <p>Город: {{ obj.area.name }} | Компания: {{ obj.employer.name}} | Дата публикации: {{ obj.published_at }}</p>
+                <p>Город: {{ obj.city }} | Компания: {{ obj.company}} | Дата публикации: {{ obj.published_at }}</p>
             </div>
         </div>
         {% empty %}

@@ -1,9 +1,25 @@
 django
 
-requests
+uvicorn
+
+httpx
 
 django-allauth
+
+django-allauth-ui
+django-widget-tweaks
 
 python-dotenv
 
 beautifulsoup4
+
+Pillow
+
+django-crispy-forms
+crispy-bootstrap5
+
+django-debug-toolbar
+
+orjson
+
+aiofiles
