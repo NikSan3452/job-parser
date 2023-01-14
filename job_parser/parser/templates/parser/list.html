@@ -25,7 +25,7 @@
                 </p>
                 <p class="card-text">
                     {% if obj.responsibility  %}
-                        {{ obj.responsibility }}
+                        {{ obj.responsibility|truncatechars:300 }}
                     {% endif %}
                 </p>
                 <p>Город: {{ obj.city }} | Компания: {{ obj.company}} | Дата публикации: {{ obj.published_at }}</p>

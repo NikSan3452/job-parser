@@ -29,9 +29,6 @@ class VacancyList(View, VacancyDataMixin):
         if job_from_request:
             job_from_request = job_from_request.lower()
 
-        # # Находим вакансии по паре город-специальность
-        # result = await run_parser.main(city=city_from_request, job=job_from_request)
-        
         if (  # Если список вакансий пуст
             VacancyDataMixin.job_list is None
             # или город из формы не равен городу из предыдущего запроса
@@ -39,9 +36,11 @@ class VacancyList(View, VacancyDataMixin):
             # или вакансия из формы не равна вакансии из предыдущего запроса
             or job_from_request != VacancyDataMixin.job
         ):  # Получаем список вакансий
+            VacancyDataMixin.job_list.clear()
             VacancyDataMixin.job_list = await parsers.run(
                 city=city_from_request, job=job_from_request
             )
+            print(VacancyDataMixin.job_list)
             # Присваиваем временным переменным значения текущего города и вакансии
             VacancyDataMixin.city = city_from_request
             VacancyDataMixin.job = job_from_request
@@ -52,7 +51,8 @@ class VacancyList(View, VacancyDataMixin):
             "job": VacancyDataMixin.job,
             "form": self.form,
         }
-
+        
+        print(VacancyDataMixin.job, job_from_request)
         paginator = Paginator(VacancyDataMixin.job_list, 5)
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)

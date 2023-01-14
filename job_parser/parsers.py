@@ -11,14 +11,17 @@ from typing import Optional
 from dotenv import load_dotenv
 
 from django.db import DatabaseError
+from asgiref.sync import sync_to_async
 
 project = os.path.dirname(os.path.abspath("manage.py"))
 sys.path.append(project)
 os.environ["DJANGO_SETTINGS_MODULE"] = "job_parser.settings"
+os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
 
 import django
 
 django.setup()
+
 
 from parser.models import City
 
@@ -54,8 +57,6 @@ class ParserData:
 class Parser:
 
     general_job_list: list[dict] = []
-    headhunter: list[dict] = []
-    superjob: list[dict] = []
 
     def __init__(
         self,
@@ -77,13 +78,9 @@ class Parser:
         params: Optional[dict] = None,
     ) -> str:
         async with httpx.AsyncClient() as client:
-            try:
-                response = await client.get(url=url, headers=headers, params=params)
-                data = response.content.decode()
-            except httpx.RequestError as exc:
-                print(f"Сервер {exc.request.url!r} вернул неверный ответ {exc}")
-                pass
-        return data
+            response = await client.get(url=url, headers=headers, params=params)
+            data = response.content.decode()
+            return data
 
     async def get_job_from_headhunter(self) -> dict:
         city_from_db = await City.objects.filter(city=self.city).afirst()
@@ -99,10 +96,14 @@ class Parser:
                 "date_from": self.date_from,
                 "date_to": self.date_to,
             }
-
-            data = await self.create_session(url=ParserData.HEADHUNTER_URL, params=params)
-            json_data = orjson.loads(data)
-            job_list.append(json_data)
+            try:
+                data = await self.create_session(
+                    url=ParserData.HEADHUNTER_URL, params=params
+                )
+                json_data = orjson.loads(data)
+                job_list.append(json_data)
+            except httpx.RequestError as exc:
+                return f"Адрес {exc.request.url!r} вернул неверный ответ {exc}"
 
             if (job_list[0]["pages"] - page) <= 1:
                 break
@@ -127,7 +128,7 @@ class Parser:
             converted_date = datetime.date.strftime(datetime_obj, "%d-%m-%Y")
             job_dict["published_at"] = converted_date
 
-            Parser.headhunter.append(job_dict.copy())
+            Parser.general_job_list.append(job_dict.copy())
 
         print("Сбор вакансий с сайта Headhunter завершен")
         return job_dict
@@ -138,6 +139,7 @@ class Parser:
 
         job_list = []
         for page in range(0, 5):
+
             params = {
                 "keyword": self.job,
                 "town": self.city,
@@ -146,13 +148,17 @@ class Parser:
                 "date_published_from": date_from,
                 "date_published_to": date_to,
             }
-            data = await self.create_session(
-                url=ParserData.SUPERJOB_URL,
-                params=params,
-                headers=ParserData.SUPERJOB_HEADERS,
-            )
-            json_data = orjson.loads(data)
-            job_list.append(json_data)
+
+            try:
+                data = await self.create_session(
+                    url=ParserData.SUPERJOB_URL,
+                    params=params,
+                    headers=ParserData.SUPERJOB_HEADERS,
+                )
+                json_data = orjson.loads(data)
+                job_list.append(json_data)
+            except httpx.RequestError as exc:
+                return f"Адрес {exc.request.url!r} вернул неверный ответ {exc}"
 
             if (job_list[0]["total"] - page) <= 1:
                 break
@@ -165,7 +171,8 @@ class Parser:
             job_dict["salary_from"] = job["payment_from"]
             job_dict["salary_to"] = job["payment_to"]
             job_dict["salary_currency"] = job["currency"]
-            job_dict["responsibility"] = job["work"]
+            if job["candidat"]:
+                job_dict["responsibility"] = job["candidat"]
             if job["town"]:
                 job_dict["city"] = job["town"]["title"]
             job_dict["company"] = job["firm_name"]
@@ -174,7 +181,7 @@ class Parser:
             converted_date = timestamp.strftime("%d-%m-%Y")
             job_dict["published_at"] = converted_date
 
-            Parser.superjob.append(job_dict.copy())
+            Parser.general_job_list.append(job_dict.copy())
 
         print("Сбор вакансий с сайта SuperJob завершен")
         return job_dict
@@ -190,15 +197,11 @@ class Parser:
 
 async def run(city="москва", job="Java"):
     parser = Parser(city=city, job=job)
-
     task1 = asyncio.create_task(parser.get_job_from_headhunter())
     task2 = asyncio.create_task(parser.get_job_from_superjob())
     await asyncio.gather(task1, task2)
 
-    Parser.general_job_list += Parser.superjob
-    Parser.general_job_list += Parser.headhunter
-
-    print(f"Количество вакансий: {len(Parser.general_job_list)}", Parser.general_job_list)
+    # print(f"Количество вакансий: {len(Parser.general_job_list)}", Parser.general_job_list)
     return Parser.general_job_list
 
 
