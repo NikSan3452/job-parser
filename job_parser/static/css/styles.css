@@ -58,3 +58,10 @@ body {
     border-color: #C6D3E7;
 }
 
+.card-param {
+    color: rgba(145, 247, 145, 0.76);
+}
+
+.card-value {
+    color: #647ff7;
+}
