@@ -18,6 +18,27 @@ class VacancyDataMixin:
 class FormCheckMixin:
     """Класс содержит методы проверки формы по поиску вакансий"""
 
+    async def get_request(self, request: dict) -> tuple[str]:
+        city_from_request = request.POST.get("city")
+        if city_from_request:
+            city_from_request = city_from_request.lower()
+
+        job_from_request = request.POST.get("job")
+        if job_from_request:
+            job_from_request = job_from_request.lower()
+
+        date_from = request.POST.get("date_from")
+        date_to = request.POST.get("date_to")
+        title_search = request.POST.get("title_search")
+
+        return await self.check_form(
+            city=city_from_request,
+            job=job_from_request,
+            date_from=date_from,
+            date_to=date_to,
+            title_search=title_search,
+        )
+
     async def check_form(
         self, city: str, job: str, date_from: str, date_to: str, title_search: bool
     ) -> None:

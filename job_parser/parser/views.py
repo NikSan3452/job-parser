@@ -1,11 +1,9 @@
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.views import View
-from parser.models import City
 
 from parser.forms import SearchingForm
 from parser.mixins import VacancyDataMixin, FormCheckMixin
-import parsers
 
 
 class HomePageView(View, VacancyDataMixin, FormCheckMixin):
@@ -24,26 +22,8 @@ class HomePageView(View, VacancyDataMixin, FormCheckMixin):
 
     async def post(self, request, *args, **kwargs):
         form = SearchingForm(request.POST)
-
-        city_from_request = request.POST.get("city")
-        if city_from_request:
-            city_from_request = city_from_request.lower()
-
-        job_from_request = request.POST.get("job")
-        if job_from_request:
-            job_from_request = job_from_request.lower()
-
-        date_from = request.POST.get("date_from")
-        date_to = request.POST.get("date_to")
-        title_search = request.POST.get("title_search")
-
-        await self.check_form(
-            city=city_from_request,
-            job=job_from_request,
-            date_from=date_from,
-            date_to=date_to,
-            title_search=title_search,
-        )
+        
+        await self.get_request(request=request)
 
         context = {
             "form": form,
@@ -79,25 +59,7 @@ class VacancyList(View, VacancyDataMixin, FormCheckMixin):
     async def post(self, request, *args, **kwargs):
         form = SearchingForm(request.POST)
 
-        city_from_request = request.POST.get("city")
-        if city_from_request:
-            city_from_request = city_from_request.lower()
-
-        job_from_request = request.POST.get("job")
-        if job_from_request:
-            job_from_request = job_from_request.lower()
-
-        date_from = request.POST.get("date_from")
-        date_to = request.POST.get("date_to")
-        title_search = request.POST.get("title_search")
-
-        await self.check_form(
-            city=city_from_request,
-            job=job_from_request,
-            date_from=date_from,
-            date_to=date_to,
-            title_search=title_search,
-        )
+        await self.get_request(request=request)
 
         context = {
             "object_list": VacancyDataMixin.job_list,

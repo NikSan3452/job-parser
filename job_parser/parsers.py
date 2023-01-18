@@ -77,7 +77,7 @@ class Parser:
         pages: int,
         total_pages: str,
         headers: Optional[dict] = None,
-    ) -> list:
+    ) -> list[dict]:
         """Отвечает за получение постраничное получение вакансий.
 
         Args:
