@@ -1,13 +1,14 @@
 {% extends "base.html" %}
+{% load static %}
 {% load crispy_forms_tags %}
-{% block title %} Home {% endblock %}
+{% block title %} Not wolf {% endblock %}
 {% block content %}
 <div class="row">
-    <div class="col my-5"><h2 class="text-center">Сервис по сбору и рассылке вакансий</h2></div>
+    <div class="col my-5"><h2 class="text-center">Поиск работы</h2></div>
 </div>
-<div>
-    <div class="my-5">
-        <form action="{% url 'list' %}">
+<div class="row">
+    <div class="col-md-6 my-5 mx-auto">
+        <form action="{% url 'list' %}" method="post">
             <div>
                 {% csrf_token %}
                 {{ form|crispy }}
