@@ -234,6 +234,8 @@ class Headhunter(Parser):
                 job_dict["city"] = job["area"]["name"]
             if job["employer"]:
                 job_dict["company"] = job["employer"]["name"]
+            if job["schedule"]:
+                job_dict["type_of_work"] = job["schedule"]["name"]
 
             # Конвертируем дату в удобочитаемый вид
             published_date = parser.parse(job["published_at"]).replace(tzinfo=pytz.UTC)
@@ -295,6 +297,8 @@ class SuperJob(Parser):
             if job["town"]:
                 job_dict["city"] = job["town"]["title"]
             job_dict["company"] = job["firm_name"]
+            if job["type_of_work"]:
+                job_dict["type_of_work"] = job["type_of_work"]['title']
 
             # Конвертируем дату в удобочитаемый вид
             published_date = datetime.datetime.fromtimestamp(
@@ -356,6 +360,8 @@ class Zarplata(Parser):
                 job_dict["city"] = job["area"]["name"]
             if job["employer"]:
                 job_dict["company"] = job["employer"]["name"]
+            if job["schedule"]:
+                job_dict["type_of_work"] = job["schedule"]["name"]
 
             # Конвертируем дату в удобочитаемый вид
             published_date = parser.parse(job["published_at"]).replace(tzinfo=pytz.UTC)
@@ -426,30 +432,8 @@ async def run(
     sorted_job_list_by_date = Parser.sort_by_date(Parser.general_job_list, "published_at")
     if title_search:
         sorted_job_list_by_date = Parser.sort_by_title(sorted_job_list_by_date, job)
-    # print(f"Количество вакансий: {len(sorted_job_list)}", sorted_job_list)
+    # print(f"Количество вакансий: {len(sorted_job_list_by_date)}", sorted_job_list_by_date)
     return sorted_job_list_by_date
-
-
-async def create_session(
-    url: str,
-    headers: Optional[dict] = None,
-    params: Optional[dict] = None,
-) -> str:
-    """Отвечает за создание запросов к API.
-
-    Args:
-        url (str): URL - адрес API.
-        headers (Optional[dict], optional): Заголовки запроса. По умолчанию None.
-        params (Optional[dict], optional): Параметры запроса. По умолчанию None.
-
-    Returns:
-        str: Контент в виде строки.
-    """
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url=url, headers=headers, params=params)
-        data = response.content.decode()
-    print(data)
-    return data
 
 
 if __name__ == "__main__":

@@ -28,6 +28,7 @@
                     {% if obj.salary_from or obj.salary_to %}
                     <span class="card-param">{{ obj.salary_currency }}</span>{% endif %}
                 </p>
+                <p><span class="card-param">Тип занятости: </span> <span class="card-value">{{ obj.type_of_work }}</span></p>
                 <p class="card-text">
                     {% if obj.responsibility  %}
                     <span class="card-param">Обязанности:</span> {{ obj.responsibility|truncatechars:300 }}
