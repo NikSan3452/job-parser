@@ -11,6 +11,7 @@ class VacancyDataMixin:
     date_from: Optional[str] = None
     date_to: Optional[str] = None
     title_search: bool = False
+    experience: int = None
 
     job_list: list[dict] = []
 
@@ -30,6 +31,7 @@ class FormCheckMixin:
         date_from = request.POST.get("date_from")
         date_to = request.POST.get("date_to")
         title_search = request.POST.get("title_search")
+        experience = int(request.POST.get("experience"))
 
         return await self.check_form(
             city=city_from_request,
@@ -37,10 +39,17 @@ class FormCheckMixin:
             date_from=date_from,
             date_to=date_to,
             title_search=title_search,
+            experience=experience,
         )
 
     async def check_form(
-        self, city: str, job: str, date_from: str, date_to: str, title_search: bool
+        self,
+        city: str,
+        job: str,
+        date_from: str,
+        date_to: str,
+        title_search: bool,
+        experience: int,
     ) -> None:
         """Отвечает за проверку формы по поиску вакансий
 
@@ -58,6 +67,7 @@ class FormCheckMixin:
             or date_from != VacancyDataMixin.date_from
             or date_to != VacancyDataMixin.date_to
             or title_search != VacancyDataMixin.title_search
+            or experience != VacancyDataMixin.experience
         ):
             VacancyDataMixin.job_list.clear()
 
@@ -73,6 +83,7 @@ class FormCheckMixin:
                     date_from=date_from,
                     date_to=date_to,
                     title_search=title_search,
+                    experience=experience,
                 )
             except Exception as exc:
                 print(f"Ошибка {exc} Сервер столкнулся с непредвиденной ошибкой")
@@ -82,3 +93,4 @@ class FormCheckMixin:
             VacancyDataMixin.date_from = date_from
             VacancyDataMixin.date_to = date_to
             VacancyDataMixin.title_search = title_search
+            VacancyDataMixin.experience = experience

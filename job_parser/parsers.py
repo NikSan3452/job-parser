@@ -68,6 +68,7 @@ class Parser:
         async with httpx.AsyncClient() as client:
             response = await client.get(url=url, headers=headers, params=params)
             data = response.content.decode()
+
         return data
 
     async def get_vacancies(
@@ -183,6 +184,28 @@ class Parser:
                 sorted_list.append(job)
         return sorted_list
 
+    @staticmethod
+    def convert_experience(experience: int) -> str:
+        """Конвертирует значения опыта работы в понятный
+        для API HeadHunter и Zarplata вид.
+
+        Args:
+            experience (int): Опыт.
+
+        Returns:
+            str: Конвертированный опыт.
+        """
+        if experience > 0:
+            if experience == 1:
+                experience = "noExperience"
+            elif experience == 2:
+                experience = "between1And3"
+            elif experience == 3:
+                experience = "between3And6"
+            elif experience == 4:
+                experience = "moreThan6"
+        return experience
+
 
 class Headhunter(Parser):
     def __init__(
@@ -191,10 +214,12 @@ class Headhunter(Parser):
         job: str,
         date_from: datetime.date,
         date_to: datetime.date,
+        experience: int,
     ) -> None:
         self.city_from_db = city_from_db
         self.job = job
         self.date_from, self.date_to = self.check_date(date_from, date_to)
+        self.experience = experience
 
         # Формируем параметры запроса к API Headhunter
         self.hh_params = {
@@ -204,6 +229,9 @@ class Headhunter(Parser):
             "date_from": self.date_from,
             "date_to": self.date_to,
         }
+
+        self.experience = self.convert_experience(experience=experience)
+        self.hh_params["experience"] = self.experience
 
     async def get_vacancy_from_headhunter(self) -> dict:
         """Формирует словарь с основными полями вакансий с сайта HeadHunter
@@ -255,6 +283,7 @@ class SuperJob(Parser):
         job: str,
         date_from: datetime.date,
         date_to: datetime.date,
+        experience: int,
     ) -> None:
         self.city = city
         self.job = job
@@ -268,6 +297,8 @@ class SuperJob(Parser):
             "date_published_from": self.convert_date(self.date_from),
             "date_published_to": self.convert_date(self.date_to),
         }
+        if experience > 0:
+            self.sj_params["experience"] = experience
 
     async def get_vacancy_from_superjob(self) -> dict:
         """Формирует словарь с основными полями вакансий с сайта SuperJob
@@ -298,7 +329,9 @@ class SuperJob(Parser):
                 job_dict["city"] = job["town"]["title"]
             job_dict["company"] = job["firm_name"]
             if job["type_of_work"]:
-                job_dict["type_of_work"] = job["type_of_work"]['title']
+                job_dict["type_of_work"] = job["type_of_work"]["title"]
+            if job["experience"]:
+                job_dict["experience"] = job["experience"]["title"]
 
             # Конвертируем дату в удобочитаемый вид
             published_date = datetime.datetime.fromtimestamp(
@@ -320,10 +353,12 @@ class Zarplata(Parser):
         job: str,
         date_from: datetime.date,
         date_to: datetime.date,
+        experience: int,
     ) -> None:
         self.city_from_db = city_from_db
         self.job = job
         self.date_from, self.date_to = self.check_date(date_from, date_to)
+        self.experience = experience
 
         # Формируем параметры запроса к API Zarplata
         self.zp_params = {
@@ -333,6 +368,9 @@ class Zarplata(Parser):
             "date_from": self.date_from,
             "date_to": self.date_to,
         }
+
+        self.experience = self.convert_experience(experience=experience)
+        self.zp_params["experience"] = self.experience
 
     async def get_vacancy_from_zarplata(self) -> dict:
         """Формирует словарь с основными полями вакансий с сайта Zarplata
@@ -381,6 +419,7 @@ async def run(
     date_to: Optional[str] = "",
     date_from: Optional[str] = "",
     title_search: Optional[bool] = False,
+    experience: int = 0,
 ) -> list[dict]:
     """Отвечает за запуск парсера.
 
@@ -403,18 +442,17 @@ async def run(
         job=job,
         date_from=date_from,
         date_to=date_to,
+        experience=experience,
     )
     sj = SuperJob(
-        city=city,
-        job=job,
-        date_from=date_from,
-        date_to=date_to,
+        city=city, job=job, date_from=date_from, date_to=date_to, experience=experience
     )
     zp = Zarplata(
         city_from_db=city_from_db,
         job=job,
         date_from=date_from,
         date_to=date_to,
+        experience=experience,
     )
 
     # Очищаем список вакансий
