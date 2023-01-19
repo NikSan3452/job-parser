@@ -27,7 +27,7 @@
                               <a class="nav-link text-light" href="{% url 'account_logout' %}">Выйти</a>
                           </li>
                           <li class="nav-item">
-                              <a class="nav-link text-light" href="{% url 'profile' %}">Профиль</a>
+                              <a class="nav-link text-light" href="{% url 'profiles:profile' request.user.username %}">Профиль</a>
                           </li>
                       {% else %}
                           <li class="nav-item">

@@ -12,14 +12,16 @@ class City(models.Model):
     def __str__(self) -> str:
         return self.city
 
+
 class Vacancy(models.Model):
     url = models.URLField(unique=True)
-    name = models.CharField(max_length=250, verbose_name="Вакансия")
+    title = models.CharField(max_length=250, verbose_name="Вакансия")
     salary = models.CharField(max_length=50, verbose_name="Зарплата")
-    employer = models.CharField(max_length=250, verbose_name="Компания")
+    company = models.CharField(max_length=250, verbose_name="Компания")
     description = models.TextField(max_length=5000, verbose_name="Описание вакансии")
-    area = models.ForeignKey(City, on_delete=models.CASCADE, verbose_name="Город")
-    published_at = models.DateField(auto_now_add=True)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, verbose_name="Город")
+    published_at = models.DateField(auto_now_add=True, verbose_name="Дата публикации")
+    favourite = models.BooleanField(default=False, verbose_name='Избраное')
 
     class Meta:
         verbose_name = "Вакансия"
