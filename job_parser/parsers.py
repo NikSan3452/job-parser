@@ -68,7 +68,7 @@ class Parser:
         async with httpx.AsyncClient() as client:
             response = await client.get(url=url, headers=headers, params=params)
             data = response.content.decode()
-            print(data)
+
         return data
 
     async def get_vacancies(
@@ -255,14 +255,19 @@ class Headhunter(Parser):
                 job_dict["salary_from"] = job["salary"]["from"]
                 job_dict["salary_to"] = job["salary"]["to"]
                 job_dict["salary_currency"] = job["salary"]["currency"]
+            else:
+                job_dict["salary_from"] = None
+                job_dict["salary_to"] = None
             if job["snippet"]:
                 job_dict["responsibility"] = job["snippet"]["responsibility"]
-            if job["area"]:
-                job_dict["city"] = job["area"]["name"]
-            if job["employer"]:
-                job_dict["company"] = job["employer"]["name"]
+            else:
+                job_dict["responsibility"] = "Нет описания"
+            job_dict["city"] = job["area"]["name"]
+            job_dict["company"] = job["employer"]["name"]
             if job["schedule"]:
                 job_dict["type_of_work"] = job["schedule"]["name"]
+            else:
+                job_dict["type_of_work"] = "Не указано"
 
             # Конвертируем дату в удобочитаемый вид
             published_date = parser.parse(job["published_at"]).replace(tzinfo=pytz.UTC)
@@ -319,18 +324,33 @@ class SuperJob(Parser):
             job_dict["job_board"] = "SuperJob"
             job_dict["url"] = job["link"]
             job_dict["title"] = job["profession"]
-            job_dict["salary_from"] = job["payment_from"]
-            job_dict["salary_to"] = job["payment_to"]
-            job_dict["salary_currency"] = job["currency"]
+            if job["payment_from"]:
+                job_dict["salary_from"] = job["payment_from"]
+            else:
+                job_dict["salary_from"] = None
+            if job["payment_to"]:
+                job_dict["salary_to"] = job["payment_to"]
+            else:
+                job_dict["salary_to"] = None
+            if job["currency"]:
+                job_dict["salary_currency"] = job["currency"]
+            else:
+                job_dict["salary_currency"] = "Валюта не указана"
             if job["candidat"]:
                 job_dict["responsibility"] = job["candidat"]
+            else:
+                job_dict["responsibility"] = "Нет описания"
             if job["town"]:
                 job_dict["city"] = job["town"]["title"]
             job_dict["company"] = job["firm_name"]
             if job["type_of_work"]:
                 job_dict["type_of_work"] = job["type_of_work"]["title"]
+            else:
+                job_dict["type_of_work"] = "Не указано"
             if job["experience"]:
                 job_dict["experience"] = job["experience"]["title"]
+            else:
+                job_dict["experience"] = "Не указано"
 
             # Конвертируем дату в удобочитаемый вид
             published_date = datetime.datetime.fromtimestamp(
@@ -384,21 +404,26 @@ class Zarplata(Parser):
         job_dict = {}
         # Формируем словарь с вакансиями
         for job in job_list[0]["items"]:
-            job_dict["job_board"] = "Zarplata"
+            job_dict["job_board"] = "Zarplata.ru"
             job_dict["url"] = job["alternate_url"]
             job_dict["title"] = job["name"]
             if job["salary"]:
                 job_dict["salary_from"] = job["salary"]["from"]
                 job_dict["salary_to"] = job["salary"]["to"]
                 job_dict["salary_currency"] = job["salary"]["currency"]
+            else:
+                job_dict["salary_from"] = None
+                job_dict["salary_to"] = None
             if job["snippet"]:
                 job_dict["responsibility"] = job["snippet"]["responsibility"]
-            if job["area"]:
-                job_dict["city"] = job["area"]["name"]
-            if job["employer"]:
-                job_dict["company"] = job["employer"]["name"]
+            else:
+                job_dict["responsibility"] = "Нет описания"
+            job_dict["city"] = job["area"]["name"]
+            job_dict["company"] = job["employer"]["name"]
             if job["schedule"]:
                 job_dict["type_of_work"] = job["schedule"]["name"]
+            else:
+                job_dict["type_of_work"] = "Не указано"
 
             # Конвертируем дату в удобочитаемый вид
             published_date = parser.parse(job["published_at"]).replace(tzinfo=pytz.UTC)
@@ -486,5 +511,5 @@ def insert_data():
 
 
 if __name__ == "__main__":
-    # insert_data()
-    asyncio.run(run())
+    insert_data()
+    # asyncio.run(run())
