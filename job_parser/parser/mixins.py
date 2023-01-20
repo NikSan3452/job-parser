@@ -78,7 +78,7 @@ class FormCheckMixin:
                 # Получаем список вакансий
                 VacancyDataMixin.job_list = await parsers.run(
                     city=city,
-                    city_from_db=city_from_db.hh_id,
+                    city_from_db=city_from_db.city_id,
                     job=job,
                     date_from=date_from,
                     date_to=date_to,

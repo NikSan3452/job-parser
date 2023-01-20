@@ -3,7 +3,6 @@ import sys
 import asyncio
 import orjson
 import datetime
-import aiofiles
 import httpx
 from dateutil import parser
 from typing import Optional

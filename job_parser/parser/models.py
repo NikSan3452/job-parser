@@ -1,8 +1,9 @@
 from django.db import models
+from profiles.models import Profile
 
 
 class City(models.Model):
-    hh_id = models.CharField(max_length=50, unique=True)
+    city_id = models.CharField(max_length=50, unique=True)
     city = models.CharField(max_length=50, verbose_name="Город", unique=True)
 
     class Meta:
@@ -14,14 +15,20 @@ class City(models.Model):
 
 
 class Vacancy(models.Model):
+    user = models.ForeignKey(
+        Profile, on_delete=models.CASCADE, verbose_name="Пользователь"
+    )
     url = models.URLField(unique=True)
     title = models.CharField(max_length=250, verbose_name="Вакансия")
-    salary = models.CharField(max_length=50, verbose_name="Зарплата")
+    salary_from = models.CharField(max_length=50, null=True, verbose_name="Зарплата от")
+    salary_to = models.CharField(max_length=50, null=True, verbose_name="Зарплата до")
     company = models.CharField(max_length=250, verbose_name="Компания")
-    description = models.TextField(max_length=5000, verbose_name="Описание вакансии")
-    city = models.ForeignKey(City, on_delete=models.CASCADE, verbose_name="Город")
+    description = models.TextField(
+        max_length=5000, null=True, verbose_name="Описание вакансии"
+    )
+    city = models.CharField(max_length=250, verbose_name="Город")
     published_at = models.DateField(auto_now_add=True, verbose_name="Дата публикации")
-    favourite = models.BooleanField(default=False, verbose_name='Избраное')
+    favourite = models.BooleanField(default=False, verbose_name="Избраное")
 
     class Meta:
         verbose_name = "Вакансия"
@@ -29,4 +36,4 @@ class Vacancy(models.Model):
         ordering = ["-published_at"]
 
     def __str__(self) -> str:
-        return self.name
+        return self.title

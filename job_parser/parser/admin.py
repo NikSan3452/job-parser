@@ -11,4 +11,13 @@ class CityAdmin(admin.ModelAdmin):
 
 @admin.register(Vacancy)
 class VacancyAdmin(admin.ModelAdmin):
-    fields = ("url", "name", 'salary', "employer", "description", "area", 'published_at')
+    fields = (
+        "user",
+        "url",
+        "title",
+        "salary",
+        "company",
+        "description",
+        "city",
+        "published_at",
+    )
