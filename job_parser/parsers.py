@@ -68,7 +68,7 @@ class Parser:
         async with httpx.AsyncClient() as client:
             response = await client.get(url=url, headers=headers, params=params)
             data = response.content.decode()
-
+            print(data)
         return data
 
     async def get_vacancies(
@@ -195,15 +195,14 @@ class Parser:
         Returns:
             str: Конвертированный опыт.
         """
-        if experience > 0:
-            if experience == 1:
-                experience = "noExperience"
-            elif experience == 2:
-                experience = "between1And3"
-            elif experience == 3:
-                experience = "between3And6"
-            elif experience == 4:
-                experience = "moreThan6"
+        if experience == 1:
+            experience = "noExperience"
+        elif experience == 2:
+            experience = "between1And3"
+        elif experience == 3:
+            experience = "between3And6"
+        elif experience == 4:
+            experience = "moreThan6"
         return experience
 
 
@@ -229,9 +228,9 @@ class Headhunter(Parser):
             "date_from": self.date_from,
             "date_to": self.date_to,
         }
-
-        self.experience = self.convert_experience(experience=experience)
-        self.hh_params["experience"] = self.experience
+        if experience > 0:
+            self.experience = self.convert_experience(experience=experience)
+            self.hh_params["experience"] = self.experience
 
     async def get_vacancy_from_headhunter(self) -> dict:
         """Формирует словарь с основными полями вакансий с сайта HeadHunter
@@ -368,9 +367,9 @@ class Zarplata(Parser):
             "date_from": self.date_from,
             "date_to": self.date_to,
         }
-
-        self.experience = self.convert_experience(experience=experience)
-        self.zp_params["experience"] = self.experience
+        if experience > 0:
+            self.experience = self.convert_experience(experience=experience)
+            self.zp_params["experience"] = self.experience
 
     async def get_vacancy_from_zarplata(self) -> dict:
         """Формирует словарь с основными полями вакансий с сайта Zarplata
@@ -474,5 +473,18 @@ async def run(
     return sorted_job_list_by_date
 
 
+def insert_data():
+    import json
+    from parser.models import City
+
+    with open("city.json") as f:
+        data = json.loads(f.read())
+        seen = set()
+        data = {k: v for k, v in data.items() if v not in seen and not seen.add(v)}
+        city_objects = [City(city_id=key, city=value) for key, value in data.items()]
+        City.objects.bulk_create(city_objects)
+
+
 if __name__ == "__main__":
+    # insert_data()
     asyncio.run(run())
