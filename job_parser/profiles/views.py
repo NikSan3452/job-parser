@@ -19,7 +19,12 @@ def profile(request, username):
             profile.save()
             return redirect("profiles:profile", username=username)
     else:
-        default_data = {"city": profile.city, "job": profile.job}
+        default_data = {
+            "city": profile.city,
+            "job": profile.job,
+            "subscribe": profile.subscribe,
+        }
+        
         form = ProfileForm(initial=default_data)
 
     return render(request, "users/profile.html", {"form": form, "user": user})
