@@ -1,4 +1,4 @@
-import parsers
+import parser.parsers as parsers
 from typing import Optional
 from parser.models import City
 

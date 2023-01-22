@@ -49,16 +49,14 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-
     # 'django.middleware.cache.UpdateCacheMiddleware',
     "django.middleware.common.CommonMiddleware",
     # 'django.middleware.cache.FetchFromCacheMiddleware',
-
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware", # debug-toolbar
+    "debug_toolbar.middleware.DebugToolbarMiddleware",  # debug-toolbar
 ]
 
 ROOT_URLCONF = "job_parser.urls"
@@ -151,8 +149,8 @@ AUTHENTICATION_BACKENDS = [
 SITE_ID = 2
 LOGIN_REDIRECT_URL = "/"
 ACCOUNT_SIGNUP_REDIRECT_URL = "/"
-ACCOUNT_EMAIL_VERIFICATION = 'none'
-ACCOUNT_AUTHENTICATION_METHOD = 'username'
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_AUTHENTICATION_METHOD = "username"
 ACCOUNT_EMAIL_REQUIRED = False
 
 # django-crispy-forms
@@ -173,3 +171,15 @@ INTERNAL_IPS = [
 # }
 
 # CACHE_MIDDLEWARE_SECONDS = 60
+
+# Redis
+REDIS_HOST = '127.0.0.1'
+REDIS_PORT = '6379'
+
+# Celery
+CELERY_BROKER_URL = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
+CELERY_BROKER_TRANSPORT_OPTION = {'visibility_timeout': 3600}
+CELERY_RESULT_BACKEND = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
