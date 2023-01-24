@@ -65,3 +65,16 @@ body {
 .card-value {
     color: #647ff7;
 }
+
+.profile-messages {
+    text-align: center;
+}
+
+.danger-message {
+    color: rgb(236, 88, 88);
+}
+
+.success-message {
+    color: rgb(72, 165, 72);
+}
+

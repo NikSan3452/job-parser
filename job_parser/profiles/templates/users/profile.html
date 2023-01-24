@@ -3,14 +3,25 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-6 my-5 mx-auto">
-        <p>{{ user }}</p>
-        <form action="{% url 'profiles:profile' request.user.username %}" method="post">
-            {% csrf_token %}
-            {{ form|crispy }}
-            <button type="submit" class="btn btn-primary">Подписаться</button>
-        </form>
+    <div class="profile-messages">
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                    <p class="danger-message">{{ message }}</p>                    
+                {% else %}
+                    <p class="success-message">{{ message }}</p>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
     </div>
-</div>
+    <div class="row">
+        <div class="col-md-6 my-5 mx-auto">
+            <h3 class="profile-user">{{ user }}</h3>
+            <form action="{% url 'profiles:profile' request.user.username %}" method="post">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-primary">Подписаться</button>
+            </form>
+        </div>
+    </div>
 {% endblock %}
