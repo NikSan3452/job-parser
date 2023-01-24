@@ -23,3 +23,15 @@ django-debug-toolbar
 orjson
 
 aiofiles
+
+celery
+
+redis
+
+python-dateutil
+
+django-shortcuts
+
+black
+
+ruff

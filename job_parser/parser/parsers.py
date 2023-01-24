@@ -84,7 +84,7 @@ class Parser:
         Returns:
             list: _description_
         """
-        job_list = []
+        job_list: list[dict] = []
         for page in range(pages):  # Постраничный вывод вакансий
             params["page"] = page
             page += 1
@@ -153,7 +153,9 @@ class Parser:
         Returns:
             list[dict]: Сортированный список вакансий.
         """
-        sorted_list = sorted(job_list, key=lambda _dict: _dict[key], reverse=True)
+        sorted_list: list[dict] = sorted(
+            job_list, key=lambda _dict: _dict[key], reverse=True
+        )
         return sorted_list
 
     @staticmethod
@@ -168,7 +170,7 @@ class Parser:
         Returns:
             list[dict]: Сортированный список вакансий.
         """
-        sorted_list = []
+        sorted_list: list[dict] = []
         for job in job_list:
             if title in job["title"]:
                 sorted_list.append(job)
@@ -213,11 +215,14 @@ class Headhunter(Parser):
         # Формируем параметры запроса к API Headhunter
         self.hh_params = {
             "text": f"NAME:{self.job}",
-            "area": self.city_from_db,
             "per_page": 100,
             "date_from": self.date_from,
             "date_to": self.date_to,
         }
+
+        if self.city_from_db:
+            self.hh_params["area"] = self.city_from_db
+
         if experience > 0:
             self.experience = self.convert_experience(experience=experience)
             self.hh_params["experience"] = self.experience
@@ -286,11 +291,14 @@ class SuperJob(Parser):
         # Формируем параметры запроса к API SuperJob
         self.sj_params = {
             "keyword": self.job,
-            "town": self.city,
             "count": 100,
             "date_published_from": self.convert_date(self.date_from),
             "date_published_to": self.convert_date(self.date_to),
         }
+
+        if self.city:
+            self.sj_params["town"] = self.city
+
         if experience > 0:
             self.sj_params["experience"] = experience
 
@@ -372,11 +380,14 @@ class Zarplata(Parser):
         # Формируем параметры запроса к API Zarplata
         self.zp_params = {
             "text": f"NAME:{self.job}",
-            "area": self.city_from_db,
             "per_page": 100,
             "date_from": self.date_from,
             "date_to": self.date_to,
         }
+
+        if self.city_from_db:
+            self.zp_params["area"] = self.city_from_db
+
         if experience > 0:
             self.experience = self.convert_experience(experience=experience)
             self.zp_params["experience"] = self.experience
@@ -427,8 +438,8 @@ class Zarplata(Parser):
 
 
 async def run(
-    city: Optional[str] = "Москва",
-    city_from_db: Optional[int] = 1,
+    city: Optional[str] = None,
+    city_from_db: Optional[int] = None,
     job: Optional[str] = "Python",
     date_to: Optional[str] = "",
     date_from: Optional[str] = "",
@@ -484,7 +495,7 @@ async def run(
     sorted_job_list_by_date = Parser.sort_by_date(Parser.general_job_list, "published_at")
     if title_search:
         sorted_job_list_by_date = Parser.sort_by_title(sorted_job_list_by_date, job)
-    # print(f"Количество вакансий: {len(sorted_job_list_by_date)}", sorted_job_list_by_date)
+    print(f"Количество вакансий: {len(sorted_job_list_by_date)}", sorted_job_list_by_date)
     return sorted_job_list_by_date
 
 

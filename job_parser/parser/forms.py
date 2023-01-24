@@ -15,7 +15,9 @@ class SearchingForm(forms.Form):
         label="Что ищем ?", widget=forms.TextInput(attrs={"placeholder": "Поиск"})
     )
     city = forms.CharField(
-        label="Город", widget=forms.TextInput(attrs={"placeholder": "Город"})
+        label="Город",
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "Город"}),
     )
     date_from = forms.DateField(
         label="Дата от",

@@ -19,7 +19,7 @@ class VacancyDataMixin:
 class FormCheckMixin:
     """Класс содержит методы проверки формы по поиску вакансий"""
 
-    async def get_request(self, request: dict) -> tuple[str]:
+    async def get_request(self, request: dict) -> None:
         city_from_request = request.POST.get("city")
         if city_from_request:
             city_from_request = city_from_request.lower()
@@ -73,12 +73,16 @@ class FormCheckMixin:
 
             try:
                 # Получаем id города для API HeadHunter
-                city_from_db = await City.objects.filter(city=city).afirst()
+                if city:
+                    city_from_db = await City.objects.filter(city=city).afirst()
+                    city_id = city_from_db.city_id
+                else:
+                    city_id = None
 
                 # Получаем список вакансий
                 VacancyDataMixin.job_list = await parsers.run(
                     city=city,
-                    city_from_db=city_from_db.city_id,
+                    city_from_db=city_id,
                     job=job,
                     date_from=date_from,
                     date_to=date_to,
