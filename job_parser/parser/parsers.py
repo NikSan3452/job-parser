@@ -68,7 +68,7 @@ class Parser:
         pages: int,
         total_pages: str,
         headers: Optional[dict] = None,
-    ) -> list[dict]:
+    ) -> list[dict] | str:
         """Отвечает за получение постраничное получение вакансий.
 
         Args:
@@ -82,7 +82,7 @@ class Parser:
             headers (Optional[dict], optional): Заголовки запроса. По умолчанию None.
 
         Returns:
-            list: _description_
+            list[dict] | str: Список вакансий или исключение.
         """
         job_list: list[dict] = []
         for page in range(pages):  # Постраничный вывод вакансий
@@ -101,14 +101,14 @@ class Parser:
         return job_list
 
     @staticmethod
-    def convert_date(date: str | datetime.date | int) -> str | datetime.date | int:
+    def convert_date(date: str | datetime.date) -> float:
         """Проверяет формат даты и при необходимости конвертирует его.
 
         Args:
-            date (str | datetime.date | int): Дата.
+            date (str | datetime.date): Дата.
 
         Returns:
-            str | datetime.date | int: Дата.
+            float: Конвертированная дата.
         """
         if isinstance(date, datetime.date):
             converted_to_datetime = datetime.datetime.combine(
@@ -121,11 +121,9 @@ class Parser:
                 converted_from_str, datetime.time()
             ).timestamp()
             return converted_to_datetime
-        else:
-            return date
 
     @staticmethod
-    def check_date(date_from: str, date_to: str) -> datetime.date:
+    def check_date(date_from: str, date_to: str) -> datetime.date | str:
         """Проверяет дату на пустое значение, если истина, то
         будет установлено значение по умолчанию.
 
@@ -134,7 +132,7 @@ class Parser:
             date_to (str): Дата до.
 
         Returns:
-            datetime.date: Время задаваемое по умолчанию.
+            datetime.date | str: Время задаваемое по умолчанию.
         """
         if date_from == "":
             date_from = datetime.date.today() - datetime.timedelta(days=10)
@@ -201,10 +199,10 @@ class Parser:
 class Headhunter(Parser):
     def __init__(
         self,
-        city_from_db: str,
+        city_from_db: int,
         job: str,
-        date_from: datetime.date,
-        date_to: datetime.date,
+        date_from: str | datetime.date,
+        date_to: str | datetime.date,
         experience: int,
     ) -> None:
         self.city_from_db = city_from_db
@@ -280,8 +278,8 @@ class SuperJob(Parser):
         self,
         city: str,
         job: str,
-        date_from: datetime.date,
-        date_to: datetime.date,
+        date_from: str | datetime.date,
+        date_to: str | datetime.date,
         experience: int,
     ) -> None:
         self.city = city
@@ -366,10 +364,10 @@ class SuperJob(Parser):
 class Zarplata(Parser):
     def __init__(
         self,
-        city_from_db: str,
+        city_from_db: int,
         job: str,
-        date_from: datetime.date,
-        date_to: datetime.date,
+        date_from: str | datetime.date,
+        date_to: str | datetime.date,
         experience: int,
     ) -> None:
         self.city_from_db = city_from_db
@@ -441,8 +439,8 @@ async def run(
     city: Optional[str] = None,
     city_from_db: Optional[int] = None,
     job: Optional[str] = "Python",
-    date_to: Optional[str] = "",
-    date_from: Optional[str] = "",
+    date_to: Optional[str | datetime.date] = "",
+    date_from: Optional[str | datetime.date] = "",
     title_search: Optional[bool] = False,
     experience: int = 0,
 ) -> list[dict]:
