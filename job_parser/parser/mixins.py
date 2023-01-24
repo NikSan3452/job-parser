@@ -6,10 +6,10 @@ from parser.models import City
 class VacancyDataMixin:
     """Класс хранит в памяти параметры поиска и информацию о найденных вакансиях"""
 
-    city: Optional[str] = None
-    job: Optional[str] = None
-    date_from: Optional[str] = None
-    date_to: Optional[str] = None
+    city: str = None
+    job: str = None
+    date_from: str = None
+    date_to: str = None
     title_search: bool = False
     experience: int = None
 
