@@ -18,7 +18,7 @@ class Vacancy(models.Model):
     user = models.ForeignKey(
         Profile, on_delete=models.CASCADE, verbose_name="Пользователь"
     )
-    url = models.URLField(unique=True)
+    url = models.URLField(null=False)
     title = models.CharField(max_length=250, verbose_name="Вакансия")
     salary_from = models.CharField(max_length=50, null=True, verbose_name="Зарплата от")
     salary_to = models.CharField(max_length=50, null=True, verbose_name="Зарплата до")

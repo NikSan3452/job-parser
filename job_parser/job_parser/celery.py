@@ -10,7 +10,11 @@ app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
     "parsing-job-every-day": {
-        "task": "parser.tasks.main",
-        "schedule": crontab(minute="*/1"),
-    }
+        "task": "parser.tasks.run_parser",
+        "schedule": crontab(hour=7, minute=0),
+    },
+    "sending-vacancy-every-day": {
+        "task": "parser.tasks.sending_emails",
+        "schedule": crontab(hour=12, minute=0),
+    },
 }

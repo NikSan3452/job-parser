@@ -13,8 +13,8 @@ def profile(request, username):
         form = ProfileForm(request.POST)
 
         if form.is_valid():
-            profile.city = form.cleaned_data["city"]
-            profile.job = form.cleaned_data["job"]
+            profile.city = form.cleaned_data["city"].lower()
+            profile.job = form.cleaned_data["job"].lower()
             profile.subscribe = form.cleaned_data["subscribe"]
             profile.save()
             return redirect("profiles:profile", username=username)
