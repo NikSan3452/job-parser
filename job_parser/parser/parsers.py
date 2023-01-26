@@ -1,5 +1,4 @@
 import os
-import sys
 import asyncio
 import orjson
 import datetime
@@ -34,71 +33,8 @@ class ParserConfig:
 config = ParserConfig()
 
 
-class Parser:
-    """Основной класс парсера."""
-
-    general_job_list: list[dict] = []
-
-    async def create_session(
-        self,
-        url: str,
-        headers: Optional[dict] = None,
-        params: Optional[dict] = None,
-    ) -> str:
-        """Отвечает за создание запросов к API.
-
-        Args:
-            url (str): URL - адрес API.
-            headers (Optional[dict], optional): Заголовки запроса. По умолчанию None.
-            params (Optional[dict], optional): Параметры запроса. По умолчанию None.
-
-        Returns:
-            str: Контент в виде строки.
-        """
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url=url, headers=headers, params=params)
-            data = response.content.decode()
-
-        return data
-
-    async def get_vacancies(
-        self,
-        url: str,
-        params: dict,
-        pages: int,
-        total_pages: str,
-        headers: Optional[dict] = None,
-    ) -> list[dict] | str:
-        """Отвечает за получение постраничное получение вакансий.
-
-        Args:
-            url (str): URL - адрес API.
-            params (dict): Параметры запроса.
-            page_range (int): Диапазон страниц (максимум 20)
-            total_pages (str): Строковое представление ключа словаря
-            с общим количеством страниц, которые вернул сервер. Т.к у каждого API
-            разное название этого параметра, его нужно передать здесь.
-            Необходимо для проверки на последнюю страницу.
-            headers (Optional[dict], optional): Заголовки запроса. По умолчанию None.
-
-        Returns:
-            list[dict] | str: Список вакансий или исключение.
-        """
-        job_list: list[dict] = []
-        for page in range(pages):  # Постраничный вывод вакансий
-            params["page"] = page
-            page += 1
-            try:
-                data = await self.create_session(url=url, params=params, headers=headers)
-                json_data = orjson.loads(data)
-                job_list.append(json_data)
-            except httpx.RequestError as exc:
-                return f"Адрес {exc.request.url!r} вернул неверный ответ {exc}"
-
-            if (job_list[0][total_pages] - page) <= 1:  # Проверка на последнюю страницу
-                break
-
-        return job_list
+class Utils:
+    """Класс со вспомогательными методами"""
 
     @staticmethod
     def convert_date(date: str | datetime.date) -> float:
@@ -196,6 +132,73 @@ class Parser:
         return experience
 
 
+class Parser:
+    """Основной класс парсера."""
+
+    general_job_list: list[dict] = []
+
+    async def create_session(
+        self,
+        url: str,
+        headers: Optional[dict] = None,
+        params: Optional[dict] = None,
+    ) -> str:
+        """Отвечает за создание запросов к API.
+
+        Args:
+            url (str): URL - адрес API.
+            headers (Optional[dict], optional): Заголовки запроса. По умолчанию None.
+            params (Optional[dict], optional): Параметры запроса. По умолчанию None.
+
+        Returns:
+            str: Контент в виде строки.
+        """
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url=url, headers=headers, params=params)
+            data = response.content.decode()
+
+        return data
+
+    async def get_vacancies(
+        self,
+        url: str,
+        params: dict,
+        pages: int,
+        total_pages: str,
+        headers: Optional[dict] = None,
+    ) -> list[dict] | str:
+        """Отвечает за постраничное получение вакансий.
+
+        Args:
+            url (str): URL - адрес API.
+            params (dict): Параметры запроса.
+            page_range (int): Диапазон страниц (максимум 20)
+            total_pages (str): Строковое представление ключа словаря
+            с общим количеством страниц, которые вернул сервер. Т.к у каждого API
+            разное название этого параметра, его нужно передать здесь.
+            Необходимо для проверки на последнюю страницу.
+            headers (Optional[dict], optional): Заголовки запроса. По умолчанию None.
+
+        Returns:
+            list[dict] | str: Список вакансий или исключение.
+        """
+        job_list: list[dict] = []
+        for page in range(pages):  # Постраничный вывод вакансий
+            params["page"] = page
+            page += 1
+            try:
+                data = await self.create_session(url=url, params=params, headers=headers)
+                json_data = orjson.loads(data)
+                job_list.append(json_data)
+            except httpx.RequestError as exc:
+                return f"Адрес {exc.request.url!r} вернул неверный ответ {exc}"
+
+            if (job_list[0][total_pages] - page) <= 1:  # Проверка на последнюю страницу
+                break
+
+        return job_list
+
+
 class Headhunter(Parser):
     def __init__(
         self,
@@ -204,10 +207,12 @@ class Headhunter(Parser):
         date_from: str | datetime.date,
         date_to: str | datetime.date,
         experience: int,
+        utils: Utils,
     ) -> None:
+        self.utils = utils
         self.city_from_db = city_from_db
         self.job = job
-        self.date_from, self.date_to = self.check_date(date_from, date_to)
+        self.date_from, self.date_to = self.utils.check_date(date_from, date_to)
         self.experience = experience
 
         # Формируем параметры запроса к API Headhunter
@@ -222,7 +227,7 @@ class Headhunter(Parser):
             self.hh_params["area"] = self.city_from_db
 
         if experience > 0:
-            self.experience = self.convert_experience(experience=experience)
+            self.experience = self.utils.convert_experience(experience=experience)
             self.hh_params["experience"] = self.experience
 
     async def get_vacancy_from_headhunter(self) -> dict:
@@ -285,17 +290,19 @@ class SuperJob(Parser):
         date_from: str | datetime.date,
         date_to: str | datetime.date,
         experience: int,
+        utils: Utils,
     ) -> None:
+        self.utils = utils
         self.city = city
         self.job = job
-        self.date_from, self.date_to = self.check_date(date_from, date_to)
+        self.date_from, self.date_to = self.utils.check_date(date_from, date_to)
 
         # Формируем параметры запроса к API SuperJob
         self.sj_params = {
             "keyword": self.job,
             "count": 100,
-            "date_published_from": self.convert_date(self.date_from),
-            "date_published_to": self.convert_date(self.date_to),
+            "date_published_from": self.utils.convert_date(self.date_from),
+            "date_published_to": self.utils.convert_date(self.date_to),
         }
 
         if self.city:
@@ -380,10 +387,12 @@ class Zarplata(Parser):
         date_from: str | datetime.date,
         date_to: str | datetime.date,
         experience: int,
+        utils: Utils,
     ) -> None:
+        self.utils = utils
         self.city_from_db = city_from_db
         self.job = job
-        self.date_from, self.date_to = self.check_date(date_from, date_to)
+        self.date_from, self.date_to = self.utils.check_date(date_from, date_to)
         self.experience = experience
 
         # Формируем параметры запроса к API Zarplata
@@ -398,7 +407,7 @@ class Zarplata(Parser):
             self.zp_params["area"] = self.city_from_db
 
         if experience > 0:
-            self.experience = self.convert_experience(experience=experience)
+            self.experience = self.utils.convert_experience(experience=experience)
             self.zp_params["experience"] = self.experience
 
     async def get_vacancy_from_zarplata(self) -> dict:
@@ -475,15 +484,23 @@ async def run(
         list[dict]: Список словарей с вакансиями.
     """
 
+    utils = Utils()
+
     hh = Headhunter(
         city_from_db=city_from_db,
         job=job,
         date_from=date_from,
         date_to=date_to,
         experience=experience,
+        utils=utils,
     )
     sj = SuperJob(
-        city=city, job=job, date_from=date_from, date_to=date_to, experience=experience
+        city=city,
+        job=job,
+        date_from=date_from,
+        date_to=date_to,
+        experience=experience,
+        utils=utils,
     )
     zp = Zarplata(
         city_from_db=city_from_db,
@@ -491,6 +508,7 @@ async def run(
         date_from=date_from,
         date_to=date_to,
         experience=experience,
+        utils=utils,
     )
 
     # Очищаем список вакансий
@@ -505,9 +523,9 @@ async def run(
     await asyncio.gather(task1, task2, task3)
 
     # Сортируем получемнный список вакансий
-    sorted_job_list_by_date = Parser.sort_by_date(Parser.general_job_list, "published_at")
+    sorted_job_list_by_date = utils.sort_by_date(Parser.general_job_list, "published_at")
     if title_search:
-        sorted_job_list_by_date = Parser.sort_by_title(sorted_job_list_by_date, job)
+        sorted_job_list_by_date = utils.sort_by_title(sorted_job_list_by_date, job)
     # print(f"Количество вакансий: {len(sorted_job_list_by_date)}", sorted_job_list_by_date)
     return sorted_job_list_by_date
 
