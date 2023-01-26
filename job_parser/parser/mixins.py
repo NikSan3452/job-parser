@@ -99,6 +99,7 @@ class FormCheckMixin:
             except Exception as exc:
                 print(f"Ошибка {exc} Сервер столкнулся с непредвиденной ошибкой")
 
+            # Присваиваем текущие значения временным переменным
             VacancyDataMixin.city = city
             VacancyDataMixin.job = city
             VacancyDataMixin.date_from = date_from

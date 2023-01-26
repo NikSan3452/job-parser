@@ -24,11 +24,6 @@ class VacancyList(View, VacancyDataMixin, FormCheckMixin):
             "form": form,
         }
 
-        paginator = Paginator(VacancyDataMixin.job_list, 5)
-        page_number = request.GET.get("page")
-        page_obj = paginator.get_page(page_number)
-        context["object_list"] = page_obj
-
         return render(
             request=request,
             template_name="parser/list.html",

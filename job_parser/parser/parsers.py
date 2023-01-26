@@ -493,7 +493,7 @@ async def run(
     sorted_job_list_by_date = Parser.sort_by_date(Parser.general_job_list, "published_at")
     if title_search:
         sorted_job_list_by_date = Parser.sort_by_title(sorted_job_list_by_date, job)
-    print(f"Количество вакансий: {len(sorted_job_list_by_date)}", sorted_job_list_by_date)
+    # print(f"Количество вакансий: {len(sorted_job_list_by_date)}", sorted_job_list_by_date)
     return sorted_job_list_by_date
 
 
