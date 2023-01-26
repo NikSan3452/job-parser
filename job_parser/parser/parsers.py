@@ -13,7 +13,7 @@ load_dotenv()
 
 
 class ParserConfig:
-    """Этот класс хранит параметры запросов к API SuperJob."""
+    """Этот класс хранит параметры запросов к API."""
 
     superjob_domen: str = "https://api.superjob.ru"
     superjob_api_version: str = "2.0"

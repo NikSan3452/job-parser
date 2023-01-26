@@ -1,3 +1,4 @@
+from typing import Any, Coroutine
 import parser.parsers as parsers
 from parser.models import City
 
@@ -18,14 +19,14 @@ class VacancyDataMixin:
 class SearchingFormMixin:
     """Класс содержит методы проверки формы по поиску вакансий"""
 
-    async def get_request(self, request: dict) -> None:
+    async def get_request(self, request: dict) -> Coroutine[Any, Any, None]:
         """Получает данные из запроса
 
         Args:
-            request (dict): _description_
+            request (dict): Запрос
 
-        Returns:
-            _type_: _description_
+        Returns(Coroutine[Any, Any, None]): None
+
         """
         city_from_request = request.POST.get("city")
         if city_from_request:
