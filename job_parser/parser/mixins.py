@@ -15,7 +15,7 @@ class VacancyDataMixin:
     job_list: list[dict] = []
 
 
-class FormCheckMixin:
+class SearchingFormMixin:
     """Класс содержит методы проверки формы по поиску вакансий"""
 
     async def get_request(self, request: dict) -> None:
