@@ -29,4 +29,4 @@ def profile(request, username):
 
         form = ProfileForm(initial=default_data)
 
-    return render(request, "users/profile.html", {"form": form, "user": user})
+    return render(request, "profiles/profile.html", {"form": form, "user": user})

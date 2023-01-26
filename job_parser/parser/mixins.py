@@ -19,6 +19,14 @@ class FormCheckMixin:
     """Класс содержит методы проверки формы по поиску вакансий"""
 
     async def get_request(self, request: dict) -> None:
+        """Получает данные из запроса
+
+        Args:
+            request (dict): _description_
+
+        Returns:
+            _type_: _description_
+        """
         city_from_request = request.POST.get("city")
         if city_from_request:
             city_from_request = city_from_request.lower()

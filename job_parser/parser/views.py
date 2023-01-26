@@ -4,36 +4,15 @@ from django.views import View
 
 from parser.forms import SearchingForm
 from parser.mixins import VacancyDataMixin, FormCheckMixin
+from django.views.generic.edit import FormView
 
 
-class HomePageView(View, VacancyDataMixin, FormCheckMixin):
-    async def get(self, request, *args, **kwargs):
-        form = SearchingForm()
+class HomePageView(FormView):
+    template_name = "parser/home.html"
+    form_class = SearchingForm
 
-        context = {
-            "form": form,
-        }
-
-        return render(
-            request=request,
-            template_name="parser/home.html",
-            context=context,
-        )
-
-    async def post(self, request, *args, **kwargs):
-        form = SearchingForm(request.POST)
-        
-        await self.get_request(request=request)
-
-        context = {
-            "form": form,
-        }
-
-        return render(
-            request=request,
-            template_name="parser/home.html",
-            context=context,
-        )
+    def form_valid(self, form):
+        return super().form_valid(form)
 
 
 class VacancyList(View, VacancyDataMixin, FormCheckMixin):
