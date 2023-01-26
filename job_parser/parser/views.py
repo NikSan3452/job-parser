@@ -3,20 +3,44 @@ from django.core.paginator import Paginator
 from django.views import View
 
 from parser.forms import SearchingForm
-from parser.mixins import VacancyDataMixin, FormCheckMixin
+from parser.mixins import VacancyDataMixin, SearchingFormMixin
 from django.views.generic.edit import FormView
 
 
 class HomePageView(FormView):
+    """Представление домашней страницы."""
+
     template_name = "parser/home.html"
     form_class = SearchingForm
 
     def form_valid(self, form):
+        """Валидирует форму домашней страницы.
+
+        Args:
+            form: Форма.
+
+        Returns: HTTPResponse
+        """
         return super().form_valid(form)
 
 
-class VacancyList(View, VacancyDataMixin, FormCheckMixin):
+class VacancyList(View, VacancyDataMixin, SearchingFormMixin):
+    """Представление списка вакансий.
+
+    Args:
+        View: Базовое представление.
+        VacancyDataMixin: Миксин для временного хранения данных в памяти.
+        SearchingFormMixin: Миксин формы поиска вакансий.
+    """
+
     async def get(self, request, *args, **kwargs):
+        """Обрабатывает GET - запросы.
+
+        Args:
+            request: Запрос.
+
+        Returns: HTTPResponse
+        """
         form = SearchingForm()
 
         context = {
@@ -31,6 +55,13 @@ class VacancyList(View, VacancyDataMixin, FormCheckMixin):
         )
 
     async def post(self, request, *args, **kwargs):
+        """Обрабатывает POST - запросы.
+
+        Args:
+            request: Запрос.
+
+        Returns: HTTPResponse
+        """
         form = SearchingForm(request.POST)
 
         await self.get_request(request=request)
