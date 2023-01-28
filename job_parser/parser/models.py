@@ -1,5 +1,5 @@
 from django.db import models
-from profiles.models import Profile
+from profiles.models import Profile, User
 
 
 class City(models.Model):
@@ -34,6 +34,19 @@ class Vacancy(models.Model):
         verbose_name = "Вакансия"
         verbose_name_plural = "Вакансии"
         ordering = ["-published_at"]
+
+    def __str__(self) -> str:
+        return self.title
+
+class FavouriteVacancy(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, verbose_name="Пользователь"
+    )
+    url = models.URLField(null=False, unique=True)
+
+    class Meta:
+        verbose_name = "Избранная вакансия"
+        verbose_name_plural = "Избранные вакансии"
 
     def __str__(self) -> str:
         return self.title
