@@ -70,9 +70,9 @@ class Utils:
         Returns:
             datetime.date | str: Время задаваемое по умолчанию.
         """
-        if date_from == "":
+        if date_from == "" or date_from is None:
             date_from = datetime.date.today() - datetime.timedelta(days=10)
-        if date_to == "":
+        if date_to == "" or date_to is None:
             date_to = datetime.date.today()
         return date_from, date_to
 
