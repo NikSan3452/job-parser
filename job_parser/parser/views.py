@@ -55,13 +55,13 @@ class VacancyList(View, VacancyDataMixin):
     async def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST)
         if form.is_valid():
-            city_from_request = form.cleaned_data.get("city")
-            if city_from_request:
-                city_from_request = city_from_request.lower()
+            city = form.cleaned_data.get("city")
+            if city:
+                city = city.lower()
 
-            job_from_request = form.cleaned_data.get("job")
-            if job_from_request:
-                job_from_request = job_from_request.lower()
+            job = form.cleaned_data.get("job")
+            if job:
+                job = job.lower()
 
             date_from = form.cleaned_data.get("date_from")
             date_to = form.cleaned_data.get("date_to")
@@ -70,8 +70,8 @@ class VacancyList(View, VacancyDataMixin):
 
             if (
                 VacancyDataMixin.job_list is None
-                or city_from_request != VacancyDataMixin.city
-                or job_from_request != VacancyDataMixin.job
+                or city != VacancyDataMixin.city
+                or job != VacancyDataMixin.job
                 or date_from != VacancyDataMixin.date_from
                 or date_to != VacancyDataMixin.date_to
                 or title_search != VacancyDataMixin.title_search
@@ -81,21 +81,17 @@ class VacancyList(View, VacancyDataMixin):
 
                 try:
                     # Получаем id города для API HeadHunter
-                    if city_from_request:
-                        city_from_db = await City.objects.filter(
-                            city=city_from_request
-                        ).afirst()
+                    if city:
+                        city_from_db = await City.objects.filter(city=city).afirst()
                         city_id = city_from_db.city_id
                     else:
                         city_id = None
 
-                    print(city_from_request, city_id, job_from_request, date_from, date_to, title_search, experience)
-                    
                     # Получаем список вакансий
                     VacancyDataMixin.job_list = await parsers.run(
-                        city=city_from_request,
+                        city=city,
                         city_from_db=city_id,
-                        job=job_from_request,
+                        job=job,
                         date_from=date_from,
                         date_to=date_to,
                         title_search=title_search,
@@ -105,8 +101,8 @@ class VacancyList(View, VacancyDataMixin):
                     print(f"Ошибка {exc} Сервер столкнулся с непредвиденной ошибкой")
 
                 # Присваиваем текущие значения временным переменным
-                VacancyDataMixin.city = city_from_request
-                VacancyDataMixin.job = job_from_request
+                VacancyDataMixin.city = city
+                VacancyDataMixin.job = job
                 VacancyDataMixin.date_from = date_from
                 VacancyDataMixin.date_to = date_to
                 VacancyDataMixin.title_search = title_search
