@@ -29,7 +29,9 @@
                     <span class="card-param">{{ obj.salary_currency }}</span>{% endif %}
                 </p>
                 <p><span class="card-param">Тип занятости: </span> <span class="card-value">{{ obj.type_of_work }}</span></p>
-                {% if obj.experience %}<p><span class="card-param">Опыт работы: </span> <span class="card-value">{{ obj.experience }}</span></p>{% endif %}
+                {% if obj.experience %}
+                    <p><span class="card-param">Опыт работы: </span> <span class="card-value">{{ obj.experience }}</span></p>
+                {% endif %}
                 <p class="card-text">
                     {% if obj.responsibility  %}
                     <span class="card-param">Обязанности:</span> {{ obj.responsibility|truncatechars:300 }}
@@ -43,6 +45,16 @@
                     | <span class="card-param">Дата публикации:</span>
                     <span class="card-value">{{ obj.published_at }}</span>
                 </p>
+                <div class="row favourite justify-content-end">
+                    <div class="col-1 text-center">
+                        {% if user.is_authenticated %}
+                            <input {% for favourite in list_favourite %} {% if favourite.url == obj.url %} checked {% endif %} {% endfor %} type="checkbox" class="btn-check" id="btn-check-outlined-{{forloop.counter}}" autocomplete="off" onchange="addToFavourite('{{forloop.counter}}', '{{ obj.url }}')">
+                            <label class="btn btn-outline-primary add-to-favourite" for="btn-check-outlined-{{forloop.counter}}">
+                                <i class="fa-solid fa-heart heart"></i>
+                            </label>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
         {% empty %}
@@ -81,4 +93,5 @@
             </div>
         {% endif %}
 </div>
+<script src="{% static '/js/favourite.js' %}"></script>
 {% endblock %}
