@@ -6,12 +6,12 @@ from django.views import View
 from django.contrib import auth
 from django.views.generic.edit import FormView
 from django.contrib.auth.decorators import login_required
-from asgiref.sync import sync_to_async
 
 from parser import parsers
 from parser.forms import SearchingForm
 from parser.mixins import VacancyDataMixin
 from parser.models import City, FavouriteVacancy
+from django.contrib import messages
 
 
 class HomePageView(FormView):
@@ -50,7 +50,7 @@ class VacancyList(View, VacancyDataMixin):
             return list_favourite
         except Exception as exc:
             print(f"Ошибка базы данных {exc}")
-    
+
     async def get(self, request, *args, **kwargs):
         form = self.form_class()
 
@@ -102,10 +102,17 @@ class VacancyList(View, VacancyDataMixin):
                 try:
                     # Получаем id города для API HeadHunter
                     if city:
-                        city_from_db = await City.objects.filter(city=city).afirst()
-                        city_id = city_from_db.city_id
-                    else:
                         city_id = None
+                        city_from_db = await City.objects.filter(city=city).afirst()
+                        if city_from_db:
+                            city_id = city_from_db.city_id
+
+                    if city_id is None:
+                        messages.error(
+                            request,
+                            """Город с таким названием отсуствует в базе,
+                            но вы можете посмотреть вакансии в других городах""",
+                        )
 
                     # Получаем список вакансий
                     VacancyDataMixin.job_list = await parsers.run(
