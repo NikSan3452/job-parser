@@ -1,5 +1,6 @@
 function addToFavourite(index, vacancyUrl) {
     let checkbox = document.getElementById(`btn-check-outlined-${index}`);
+
     if (checkbox.checked == true) {
         fetch("/favourite/", {
             method: "POST",

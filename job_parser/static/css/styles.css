@@ -78,3 +78,25 @@ body {
     color: rgb(72, 165, 72);
 }
 
+.add-to-favourite {
+    border: #323c4b;
+}
+
+.add-to-favourite:active, .btn-check:checked+.btn, .btn.active, .btn.show, .btn:first-child:active, :not(.btn-check)+.btn:active {
+    background-color: #1D2531;
+    ;
+
+}
+
+.favourite-img {
+    filter: invert(38%) sepia(54%) saturate(6319%) hue-rotate(336deg) brightness(86%) contrast(109%);
+}
+
+.heart {
+    color: white;
+    font-size: 25px;
+}
+
+.btn-check:checked ~ .add-to-favourite .fa-solid {
+    color: red;
+}
