@@ -3,15 +3,17 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.views import View
-from parser import parsers
+from django.contrib import auth
+from django.views.generic.edit import FormView
+from django.contrib.auth.decorators import login_required
+from asgiref.sync import sync_to_async
 
+from parser import parsers
 from parser.forms import SearchingForm
 from parser.mixins import VacancyDataMixin
-from django.views.generic.edit import FormView
 from parser.models import City, FavouriteVacancy
-from django.contrib.auth.decorators import login_required
+
 from profiles.models import User
-from django.contrib import auth
 
 
 class HomePageView(FormView):
@@ -35,15 +37,32 @@ class VacancyList(View, VacancyDataMixin):
     form_class = SearchingForm
     template_name = "parser/list.html"
 
+    async def get_favourite_vacancy(self, request):
+        """Получает список вакансий добавленных в избранное.
+
+        Args:
+            request (_type_): Запрос.
+
+        Returns:
+            _type_: Список вакансий добавленных в избранное.
+        """
+        try:
+            user = auth.get_user(request)
+            list_favourite = FavouriteVacancy.objects.filter(user=user)
+            return list_favourite
+        except Exception as exc:
+            print(f"Ошибка базы данных {exc}")
+    
     async def get(self, request, *args, **kwargs):
         form = self.form_class()
 
-        context = (
-            {
-                "form": form,
-                "object_list": VacancyDataMixin.job_list,
-            },
-        )
+        list_favourite = await self.get_favourite_vacancy(request)
+
+        context = {
+            "form": form,
+            "object_list": VacancyDataMixin.job_list,
+            "list_favourite": list_favourite,
+        }
 
         paginator = Paginator(VacancyDataMixin.job_list, 5)
         page_number = request.GET.get("page")
@@ -54,6 +73,9 @@ class VacancyList(View, VacancyDataMixin):
 
     async def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST)
+
+        list_favourite = await self.get_favourite_vacancy(request)
+
         if form.is_valid():
             city = form.cleaned_data.get("city")
             if city:
@@ -113,6 +135,7 @@ class VacancyList(View, VacancyDataMixin):
                 "city": VacancyDataMixin.city,
                 "job": VacancyDataMixin.job,
                 "form": form,
+                "list_favourite": list_favourite,
             }
 
             paginator = Paginator(VacancyDataMixin.job_list, 5)
@@ -125,15 +148,21 @@ class VacancyList(View, VacancyDataMixin):
 
 @login_required
 def add_to_favourite_view(request):
-    username = auth.get_user(request)
-    user = User.objects.get(username=username)
+    """Добавляет вакансию в избранное.
 
+    Args:
+        request (_type_): Запрос.
+
+    Returns:
+        _type_: JsonResponse.
+    """
     data = json.load(request)
     vacancy_url = data.get("payload")
-    print(vacancy_url, username)
+
     if request.method == "POST":
         try:
-            FavouriteVacancy.objects.get_or_create(user=user, url=vacancy_url)
+            username = auth.get_user(request)
+            FavouriteVacancy.objects.get_or_create(user=username, url=vacancy_url)
         except Exception as exc:
             print(f"Ошибка базы данных {exc}")
     return JsonResponse({"status": "Вакансия добавлена в избранное"})
@@ -141,15 +170,21 @@ def add_to_favourite_view(request):
 
 @login_required
 def delete_from_favourite_view(request):
-    username = auth.get_user(request)
-    user = User.objects.get(username=username)
+    """Удаляет вакансию из избранного.
 
+    Args:
+        request (_type_): Запрос.
+
+    Returns:
+        _type_: JsonResponse.
+    """
     data = json.load(request)
     vacancy_url = data.get("payload")
-    print("Удалено", vacancy_url, username)
+
     if request.method == "POST":
         try:
-            FavouriteVacancy.objects.filter(user=user, url=vacancy_url).delete()
+            username = auth.get_user(request)
+            FavouriteVacancy.objects.filter(user=username, url=vacancy_url).delete()
         except Exception as exc:
             print(f"Ошибка базы данных {exc}")
     return JsonResponse({"status": "Вакансия удалена из избранного"})
