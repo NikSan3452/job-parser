@@ -18,7 +18,10 @@ def profile(request, username):
             profile.job = form.cleaned_data["job"].lower()
             profile.subscribe = form.cleaned_data["subscribe"]
             profile.save()
-            messages.success(request, "Вы подписались на рассылку вакансий")
+            if profile.subscribe:
+                messages.success(request, "Вы подписались на рассылку вакансий")
+            else:
+                messages.error(request, "Вы отписались от рассылки")
             return redirect("profiles:profile", username=username)
     else:
         default_data = {
