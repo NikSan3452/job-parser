@@ -66,7 +66,7 @@ body {
     color: #647ff7;
 }
 
-.profile-messages {
+.profile-messages, .city-not-exists-messages {
     text-align: center;
 }
 
