@@ -13,8 +13,6 @@ from parser.forms import SearchingForm
 from parser.mixins import VacancyDataMixin
 from parser.models import City, FavouriteVacancy
 
-from profiles.models import User
-
 
 class HomePageView(FormView):
     """Представление домашней страницы."""
