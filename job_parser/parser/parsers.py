@@ -156,7 +156,6 @@ class Parser:
         async with httpx.AsyncClient() as client:
             response = await client.get(url=url, headers=headers, params=params)
             data = response.content.decode()
-
         return data
 
     async def get_vacancies(
@@ -190,11 +189,13 @@ class Parser:
                 data = await self.create_session(url=url, params=params, headers=headers)
                 json_data = orjson.loads(data)
                 job_list.append(json_data)
-            except httpx.RequestError as exc:
-                return f"Адрес {exc.request.url!r} вернул неверный ответ {exc}"
 
-            if (job_list[0][total_pages] - page) <= 1:  # Проверка на последнюю страницу
-                break
+                if (
+                    job_list[0][total_pages] - page
+                ) <= 1:  # Проверка на последнюю страницу
+                    break
+            except httpx.RequestError as exc:
+                print(f"Адрес {exc.request.url!r} вернул неверный ответ {exc}")
 
         return job_list
 
