@@ -1,4 +1,4 @@
-function addToFavourite(index, vacancyUrl, VacancyTitle) {
+function addToFavourite(index, vacancyUrl, vacancyTitle) {
     let checkbox = document.getElementById(`btn-check-outlined-${index}`);
 
     if (checkbox.checked == true) {
@@ -9,7 +9,7 @@ function addToFavourite(index, vacancyUrl, VacancyTitle) {
                 "X-Requested-With": "XMLHttpRequest",
                 "X-CSRFToken": getCookie("csrftoken"),
             },
-            body: JSON.stringify({ url: vacancyUrl, title: VacancyTitle }),
+            body: JSON.stringify({ url: vacancyUrl, title: vacancyTitle }),
         })
             .then((response) => response.json())
             .then((data) => {
@@ -23,7 +23,7 @@ function addToFavourite(index, vacancyUrl, VacancyTitle) {
                 "X-Requested-With": "XMLHttpRequest",
                 "X-CSRFToken": getCookie("csrftoken"),
             },
-            body: JSON.stringify({ payload: vacancyUrl }),
+            body: JSON.stringify({ url: vacancyUrl }),
         })
             .then((response) => response.json())
             .then((data) => {
