@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages, auth
+
+from parser.models import FavouriteVacancy
 from .models import Profile, User
 from .forms import ProfileForm
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 
 
 @login_required
@@ -24,6 +26,11 @@ def profile(request, username):
                 messages.error(request, "Вы отписались от рассылки")
             return redirect("profiles:profile", username=username)
     else:
+        try:
+            favourite_vacancy = FavouriteVacancy.objects.filter(user=user).all()
+        except Exception as exc:
+            print(f"Ошибка базы данных {exc}")
+
         default_data = {
             "city": profile.city,
             "job": profile.job,
@@ -32,4 +39,12 @@ def profile(request, username):
 
         form = ProfileForm(initial=default_data)
 
-    return render(request, "profiles/profile.html", {"form": form, "user": user})
+    return render(
+        request,
+        "profiles/profile.html",
+        {
+            "form": form,
+            "user": user,
+            "favourite_vacancy": favourite_vacancy,
+        },
+    )
