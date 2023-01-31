@@ -43,10 +43,11 @@ class FavouriteVacancy(models.Model):
         User, on_delete=models.CASCADE, verbose_name="Пользователь"
     )
     url = models.URLField(null=False, unique=True)
+    title = models.CharField(max_length=250, verbose_name="Вакансия")
 
     class Meta:
         verbose_name = "Избранная вакансия"
         verbose_name_plural = "Избранные вакансии"
 
     def __str__(self) -> str:
-        return self.url
+        return self.title
