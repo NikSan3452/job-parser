@@ -1,4 +1,4 @@
-function addToFavourite(index, vacancyUrl) {
+function addToFavourite(index, vacancyUrl, VacancyTitle) {
     let checkbox = document.getElementById(`btn-check-outlined-${index}`);
 
     if (checkbox.checked == true) {
@@ -9,12 +9,11 @@ function addToFavourite(index, vacancyUrl) {
                 "X-Requested-With": "XMLHttpRequest",
                 "X-CSRFToken": getCookie("csrftoken"),
             },
-            body: JSON.stringify({ payload: vacancyUrl }),
+            body: JSON.stringify({ url: vacancyUrl, title: VacancyTitle }),
         })
             .then((response) => response.json())
             .then((data) => {
                 console.log(data);
-                localStorage.setItem(`vacancy_${index}`, 'checked');
             });
     } else {
         fetch("/delete-favourite/", {
@@ -29,7 +28,6 @@ function addToFavourite(index, vacancyUrl) {
             .then((response) => response.json())
             .then((data) => {
                 console.log(data);
-                localStorage.removeItem(`vacancy_${index}`);
             });
     }
 }
