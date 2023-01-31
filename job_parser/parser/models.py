@@ -49,4 +49,4 @@ class FavouriteVacancy(models.Model):
         verbose_name_plural = "Избранные вакансии"
 
     def __str__(self) -> str:
-        return self.title
+        return self.url
