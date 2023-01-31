@@ -101,7 +101,7 @@ class VacancyList(View, VacancyDataMixin):
 
                 try:
                     # Получаем id города для API HeadHunter
-                   
+
                     if city:
                         city_from_db = await City.objects.filter(city=city).afirst()
                         if city_from_db:
@@ -163,11 +163,14 @@ def add_to_favourite_view(request):
     """
     data = json.load(request)
     vacancy_url = data.get("url")
+    vacancy_title = data.get("title")
 
     if request.method == "POST":
         try:
             user = auth.get_user(request)
-            FavouriteVacancy.objects.get_or_create(user=user, url=vacancy_url)
+            FavouriteVacancy.objects.get_or_create(
+                user=user, url=vacancy_url, title=vacancy_title
+            )
         except Exception as exc:
             print(f"Ошибка базы данных {exc}")
     return JsonResponse({"status": "Вакансия добавлена в избранное"})
