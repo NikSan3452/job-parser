@@ -9,8 +9,11 @@ from .forms import ProfileForm
 
 @login_required
 def profile(request, username):
-    user = User.objects.get(username=username)
-    profile = Profile.objects.get(user=user)
+    try:
+        user = User.objects.get(username=username)
+        profile = Profile.objects.get(user=user)
+    except Exception as exc:
+            print(f"Ошибка базы данных {exc}")
 
     if request.method == "POST":
         form = ProfileForm(request.POST)
