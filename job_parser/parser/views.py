@@ -188,7 +188,6 @@ def delete_from_favourite_view(request):
     """
     data = json.load(request)
     vacancy_url = data.get("url")
-
     if request.method == "POST":
         try:
             user = auth.get_user(request)
