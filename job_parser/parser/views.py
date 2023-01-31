@@ -166,8 +166,8 @@ def add_to_favourite_view(request):
 
     if request.method == "POST":
         try:
-            username = auth.get_user(request)
-            FavouriteVacancy.objects.get_or_create(user=username, url=vacancy_url)
+            user = auth.get_user(request)
+            FavouriteVacancy.objects.get_or_create(user=user, url=vacancy_url)
         except Exception as exc:
             print(f"Ошибка базы данных {exc}")
     return JsonResponse({"status": "Вакансия добавлена в избранное"})
@@ -188,8 +188,8 @@ def delete_from_favourite_view(request):
 
     if request.method == "POST":
         try:
-            username = auth.get_user(request)
-            FavouriteVacancy.objects.filter(user=username, url=vacancy_url).delete()
+            user = auth.get_user(request)
+            FavouriteVacancy.objects.filter(user=user, url=vacancy_url).delete()
         except Exception as exc:
             print(f"Ошибка базы данных {exc}")
     return JsonResponse({"status": "Вакансия удалена из избранного"})
