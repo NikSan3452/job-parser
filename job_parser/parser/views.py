@@ -101,18 +101,18 @@ class VacancyList(View, VacancyDataMixin):
 
                 try:
                     # Получаем id города для API HeadHunter
+                   
                     if city:
-                        city_id = None
                         city_from_db = await City.objects.filter(city=city).afirst()
                         if city_from_db:
                             city_id = city_from_db.city_id
-
-                    if city_id is None:
-                        messages.error(
-                            request,
-                            """Город с таким названием отсуствует в базе,
-                            но вы можете посмотреть вакансии в других городах""",
-                        )
+                        else:
+                            messages.error(
+                                request,
+                                """Город с таким названием отсуствует в базе""",
+                            )
+                    else:
+                        city_id = None
 
                     # Получаем список вакансий
                     VacancyDataMixin.job_list = await parsers.run(
@@ -162,7 +162,7 @@ def add_to_favourite_view(request):
         _type_: JsonResponse.
     """
     data = json.load(request)
-    vacancy_url = data.get("payload")
+    vacancy_url = data.get("url")
 
     if request.method == "POST":
         try:
@@ -184,7 +184,7 @@ def delete_from_favourite_view(request):
         _type_: JsonResponse.
     """
     data = json.load(request)
-    vacancy_url = data.get("payload")
+    vacancy_url = data.get("url")
 
     if request.method == "POST":
         try:
