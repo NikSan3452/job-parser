@@ -58,7 +58,7 @@
                 <div class="row favourite justify-content-end">
                     <div class="col-1 text-center">
                         {% if user.is_authenticated %}
-                            <input {% for favourite in list_favourite %} {% if favourite.url == obj.url %} checked {% endif %} {% endfor %} type="checkbox" class="btn-check" id="btn-check-outlined-{{forloop.counter}}" autocomplete="off" onchange="addToFavourite('{{forloop.counter}}', '{{ obj.url }}')">
+                            <input {% for favourite in list_favourite %} {% if favourite.url == obj.url %} checked {% endif %} {% endfor %} type="checkbox" class="btn-check" id="btn-check-outlined-{{forloop.counter}}" autocomplete="off" onchange="addToFavourite('{{forloop.counter}}', '{{ obj.url }}', '{{ obj.title }}')">
                             <label class="btn btn-outline-primary add-to-favourite" for="btn-check-outlined-{{forloop.counter}}">
                                 <i class="fa-solid fa-heart heart"></i>
                             </label>
