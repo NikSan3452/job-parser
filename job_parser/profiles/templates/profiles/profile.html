@@ -24,4 +24,28 @@
             </form>
         </div>
     </div>
+    <div class="row justify-content-center">
+        <div class="col-10">
+            {% for vacancy in favourite_vacancy %}
+                <div class="card my-3" id="favourite-block-{{forloop.counter}}">
+                    <div class="row favourite">
+                        <div class="col-11">
+                            <h5 class="card-header bg-primary bg-opacity-10">
+                                <a class="text-decoration-none" href="{{ vacancy.url }}"> {{ vacancy.title }}</a>
+                            </h5>
+                        </div>
+                        <div class="col-1 text-center">
+                            {% if user.is_authenticated %}
+                                <input {% if vacancy.url %} checked {% endif %} type="checkbox" class="btn-check" id="btn-check-outlined" autocomplete="off" onclick="removeFavouriteFromProfile('{{ forloop.counter }}', '{{ vacancy.url }}')">
+                                <label class="btn btn-outline-primary add-to-favourite" for="btn-check-outlined">
+                                    <i class="fa-solid fa-heart heart"></i>
+                                </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    <script src="{% static '/js/remove_favourite_from_profile.js' %}"></script>
 {% endblock %}
