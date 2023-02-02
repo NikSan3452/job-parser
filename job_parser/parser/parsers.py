@@ -71,7 +71,7 @@ class Utils:
             datetime.date | str: Время задаваемое по умолчанию.
         """
         if date_from == "" or date_from is None:
-            date_from = datetime.date.today() - datetime.timedelta(days=10)
+            date_from = datetime.date.today() - datetime.timedelta(days=3)
         if date_to == "" or date_to is None:
             date_to = datetime.date.today()
         return date_from, date_to
