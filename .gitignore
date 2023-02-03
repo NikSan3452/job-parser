@@ -50,7 +50,6 @@ venv.bak/
 .history
 
 cities.json
-city.json
 parser_city.json
 pyproject.toml
 db.sqlite3
