@@ -54,3 +54,5 @@ city.json
 parser_city.json
 pyproject.toml
 db.sqlite3
+.env.prod
+.env.prod.db

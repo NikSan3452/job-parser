@@ -3,8 +3,8 @@ from profiles.models import Profile, User
 
 
 class City(models.Model):
-    city_id = models.CharField(max_length=50, unique=True)
-    city = models.CharField(max_length=50, verbose_name="Город", unique=True)
+    city_id = models.CharField(max_length=255, unique=True)
+    city = models.CharField(max_length=255, verbose_name="Город", unique=True)
 
     class Meta:
         verbose_name = "Город"
