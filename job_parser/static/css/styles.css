@@ -78,25 +78,33 @@ body {
     color: rgb(72, 165, 72);
 }
 
-.add-to-favourite {
+.add-to-favourite, .add-to-black-list {
     border: #323c4b;
 }
 
-.add-to-favourite:active, .btn-check:checked+.btn, .btn.active, .btn.show, .btn:first-child:active, :not(.btn-check)+.btn:active {
+.add-to-favourite:active, .add-to-black-list:active, .favourite-list:checked+.btn, .btn.active, .btn.show, .btn:first-child:active, :not(.favourite-list)+.btn:active {
     background-color: #1D2531;
     ;
-
 }
 
-.favourite-img {
-    filter: invert(38%) sepia(54%) saturate(6319%) hue-rotate(336deg) brightness(86%) contrast(109%);
+.add-to-black-list:active, .black-list:checked+.btn, .btn.active, .btn.show, .btn:first-child:active, :not(.black-list)+.btn:active {
+    background-color: #1D2531;
+    ;
 }
 
-.heart {
+.heart, .trash {
     color: white;
     font-size: 25px;
 }
 
-.btn-check:checked ~ .add-to-favourite .fa-solid {
+.heart:hover, .trash:hover {
+    color: red;
+}
+
+.favourite-list:checked ~ .add-to-favourite .fa-solid {
+    color: red;
+}
+
+.black-list:checked ~ .add-to-black-list .fa-solid {
     color: red;
 }
