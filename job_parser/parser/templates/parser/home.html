@@ -4,10 +4,10 @@
 {% block title %} Not wolf {% endblock %}
 {% block content %}
 <div class="row">
-    <div class="col my-5"><h2 class="text-center">Поиск работы</h2></div>
+    <div class="col my-2"><h2 class="text-center">Поиск работы</h2></div>
 </div>
 <div class="row">
-    <div class="col-md-6 my-5 mx-auto">
+    <div class="col-md-6 my-2 mx-auto">
         <form action="{% url 'list' %}" method="post">
             <div>
                 {% csrf_token %}
