@@ -18,11 +18,15 @@
         <form action="{% url 'list' %}" method="post">
                 {% csrf_token %}
                 {{ form|crispy }}
-            <button type="submit" class="btn btn-primary">Найти</button>
+            <div class="row justify-content-center">
+                <div class="col btn-wrap">
+                    <button type="submit" class="btn btn-primary">Найти</button>
+                </div>
+            </div>
         </form>
     </div>
 
-    <div class="col-10">
+    <div class="col-md-10">
         <p>Найдено {{ count_vacancy }} вакансий по Вашему запросу</p>
         {% for obj in object_list %}
         <div class="card my-3" id="delete-vacancy-{{forloop.counter}}">
