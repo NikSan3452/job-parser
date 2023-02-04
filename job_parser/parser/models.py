@@ -38,12 +38,12 @@ class Vacancy(models.Model):
     def __str__(self) -> str:
         return self.title
 
+
 class FavouriteVacancy(models.Model):
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, verbose_name="Пользователь"
-    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
     url = models.URLField(null=False, unique=True)
     title = models.CharField(max_length=250, verbose_name="Вакансия")
+    
 
     class Meta:
         verbose_name = "Избранная вакансия"
@@ -51,3 +51,14 @@ class FavouriteVacancy(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+class VacancyBlackList(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
+    url = models.URLField(null=False, unique=True)
+
+    class Meta:
+        verbose_name = "Вакансия в черном списке"
+        verbose_name_plural = "Вакансии в черном списке"
+
+    def __str__(self) -> str:
+        return self.url
