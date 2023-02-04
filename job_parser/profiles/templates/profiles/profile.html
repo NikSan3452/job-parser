@@ -29,16 +29,24 @@
             {% for vacancy in favourite_vacancy %}
                 <div class="card my-3" id="favourite-block-{{forloop.counter}}">
                     <div class="row favourite">
-                        <div class="col-11">
+                        <div class="col-10">
                             <h5 class="card-header bg-primary bg-opacity-10">
                                 <a class="text-decoration-none" href="{{ vacancy.url }}"> {{ vacancy.title }}</a>
                             </h5>
                         </div>
-                        <div class="col-1 text-center">
+                        <div class="col-2 text-center my-auto">
                             {% if user.is_authenticated %}
-                                <input {% if vacancy.url %} checked {% endif %} type="checkbox" class="btn-check" id="btn-check-outlined" autocomplete="off" onclick="removeFavouriteFromProfile('{{ forloop.counter }}', '{{ vacancy.url }}')">
-                                <label class="btn btn-outline-primary add-to-favourite" for="btn-check-outlined">
-                                    <i class="fa-solid fa-heart heart"></i>
+                                <input {% for favourite in list_favourite %} {% if favourite.url == obj.url %}
+                                checked
+                                {% endif %}
+                                {% endfor %}
+                                type="checkbox"
+                                class="btn-check favourite-list"
+                                id="btn-check-outlined-{{forloop.counter}}"
+                                autocomplete="off"
+                                onclick="removeFavouriteFromProfile('{{ forloop.counter }}', '{{ vacancy.url }}')">
+                                <label class="btn btn-outline-primary add-to-favourite" for="btn-check-outlined-{{forloop.counter}}">
+                                    <i class="fa-solid fa-trash-can trash" style="color:red"></i>
                                 </label>
                             {% endif %}
                         </div>
