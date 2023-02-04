@@ -3,15 +3,15 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.core.paginator import Paginator
 from django.views import View
-from django.contrib import auth
+from django.contrib import auth, messages
 from django.views.generic.edit import FormView
 from django.contrib.auth.decorators import login_required
 
 from parser import parsers
 from parser.forms import SearchingForm
-from parser.mixins import VacancyDataMixin
-from parser.models import City, FavouriteVacancy
-from django.contrib import messages
+from parser.mixins import VacancyDataMixin, VacancyHelpersMixin
+from parser.models import City, FavouriteVacancy, VacancyBlackList
+
 
 
 class HomePageView(FormView):
@@ -31,25 +31,9 @@ class HomePageView(FormView):
         return super().form_valid(form)
 
 
-class VacancyList(View, VacancyDataMixin):
+class VacancyList(View, VacancyDataMixin, VacancyHelpersMixin):
     form_class = SearchingForm
     template_name = "parser/list.html"
-
-    async def get_favourite_vacancy(self, request):
-        """Получает список вакансий добавленных в избранное.
-
-        Args:
-            request (_type_): Запрос.
-
-        Returns:
-            _type_: Список вакансий добавленных в избранное.
-        """
-        try:
-            user = auth.get_user(request)
-            list_favourite = FavouriteVacancy.objects.filter(user=user)
-            return list_favourite
-        except Exception as exc:
-            print(f"Ошибка базы данных {exc}")
 
     async def get(self, request, *args, **kwargs):
         form = self.form_class()
@@ -87,7 +71,10 @@ class VacancyList(View, VacancyDataMixin):
             date_to = form.cleaned_data.get("date_to")
             title_search = form.cleaned_data.get("title_search")
             experience = int(form.cleaned_data.get("experience"))
-
+            
+            # Если хотя бы один из параметров изменился начинается новый поиск,
+            # в противном случае запрос к API не отправляется и пользователь видит
+            # старые данные, хронящиеся в VacancyDataMixin.job_list
             if (
                 VacancyDataMixin.job_list is None
                 or city != VacancyDataMixin.city
@@ -100,8 +87,7 @@ class VacancyList(View, VacancyDataMixin):
                 VacancyDataMixin.job_list.clear()
 
                 try:
-                    # Получаем id города для API HeadHunter
-
+                    # Получаем id города для API HeadHunter и Zarplata
                     if city:
                         city_from_db = await City.objects.filter(city=city).afirst()
                         if city_from_db:
@@ -124,23 +110,30 @@ class VacancyList(View, VacancyDataMixin):
                         title_search=title_search,
                         experience=experience,
                     )
+
+                    # Присваиваем текущие значения из запроса временным переменным
+                    VacancyDataMixin.city = city
+                    VacancyDataMixin.job = job
+                    VacancyDataMixin.date_from = date_from
+                    VacancyDataMixin.date_to = date_to
+                    VacancyDataMixin.title_search = title_search
+                    VacancyDataMixin.experience = experience
+                    
                 except Exception as exc:
                     print(f"Ошибка {exc} Сервер столкнулся с непредвиденной ошибкой")
 
-                # Присваиваем текущие значения временным переменным
-                VacancyDataMixin.city = city
-                VacancyDataMixin.job = job
-                VacancyDataMixin.date_from = date_from
-                VacancyDataMixin.date_to = date_to
-                VacancyDataMixin.title_search = title_search
-                VacancyDataMixin.experience = experience
+            # Проверяем добавлена ли вакансия в черный список
+            vacancies = await self.check_vacancy_black_list(VacancyDataMixin.job_list, request)
+
+            count_vacancy = len(vacancies)
 
             context = {
-                "object_list": VacancyDataMixin.job_list,
+                "object_list": vacancies,
                 "city": VacancyDataMixin.city,
                 "job": VacancyDataMixin.job,
                 "form": form,
                 "list_favourite": list_favourite,
+                'count_vacancy': count_vacancy
             }
 
             paginator = Paginator(VacancyDataMixin.job_list, 5)
@@ -195,3 +188,24 @@ def delete_from_favourite_view(request):
         except Exception as exc:
             print(f"Ошибка базы данных {exc}")
     return JsonResponse({"status": "Вакансия удалена из избранного"})
+
+
+@login_required
+def add_to_black_list_view(request):
+    """Удаляет вакансию из избранного.
+
+    Args:
+        request (_type_): Запрос.
+
+    Returns:
+        _type_: JsonResponse.
+    """
+    data = json.load(request)
+    vacancy_url = data.get("url")
+    if request.method == "POST":
+        try:
+            user = auth.get_user(request)
+            VacancyBlackList.objects.get_or_create(user=user, url=vacancy_url)
+        except Exception as exc:
+            print(f"Ошибка базы данных {exc}")
+    return JsonResponse({"status": "Вакансия добавлена в черный список"})
