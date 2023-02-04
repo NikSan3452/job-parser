@@ -32,6 +32,25 @@ function addToFavourite(index, vacancyUrl, vacancyTitle) {
     }
 }
 
+function addVacancyToBlackList(index, vacancyUrl) {
+    let vacancy = document.getElementById(`delete-vacancy-${index}`);
+    vacancy.remove();
+
+    fetch("/add-to-black-list/", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: JSON.stringify({ url: vacancyUrl }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            console.log(data);
+        });
+}
+
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== "") {
