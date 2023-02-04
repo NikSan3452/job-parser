@@ -23,8 +23,9 @@
     </div>
 
     <div class="col-10">
+        <p>Найдено {{ count_vacancy }} вакансий по Вашему запросу</p>
         {% for obj in object_list %}
-        <div class="card my-3">
+        <div class="card my-3" id="delete-vacancy-{{forloop.counter}}">
             <h5 class="card-header bg-primary bg-opacity-10">
                 <a class="text-decoration-none" href="{{ obj.url }}" target ="_blank">{{ obj.title }}</a>
             </h5>
@@ -56,12 +57,33 @@
                     <span class="card-value">{{ obj.published_at }}</span>
                 </p>
                 <div class="row favourite justify-content-end">
-                    <div class="col-1 text-center">
+                    <div class="col-4 text-end">
                         {% if user.is_authenticated %}
-                            <input {% for favourite in list_favourite %} {% if favourite.url == obj.url %} checked {% endif %} {% endfor %} type="checkbox" class="btn-check" id="btn-check-outlined-{{forloop.counter}}" autocomplete="off" onchange="addToFavourite('{{forloop.counter}}', '{{ obj.url }}', '{{ obj.title }}')">
+                            <input 
+                            type="checkbox"
+                            class="btn-check black-list"
+                            id="btn-check-delete-{{forloop.counter}}"
+                            autocomplete="off"
+                            onchange="addVacancyToBlackList('{{forloop.counter}}', '{{ obj.url }}')">
+
+                            <label class="btn btn-outline-primary add-to-black-list" for="btn-check-delete-{{forloop.counter}}">
+                                <i class="fa-solid fa-trash-can trash"></i>
+                            </label>
+
+                            <input {% for favourite in list_favourite %} {% if favourite.url == obj.url %}
+                            checked
+                            {% endif %}
+                            {% endfor %}
+                            type="checkbox"
+                            class="btn-check favourite-list"
+                            id="btn-check-outlined-{{forloop.counter}}"
+                            autocomplete="off"
+                            onchange="addToFavourite('{{forloop.counter}}', '{{ obj.url }}', '{{ obj.title }}')">
+
                             <label class="btn btn-outline-primary add-to-favourite" for="btn-check-outlined-{{forloop.counter}}">
                                 <i class="fa-solid fa-heart heart"></i>
                             </label>
+                            
                         {% endif %}
                     </div>
                 </div>
