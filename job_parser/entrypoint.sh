@@ -12,7 +12,6 @@ then
 fi
 
 python manage.py migrate
-python manage.py collectstatic
 python insert_data.py
 
 exec "$@"
