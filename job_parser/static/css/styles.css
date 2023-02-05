@@ -46,6 +46,10 @@ body {
     color: #C6D3E7;
 }
 
+.navbar-toggler-icon {
+    color: white;
+}
+
 .content {
     height: 100%;
     margin-top: auto;
