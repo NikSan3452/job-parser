@@ -1,17 +1,15 @@
 import json
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.core.paginator import Paginator
 from django.views import View
-from django.contrib import auth, messages
+from django.contrib import auth
 from django.views.generic.edit import FormView
 from django.contrib.auth.decorators import login_required
 
 from parser import parsers
 from parser.forms import SearchingForm
-from parser.mixins import VacancyDataMixin, VacancyHelpersMixin
-from parser.models import City, FavouriteVacancy, VacancyBlackList
-
+from parser.mixins import VacancyHelpersMixin
+from parser.models import FavouriteVacancy, VacancyBlackList
 
 
 class HomePageView(FormView):
@@ -19,6 +17,12 @@ class HomePageView(FormView):
 
     template_name = "parser/home.html"
     form_class = SearchingForm
+
+    def get(self, request):
+        super().get(request)
+        if not request.session or not request.session.session_key:
+            request.session.save()
+        return self.render_to_response(self.get_context_data())
 
     def form_valid(self, form):
         """Валидирует форму домашней страницы.
@@ -31,115 +35,77 @@ class HomePageView(FormView):
         return super().form_valid(form)
 
 
-class VacancyList(View, VacancyDataMixin, VacancyHelpersMixin):
+class VacancyList(View, VacancyHelpersMixin):
     form_class = SearchingForm
     template_name = "parser/list.html"
+    job_list = []
 
     async def get(self, request, *args, **kwargs):
         form = self.form_class()
 
+        # Получаем данные из кэша
+        self.job_list = await self.get_data_from_cache(request)
+
+        # Отображаем вакансии, которые в избранном
         list_favourite = await self.get_favourite_vacancy(request)
 
         context = {
             "form": form,
-            "object_list": VacancyDataMixin.job_list,
+            "object_list": self.job_list,
             "list_favourite": list_favourite,
         }
 
-        paginator = Paginator(VacancyDataMixin.job_list, 5)
-        page_number = request.GET.get("page")
-        page_obj = paginator.get_page(page_number)
-        context["object_list"] = page_obj
+        # Пагинация
+        await self.get_pagination(request, self.job_list, context)
 
         return render(request, self.template_name, context)
 
     async def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST)
 
-        list_favourite = await self.get_favourite_vacancy(request)
-
         if form.is_valid():
-            city = form.cleaned_data.get("city")
-            if city:
-                city = city.lower()
+            # Получаем данные из формы
+            (
+                city,
+                job,
+                date_from,
+                date_to,
+                title_search,
+                experience,
+            ) = await self.get_form_data(form)
 
-            job = form.cleaned_data.get("job")
-            if job:
-                job = job.lower()
+            # Получаем id города для API HeadHunter и Zarplata
+            city_id = await self.get_city_id(form, request)
 
-            date_from = form.cleaned_data.get("date_from")
-            date_to = form.cleaned_data.get("date_to")
-            title_search = form.cleaned_data.get("title_search")
-            experience = int(form.cleaned_data.get("experience"))
-            
-            # Если хотя бы один из параметров изменился начинается новый поиск,
-            # в противном случае запрос к API не отправляется и пользователь видит
-            # старые данные, хронящиеся в VacancyDataMixin.job_list
-            if (
-                VacancyDataMixin.job_list is None
-                or city != VacancyDataMixin.city
-                or job != VacancyDataMixin.job
-                or date_from != VacancyDataMixin.date_from
-                or date_to != VacancyDataMixin.date_to
-                or title_search != VacancyDataMixin.title_search
-                or experience != VacancyDataMixin.experience
-            ):
-                VacancyDataMixin.job_list.clear()
+            try:
+                # Получаем список вакансий
+                self.job_list = await parsers.run(
+                    city=city,
+                    city_from_db=city_id,
+                    job=job,
+                    date_from=date_from,
+                    date_to=date_to,
+                    title_search=title_search,
+                    experience=experience,
+                )
+            except Exception as exc:
+                print(f"Ошибка {exc} Сервер столкнулся с непредвиденной ошибкой")
 
-                try:
-                    # Получаем id города для API HeadHunter и Zarplata
-                    if city:
-                        city_from_db = await City.objects.filter(city=city).afirst()
-                        if city_from_db:
-                            city_id = city_from_db.city_id
-                        else:
-                            messages.error(
-                                request,
-                                """Город с таким названием отсуствует в базе""",
-                            )
-                    else:
-                        city_id = None
-
-                    # Получаем список вакансий
-                    VacancyDataMixin.job_list = await parsers.run(
-                        city=city,
-                        city_from_db=city_id,
-                        job=job,
-                        date_from=date_from,
-                        date_to=date_to,
-                        title_search=title_search,
-                        experience=experience,
-                    )
-
-                    # Присваиваем текущие значения из запроса временным переменным
-                    VacancyDataMixin.city = city
-                    VacancyDataMixin.job = job
-                    VacancyDataMixin.date_from = date_from
-                    VacancyDataMixin.date_to = date_to
-                    VacancyDataMixin.title_search = title_search
-                    VacancyDataMixin.experience = experience
-                    
-                except Exception as exc:
-                    print(f"Ошибка {exc} Сервер столкнулся с непредвиденной ошибкой")
+            # Сохраняем данные в кэше
+            await self.set_data_to_cache(request, self.job_list)
 
             # Проверяем добавлена ли вакансия в черный список
-            vacancies = await self.check_vacancy_black_list(VacancyDataMixin.job_list, request)
-
-            count_vacancy = len(vacancies)
+            vacancies = await self.check_vacancy_black_list(self.job_list, request)
 
             context = {
                 "object_list": vacancies,
-                "city": VacancyDataMixin.city,
-                "job": VacancyDataMixin.job,
+                "city": city,
+                "job": job,
                 "form": form,
-                "list_favourite": list_favourite,
-                'count_vacancy': count_vacancy
             }
 
-            paginator = Paginator(VacancyDataMixin.job_list, 5)
-            page_number = request.POST.get("page")
-            page_obj = paginator.get_page(page_number)
-            context["object_list"] = page_obj
+            # Пагинация
+            await self.get_pagination(request, self.job_list, context)
 
         return render(request, self.template_name, context)
 
@@ -165,7 +131,7 @@ def add_to_favourite_view(request):
                 user=user, url=vacancy_url, title=vacancy_title
             )
         except Exception as exc:
-            print(f"Ошибка базы данных {exc}")
+            print(f"Ошибка базы данных в функции {add_to_favourite_view.__name__}: {exc}")
     return JsonResponse({"status": "Вакансия добавлена в избранное"})
 
 
@@ -186,7 +152,9 @@ def delete_from_favourite_view(request):
             user = auth.get_user(request)
             FavouriteVacancy.objects.filter(user=user, url=vacancy_url).delete()
         except Exception as exc:
-            print(f"Ошибка базы данных {exc}")
+            print(
+                f"Ошибка базы данных в функции {delete_from_favourite_view.__name__}: {exc}"
+            )
     return JsonResponse({"status": "Вакансия удалена из избранного"})
 
 
@@ -207,5 +175,7 @@ def add_to_black_list_view(request):
             user = auth.get_user(request)
             VacancyBlackList.objects.get_or_create(user=user, url=vacancy_url)
         except Exception as exc:
-            print(f"Ошибка базы данных {exc}")
+            print(
+                f"Ошибка базы данных в функции {add_to_black_list_view.__name__}: {exc}"
+            )
     return JsonResponse({"status": "Вакансия добавлена в черный список"})
