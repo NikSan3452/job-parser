@@ -11,4 +11,4 @@
 - Возможность добавить вакансию в черный список
 - Фильтр по критериям  
 
-![Домашняя страница](https://ibb.co/wwqqyZB)
+[![home.png](https://i.postimg.cc/HLRSttdv/home.png)](https://postimg.cc/nsKYFBsq)
