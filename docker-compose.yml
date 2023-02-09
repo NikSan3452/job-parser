@@ -1,29 +1,15 @@
 version: '3.8'
 
 services:
-  django:
-    build:
-      context: ./job_parser
-      dockerfile: Dockerfile
-    command: gunicorn job_parser.wsgi:application --bind 0.0.0.0:8000
-    expose: 
-    - 8000
-    env_file:
-      - ./job_parser/.env
-    volumes:
-      - static_volume:/home/job_parser/django/staticfiles
-      - media_volume:/home/job_parser/django/mediafiles
-
-  nginx:
-    build: ./job_parser/nginx
-    ports:
-    - 1337:80
-    depends_on: 
-    - django
-    volumes:
-      - static_volume:/home/job_parser/django/staticfiles
-      - media_volume:/home/job_parser/django/mediafiles
-
+  redis:
+      image: redis
+      restart: always
+      ports:
+        - '6379:6379'
+      expose: 
+      - 6379
+      volumes:
+      - "redis:/data"
   db:
     image: postgres:latest
     volumes:
@@ -36,16 +22,34 @@ services:
     expose: 
     - 5432
   
-  redis:
-    image: redis
-    restart: always
-    ports:
-      - '6379:6379'
-      - '8001:8001'
+  django:
+    build:
+      context: ./job_parser
+      dockerfile: Dockerfile
+    command: gunicorn job_parser.wsgi:application --bind 0.0.0.0:8000
     expose: 
-    - 6379
+    - 8000
     env_file:
       - ./job_parser/.env
+    volumes:
+      - static_volume:/home/job_parser/django/staticfiles
+      - media_volume:/home/job_parser/django/mediafiles
+    depends_on: 
+    - db
+    - redis
+
+  nginx:
+    build: ./job_parser/nginx
+    ports:
+    - 1337:80
+    depends_on: 
+    - django
+    - redis
+    - db
+    volumes:
+      - static_volume:/home/job_parser/django/staticfiles
+      - media_volume:/home/job_parser/django/mediafiles
+
   
   adminer:
     image: adminer
@@ -62,3 +66,4 @@ volumes:
   postgres_data:
   static_volume:
   media_volume:
+  redis:
