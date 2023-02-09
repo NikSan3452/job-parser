@@ -2,9 +2,10 @@ import pickle
 from typing import Any
 from django.contrib import auth, messages
 from django.core.paginator import Paginator
-from redis import asyncio as aioredis
+import redis 
 from parser.models import City, FavouriteVacancy, VacancyBlackList
 
+cache = redis.Redis(host='localhost', port=6379, db=0)
 
 class VacancyHelpersMixin:
     """Класс предоставляет вспомогательные методы"""
@@ -118,20 +119,6 @@ class VacancyHelpersMixin:
                 )
         return city_id
 
-    async def create_redis_connection(self) -> Any:
-        """Создает подключение к Redis.
-
-        Returns:
-            Any: Подключение.
-        """
-        try:
-            cache = await aioredis.Redis(host="localhost", port=6379, db=0)
-        except Exception as exc:
-            print(
-                f"Ошибка подключения к Redis в функции {self.create_redis_connection.__name__}: {exc}"
-            )
-        return cache
-
     async def get_data_from_cache(self, request: Any) -> Any:
         """Получает данные из кэша.
 
@@ -141,10 +128,9 @@ class VacancyHelpersMixin:
         Returns:
             Any: Список вакансий.
         """
-        cache = await self.create_redis_connection()
         cache_key = await self.create_cache_key(request)
         try:
-            result = await cache.get(cache_key)
+            result = cache.get(cache_key)
             if result:
                 pickle_job_list = pickle.loads(result)
         except Exception as exc:
@@ -161,13 +147,12 @@ class VacancyHelpersMixin:
         Returns:
             Any: Список вакансий.
         """
-        cache = await self.create_redis_connection()
         cache_key = await self.create_cache_key(request)
         try:
-            pickle_job_list = await cache.set(cache_key, pickle.dumps(job_list), ex=3600)
+            pickle_dump = pickle.dumps(job_list)
+            cache.set(cache_key, pickle_dump, ex=3600)
         except Exception as exc:
             print(f"Ошибка в функции {self.set_data_to_cache.__name__}: {exc}")
-        return pickle_job_list
 
     async def create_cache_key(self, request: Any) -> str:
         """Создает кэш - ключ в виде идетификатора сессии.
