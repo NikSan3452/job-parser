@@ -9,7 +9,7 @@ from django.contrib.auth.models import AnonymousUser
 from parser.models import City, FavouriteVacancy, VacancyBlackList
 
 
-cache = redis.Redis(host='localhost', port=6379, db=0)
+cache = redis.Redis(host="172.18.0.2", port=6379, db=0)
 
 class VacancyHelpersMixin:
     """Класс предоставляет вспомогательные методы"""
@@ -139,10 +139,9 @@ class VacancyHelpersMixin:
         try:
             result = cache.get(cache_key)
             if result:
-                pickle_job_list = pickle.loads(result)
+                return pickle.loads(result)
         except Exception as exc:
             print(f"Ошибка в функции {self.get_data_from_cache.__name__}: {exc}")
-        return pickle_job_list
 
     async def set_data_to_cache(self, request: Any, job_list: list[dict]) -> Any:
         """Добавляет данные в кэш.
