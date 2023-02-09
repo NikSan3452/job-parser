@@ -1,10 +1,14 @@
 import pickle
+import redis 
 from typing import Any
+
 from django.contrib import auth, messages
 from django.core.paginator import Paginator
-import redis 
-from parser.models import City, FavouriteVacancy, VacancyBlackList
 from django.contrib.auth.models import AnonymousUser
+
+from parser.models import City, FavouriteVacancy, VacancyBlackList
+
+
 cache = redis.Redis(host='localhost', port=6379, db=0)
 
 class VacancyHelpersMixin:
