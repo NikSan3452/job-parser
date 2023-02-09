@@ -27,7 +27,7 @@ aiofiles
 
 celery
 
-redis>=4.2.0rc1
+redis
 
 python-dateutil
 
