@@ -12,6 +12,5 @@ then
 fi
 
 python manage.py migrate
-python insert_data.py
 
 exec "$@"
