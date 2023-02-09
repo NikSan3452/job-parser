@@ -7,6 +7,7 @@ from dateutil import parser
 from typing import Optional
 from dotenv import load_dotenv
 import pytz
+from dataclasses import dataclass
 
 load_dotenv()
 
@@ -130,9 +131,6 @@ class Utils:
         elif experience == 4:
             experience = "moreThan6"
         return experience
-
-
-from dataclasses import dataclass
 
 
 @dataclass
