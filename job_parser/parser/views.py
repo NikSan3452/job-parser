@@ -90,7 +90,7 @@ class VacancyList(View, VacancyHelpersMixin):
                 )
             except Exception as exc:
                 print(f"Ошибка {exc} Сервер столкнулся с непредвиденной ошибкой")
-
+            
             # Сохраняем данные в кэше
             await self.set_data_to_cache(request, self.job_list)
 
