@@ -34,9 +34,6 @@ services:
     volumes:
       - static_volume:/home/job_parser/django/staticfiles
       - media_volume:/home/job_parser/django/mediafiles
-    depends_on: 
-    - db
-    - redis
 
   nginx:
     build: ./job_parser/nginx
@@ -44,8 +41,6 @@ services:
     - 1337:80
     depends_on: 
     - django
-    - redis
-    - db
     volumes:
       - static_volume:/home/job_parser/django/staticfiles
       - media_volume:/home/job_parser/django/mediafiles
