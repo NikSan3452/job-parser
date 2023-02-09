@@ -1,5 +1,6 @@
+import os
 import pickle
-import redis 
+import redis
 from typing import Any
 
 from django.contrib import auth, messages
@@ -8,8 +9,12 @@ from django.contrib.auth.models import AnonymousUser
 
 from parser.models import City, FavouriteVacancy, VacancyBlackList
 
+from dotenv import load_dotenv
 
-cache = redis.Redis(host="172.18.0.2", port=6379, db=0)
+load_dotenv()
+
+cache = redis.Redis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"), db=0)
+
 
 class VacancyHelpersMixin:
     """Класс предоставляет вспомогательные методы"""
