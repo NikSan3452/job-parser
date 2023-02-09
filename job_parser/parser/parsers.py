@@ -132,6 +132,21 @@ class Utils:
         return experience
 
 
+from dataclasses import dataclass
+
+
+@dataclass
+class RequestParams:
+    city: Optional[str]
+    city_from_db: Optional[int]
+    job: Optional[str]
+    date_to: Optional[str | datetime.date]
+    date_from: Optional[str | datetime.date]
+    title_search: Optional[bool]
+    experience: int
+    utils: Utils
+
+
 class Parser:
     """Основной класс парсера."""
 
@@ -201,20 +216,14 @@ class Parser:
 
 
 class Headhunter(Parser):
-    def __init__(
-        self,
-        city_from_db: int,
-        job: str,
-        date_from: str | datetime.date,
-        date_to: str | datetime.date,
-        experience: int,
-        utils: Utils,
-    ) -> None:
-        self.utils = utils
-        self.city_from_db = city_from_db
-        self.job = job
-        self.date_from, self.date_to = self.utils.check_date(date_from, date_to)
-        self.experience = experience
+    def __init__(self, params: RequestParams) -> None:
+        self.utils = params.utils
+        self.city_from_db = params.city_from_db
+        self.job = params.job
+        self.date_from, self.date_to = self.utils.check_date(
+            params.date_from, params.date_to
+        )
+        self.experience = params.experience
 
         # Формируем параметры запроса к API Headhunter
         self.hh_params = {
@@ -227,18 +236,20 @@ class Headhunter(Parser):
         if self.city_from_db:
             self.hh_params["area"] = self.city_from_db
 
-        if experience > 0:
-            self.experience = self.utils.convert_experience(experience=experience)
+        if params.experience > 0:
+            self.experience = self.utils.convert_experience(experience=params.experience)
             self.hh_params["experience"] = self.experience
 
-    async def get_vacancy_from_headhunter(self) -> dict:
+    async def get_vacancy_from_headhunter(
+        self, url: ParserConfig = config.headhunter_url, job_board: str = "HeadHunter"
+    ) -> dict:
         """Формирует словарь с основными полями вакансий с сайта HeadHunter
 
         Returns:
             dict: Словарь с основными полями вакансий
         """
         job_list = await self.get_vacancies(
-            url=config.headhunter_url,
+            url=url,
             params=self.hh_params,
             pages=20,
             total_pages="pages",
@@ -247,7 +258,7 @@ class Headhunter(Parser):
         job_dict = {}
         # Формируем словарь с вакансиями
         for job in job_list[0]["items"]:
-            job_dict["job_board"] = "HeadHunter"
+            job_dict["job_board"] = job_board
             job_dict["url"] = job["alternate_url"]
             job_dict["title"] = job["name"]
 
@@ -284,19 +295,13 @@ class Headhunter(Parser):
 
 
 class SuperJob(Parser):
-    def __init__(
-        self,
-        city: str,
-        job: str,
-        date_from: str | datetime.date,
-        date_to: str | datetime.date,
-        experience: int,
-        utils: Utils,
-    ) -> None:
-        self.utils = utils
-        self.city = city
-        self.job = job
-        self.date_from, self.date_to = self.utils.check_date(date_from, date_to)
+    def __init__(self, params: RequestParams) -> None:
+        self.utils = params.utils
+        self.city = params.city
+        self.job = params.job
+        self.date_from, self.date_to = self.utils.check_date(
+            params.date_from, params.date_to
+        )
 
         # Формируем параметры запроса к API SuperJob
         self.sj_params = {
@@ -309,8 +314,8 @@ class SuperJob(Parser):
         if self.city:
             self.sj_params["town"] = self.city
 
-        if experience > 0:
-            self.sj_params["experience"] = experience
+        if params.experience > 0:
+            self.sj_params["experience"] = params.experience
 
     async def get_vacancy_from_superjob(self) -> dict:
         """Формирует словарь с основными полями вакансий с сайта SuperJob
@@ -380,82 +385,14 @@ class SuperJob(Parser):
         return job_dict
 
 
-class Zarplata(Parser):
-    def __init__(
-        self,
-        city_from_db: int,
-        job: str,
-        date_from: str | datetime.date,
-        date_to: str | datetime.date,
-        experience: int,
-        utils: Utils,
-    ) -> None:
-        self.utils = utils
-        self.city_from_db = city_from_db
-        self.job = job
-        self.date_from, self.date_to = self.utils.check_date(date_from, date_to)
-        self.experience = experience
-
-        # Формируем параметры запроса к API Zarplata
-        self.zp_params = {
-            "text": f"NAME:{self.job}",
-            "per_page": 100,
-            "date_from": self.date_from,
-            "date_to": self.date_to,
-        }
-
-        if self.city_from_db:
-            self.zp_params["area"] = self.city_from_db
-
-        if experience > 0:
-            self.experience = self.utils.convert_experience(experience=experience)
-            self.zp_params["experience"] = self.experience
+class Zarplata(Headhunter):
+    def __init__(self, params: RequestParams) -> None:
+        super().__init__(params)
 
     async def get_vacancy_from_zarplata(self) -> dict:
-        """Формирует словарь с основными полями вакансий с сайта Zarplata
-
-        Returns:
-            dict: Словарь с основными полями вакансий
-        """
-        job_list = await self.get_vacancies(
-            url=config.zarplata_url, params=self.zp_params, pages=20, total_pages="pages"
+        job_dict = await super().get_vacancy_from_headhunter(
+            config.zarplata_url, "Zarplata"
         )
-
-        job_dict = {}
-        # Формируем словарь с вакансиями
-        for job in job_list[0]["items"]:
-            job_dict["job_board"] = "Zarplata.ru"
-            job_dict["url"] = job["alternate_url"]
-            job_dict["title"] = job["name"]
-
-            if job["salary"]:
-                job_dict["salary_from"] = job["salary"]["from"]
-                job_dict["salary_to"] = job["salary"]["to"]
-                job_dict["salary_currency"] = job["salary"]["currency"]
-            else:
-                job_dict["salary_from"] = None
-                job_dict["salary_to"] = None
-
-            if job["snippet"]:
-                job_dict["responsibility"] = job["snippet"]["responsibility"]
-            else:
-                job_dict["responsibility"] = "Нет описания"
-
-            job_dict["city"] = job["area"]["name"]
-            job_dict["company"] = job["employer"]["name"]
-
-            if job["schedule"]:
-                job_dict["type_of_work"] = job["schedule"]["name"]
-            else:
-                job_dict["type_of_work"] = "Не указано"
-
-            # Конвертируем дату в удобочитаемый вид
-            published_date = parser.parse(job["published_at"]).replace(tzinfo=pytz.UTC)
-            job_dict["published_at"] = published_date
-
-            # Добавляем словарь с вакансией в общий список всех вакансий
-            Parser.general_job_list.append(job_dict.copy())
-
         print("Сбор вакансий с сайта Zarplata завершен")
         return job_dict
 
@@ -487,30 +424,20 @@ async def run(
 
     utils = Utils()
 
-    hh = Headhunter(
-        city_from_db=city_from_db,
-        job=job,
-        date_from=date_from,
-        date_to=date_to,
-        experience=experience,
-        utils=utils,
-    )
-    sj = SuperJob(
+    params = RequestParams(
         city=city,
-        job=job,
-        date_from=date_from,
-        date_to=date_to,
-        experience=experience,
-        utils=utils,
-    )
-    zp = Zarplata(
         city_from_db=city_from_db,
         job=job,
         date_from=date_from,
         date_to=date_to,
         experience=experience,
+        title_search=title_search,
         utils=utils,
     )
+
+    hh = Headhunter(params)
+    sj = SuperJob(params)
+    zp = Zarplata(params)
 
     # Очищаем список вакансий
     Parser.general_job_list.clear()
