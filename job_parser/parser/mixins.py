@@ -4,7 +4,7 @@ from django.contrib import auth, messages
 from django.core.paginator import Paginator
 import redis 
 from parser.models import City, FavouriteVacancy, VacancyBlackList
-
+from django.contrib.auth.models import AnonymousUser
 cache = redis.Redis(host='localhost', port=6379, db=0)
 
 class VacancyHelpersMixin:
@@ -51,7 +51,10 @@ class VacancyHelpersMixin:
         """
         try:
             user = auth.get_user(request)
-            list_favourite = FavouriteVacancy.objects.filter(user=user)
+            if not isinstance(user, AnonymousUser):
+                list_favourite = FavouriteVacancy.objects.filter(user=user)
+            else:
+                list_favourite = []
             return list_favourite
         except Exception as exc:
             print(f"Ошибка базы данных в функции {self.get_favourite_vacancy}: {exc}")
