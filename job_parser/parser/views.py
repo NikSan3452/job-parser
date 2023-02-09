@@ -47,6 +47,7 @@ class VacancyList(View, VacancyHelpersMixin):
         self.job_list = await self.get_data_from_cache(request)
 
         # Отображаем вакансии, которые в избранном
+
         list_favourite = await self.get_favourite_vacancy(request)
 
         context = {
@@ -90,7 +91,7 @@ class VacancyList(View, VacancyHelpersMixin):
                 )
             except Exception as exc:
                 print(f"Ошибка {exc} Сервер столкнулся с непредвиденной ошибкой")
-            
+
             # Сохраняем данные в кэше
             await self.set_data_to_cache(request, self.job_list)
 
