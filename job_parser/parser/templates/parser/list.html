@@ -34,6 +34,7 @@
             </h5>
             <div class="card-body">
                 <p><span class="card-param">Вакансия с сайта:</span> <span class="card-value">{{ obj.job_board }}</span></p>
+                
                 <p>
                     {% if obj.salary_from %} <span class="card-param">Зарплата от</span>
                     <span class="card-value">{{obj.salary_from}}</span> {% endif %}
@@ -42,20 +43,30 @@
                     {% if obj.salary_from or obj.salary_to %}
                     <span class="card-param">{{ obj.salary_currency }}</span>{% endif %}
                 </p>
+
+                {% if obj.job_board == 'SuperJob' %}
                 <p><span class="card-param">Тип занятости: </span> <span class="card-value">{{ obj.type_of_work }}</span></p>
+                <p><span class="card-param">Формат работы: </span> <span class="card-value">{{ obj.place_of_work }}</span></p>
+                {% else %}
+                <p><span class="card-param">Тип занятости: </span> <span class="card-value">{{ obj.type_of_work }}</span></p>
+                {% endif %}
+
                 {% if obj.experience %}
                     <p><span class="card-param">Опыт работы: </span> <span class="card-value">{{ obj.experience }}</span></p>
                 {% endif %}
+
                 <p class="card-text">
                     {% if obj.responsibility  %}
                     <span class="card-param">Обязанности:</span> {{ obj.requirement|truncatechars:300 }}
                     {% endif %}
                 </p>
+
                 <p class="card-text">
                     {% if obj.requirement %}
                     <span class="card-param">Требования:</span> {{ obj.responsibility|truncatechars:300 }}
                     {% endif %}
                 </p>
+
                 <p>
                     <span class="card-param">Город:</span>
                     <span class="card-value">{{ obj.city }}</span>
@@ -64,6 +75,7 @@
                     | <span class="card-param">Дата публикации:</span>
                     <span class="card-value">{{ obj.published_at }}</span>
                 </p>
+
                 <div class="row favourite justify-content-end">
                     <div class="col-12 text-end">
                         {% if user.is_authenticated %}
