@@ -371,6 +371,11 @@ class SuperJob(Parser):
                 job_dict["type_of_work"] = job["type_of_work"]["title"]
             else:
                 job_dict["type_of_work"] = "Не указано"
+                
+            if job['place_of_work']:
+                job_dict['place_of_work'] = job['place_of_work']["title"]
+            else:
+                job_dict['place_of_work'] = 'Нет описания'
 
             if job["experience"]:
                 job_dict["experience"] = job["experience"]["title"]
