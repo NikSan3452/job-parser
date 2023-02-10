@@ -270,8 +270,10 @@ class Headhunter(Parser):
 
             if job["snippet"]:
                 job_dict["responsibility"] = job["snippet"]["responsibility"]
+                job_dict['requirement'] = job["snippet"]['requirement']
             else:
                 job_dict["responsibility"] = "Нет описания"
+                job_dict['requirement'] = "Нет описания"
 
             job_dict["city"] = job["area"]["name"]
             job_dict["company"] = job["employer"]["name"]
@@ -350,11 +352,16 @@ class SuperJob(Parser):
                 job_dict["salary_currency"] = job["currency"]
             else:
                 job_dict["salary_currency"] = "Валюта не указана"
+            
+            if job['work']:
+                job_dict['responsibility'] = job['work']
+            else:
+                job_dict['responsibility'] = "Нет описания" 
 
             if job["candidat"]:
-                job_dict["responsibility"] = job["candidat"]
+                job_dict["requirement"] = job["candidat"]
             else:
-                job_dict["responsibility"] = "Нет описания"
+                job_dict["requirement"] = "Нет описания"
 
             if job["town"]:
                 job_dict["city"] = job["town"]["title"]
