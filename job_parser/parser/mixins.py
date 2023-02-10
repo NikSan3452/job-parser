@@ -95,18 +95,18 @@ class VacancyHelpersMixin:
         city = form.cleaned_data.get("city")
         if city:
             city = city.lower()
+        else:
+            city = None
 
         job = form.cleaned_data.get("job")
-        if job:
-            job = job.lower()
-
         date_from = form.cleaned_data.get("date_from")
         date_to = form.cleaned_data.get("date_to")
         title_search = form.cleaned_data.get("title_search")
         experience = int(form.cleaned_data.get("experience"))
-        return city, job, date_from, date_to, title_search, experience
+        remote = form.cleaned_data.get('remote')
+        return city, job, date_from, date_to, title_search, experience, remote
 
-    async def get_city_id(self, form: Any, request: Any) -> str | None:
+    async def get_city_id(self, city: Any, request: Any) -> str | None:
         """Получет id города из базы данных.
             Данный id необходим для API Headhunter и Zarplata,
             т.к поиск по городам осуществляется по их id.
@@ -114,11 +114,11 @@ class VacancyHelpersMixin:
             form (Any): Форма.
             request (Any): Запрос.
         Returns: str | None: id города."""
-        city = await self.get_form_data(form)
         city_id = None
-        if city[0]:
+        
+        if city:
             try:
-                city_from_db = await City.objects.filter(city=city[0]).afirst()
+                city_from_db = await City.objects.filter(city=city).afirst()
             except Exception as exc:
                 print(f"Ошибка базы данных в функции {self.get_city_id.__name__}: {exc}")
 

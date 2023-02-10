@@ -73,10 +73,11 @@ class VacancyList(View, VacancyHelpersMixin):
                 date_to,
                 title_search,
                 experience,
+                remote,
             ) = await self.get_form_data(form)
-
+            
             # Получаем id города для API HeadHunter и Zarplata
-            city_id = await self.get_city_id(form, request)
+            city_id = await self.get_city_id(city, request)
 
             try:
                 # Получаем список вакансий
@@ -88,6 +89,7 @@ class VacancyList(View, VacancyHelpersMixin):
                     date_to=date_to,
                     title_search=title_search,
                     experience=experience,
+                    remote=remote,
                 )
             except Exception as exc:
                 print(f"Ошибка {exc} Сервер столкнулся с непредвиденной ошибкой")

@@ -132,6 +132,17 @@ class Utils:
             experience = "moreThan6"
         return experience
 
+    @staticmethod
+    def sorted_by_remote_work(remote: bool, job_list: list[dict]):
+        sorted_list: list[dict] = []
+        if remote:
+            for job in job_list:
+                if job.get("type_of_work") == "Удаленная работа":
+                    sorted_list.append(job)
+                elif job.get("place_of_work") == "Удалённая работа (на дому)":
+                    sorted_list.append(job)
+        return sorted_list
+
 
 @dataclass
 class RequestParams:
@@ -140,7 +151,6 @@ class RequestParams:
     job: Optional[str]
     date_to: Optional[str | datetime.date]
     date_from: Optional[str | datetime.date]
-    title_search: Optional[bool]
     experience: int
     utils: Utils
 
@@ -270,10 +280,10 @@ class Headhunter(Parser):
 
             if job["snippet"]:
                 job_dict["responsibility"] = job["snippet"]["responsibility"]
-                job_dict['requirement'] = job["snippet"]['requirement']
+                job_dict["requirement"] = job["snippet"]["requirement"]
             else:
                 job_dict["responsibility"] = "Нет описания"
-                job_dict['requirement'] = "Нет описания"
+                job_dict["requirement"] = "Нет описания"
 
             job_dict["city"] = job["area"]["name"]
             job_dict["company"] = job["employer"]["name"]
@@ -352,11 +362,11 @@ class SuperJob(Parser):
                 job_dict["salary_currency"] = job["currency"]
             else:
                 job_dict["salary_currency"] = "Валюта не указана"
-            
-            if job['work']:
-                job_dict['responsibility'] = job['work']
+
+            if job["work"]:
+                job_dict["responsibility"] = job["work"]
             else:
-                job_dict['responsibility'] = "Нет описания" 
+                job_dict["responsibility"] = "Нет описания"
 
             if job["candidat"]:
                 job_dict["requirement"] = job["candidat"]
@@ -371,11 +381,11 @@ class SuperJob(Parser):
                 job_dict["type_of_work"] = job["type_of_work"]["title"]
             else:
                 job_dict["type_of_work"] = "Не указано"
-                
-            if job['place_of_work']:
-                job_dict['place_of_work'] = job['place_of_work']["title"]
+
+            if job["place_of_work"]:
+                job_dict["place_of_work"] = job["place_of_work"]["title"]
             else:
-                job_dict['place_of_work'] = 'Нет описания'
+                job_dict["place_of_work"] = "Нет описания"
 
             if job["experience"]:
                 job_dict["experience"] = job["experience"]["title"]
@@ -411,23 +421,25 @@ async def run(
     city: Optional[str] = None,
     city_from_db: Optional[int] = None,
     job: Optional[str] = "Python",
-    date_to: Optional[str | datetime.date] = "",
-    date_from: Optional[str | datetime.date] = "",
+    date_to: Optional[str | datetime.date] = None,
+    date_from: Optional[str | datetime.date] = None,
     title_search: Optional[bool] = False,
     experience: int = 0,
+    remote: Optional[bool] = False,
 ) -> list[dict]:
     """Отвечает за запуск парсера.
 
     Args:
         city (Optional[str], optional): Город. По умолчанию "Москва".
         city_from_db (Optional[int], optional): Код города из базы данных.
-        Необходим для поиска в API HeadHUnter. По умолчанию 1.
-        job (Optional[str], optional): Специальность. По умолчанию "Python".
-        date_to (Optional[datetime.date], optional): Дата до. По умолчанию сегодня.
+        Необходим для поиска в API HeadHUnter. По-умолчанию 1.
+        job (Optional[str], optional): Специальность. По-умолчанию "Python".
+        date_to (Optional[datetime.date], optional): Дата до. По-умолчанию сегодня.
         date_from (Optional[datetime.date], optional): Дата от.
-        По умолчанию высчитывается по формуле: 'Сегодня - 10 дней'.
+        По-умолчанию высчитывается по формуле: 'Сегодня - 10 дней'.
         title_search (Optional[bool]): Если True, то поиск идет по заголовкам вакансий.
-
+        experience (int): Опыт работы. По-умолчанию False.
+        remote (Optional[bool]): Если True, то поиск идет по удаленной работе.
     Returns:
         list[dict]: Список словарей с вакансиями.
     """
@@ -441,7 +453,6 @@ async def run(
         date_from=date_from,
         date_to=date_to,
         experience=experience,
-        title_search=title_search,
         utils=utils,
     )
 
@@ -461,11 +472,17 @@ async def run(
     await asyncio.gather(task1, task2, task3)
 
     # Сортируем получемнный список вакансий
-    sorted_job_list_by_date = utils.sort_by_date(Parser.general_job_list, "published_at")
+    sorted_job_list = utils.sort_by_date(Parser.general_job_list, "published_at")
     if title_search:
-        sorted_job_list_by_date = utils.sort_by_title(sorted_job_list_by_date, job)
-    # print(f"Количество вакансий: {len(sorted_job_list_by_date)}", sorted_job_list_by_date)
-    return sorted_job_list_by_date
+        sorted_job_list = utils.sort_by_title(sorted_job_list, job)
+    if remote:
+        sorted_job_list = utils.sorted_by_remote_work(remote, sorted_job_list)
+    if remote and title_search:
+        sorted_job_list_title = utils.sort_by_title(sorted_job_list, job)
+        sorted_job_list = utils.sorted_by_remote_work(remote, sorted_job_list_title)
+
+    # print(f"Количество вакансий: {len(sorted_job_list)}", sorted_job_list)
+    return sorted_job_list
 
 
 if __name__ == "__main__":

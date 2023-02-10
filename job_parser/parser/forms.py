@@ -29,13 +29,16 @@ class SearchingForm(forms.Form):
         required=False,
         widget=forms.DateInput(format="%m/%d/%Y", attrs={"type": "date"}),
     )
-    title_search = forms.BooleanField(
-        label="Искать в заголовках вакансий", required=False, widget=forms.CheckboxInput()
-    )
     experience = forms.ChoiceField(
         label="Опыт работы",
         initial=exp_values[0],
         required=False,
         choices=exp_values,
         widget=forms.Select(),
+    )
+    title_search = forms.BooleanField(
+        label="Искать в заголовках вакансий(чувствителен к регистру)", required=False, widget=forms.CheckboxInput()
+    )
+    remote = forms.BooleanField(
+        label="Удаленная работа", required=False, widget=forms.CheckboxInput()
     )
