@@ -58,7 +58,7 @@ class VacancyList(View, VacancyHelpersMixin):
         }
         context["city"] = request.GET.get("city")
         context["job"] = request.GET.get("job")
-
+        await self.check_vacancy_black_list(self.job_list, request)
         # Пагинация
         await self.get_pagination(request, self.job_list, context)
 
