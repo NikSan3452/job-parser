@@ -41,8 +41,9 @@ class VacancyList(View, VacancyHelpersMixin):
     job_list = []
 
     async def get(self, request, *args, **kwargs):
-        form = self.form_class()
-
+        form_data = request.GET.dict()
+        form = self.form_class(initial=form_data)
+        
         # Получаем данные из кэша
         self.job_list = await self.get_data_from_cache(request)
 
@@ -55,6 +56,8 @@ class VacancyList(View, VacancyHelpersMixin):
             "object_list": self.job_list,
             "list_favourite": list_favourite,
         }
+        context["city"] = request.GET.get("city")
+        context["job"] = request.GET.get("job")
 
         # Пагинация
         await self.get_pagination(request, self.job_list, context)
