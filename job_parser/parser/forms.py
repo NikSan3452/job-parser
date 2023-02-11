@@ -37,7 +37,7 @@ class SearchingForm(forms.Form):
         widget=forms.Select(),
     )
     title_search = forms.BooleanField(
-        label="Искать в заголовках вакансий(чувствителен к регистру)", required=False, widget=forms.CheckboxInput()
+        label="Искать в заголовках вакансий (чувствителен к регистру)", required=False, widget=forms.CheckboxInput()
     )
     remote = forms.BooleanField(
         label="Удаленная работа", required=False, widget=forms.CheckboxInput()
