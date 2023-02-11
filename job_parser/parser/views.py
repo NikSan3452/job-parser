@@ -42,6 +42,8 @@ class VacancyList(View, VacancyHelpersMixin):
 
     async def get(self, request, *args, **kwargs):
         form_data = request.GET.dict()
+        if request.GET.get("city") == 'None':
+            del form_data['city']
         form = self.form_class(initial=form_data)
         
         # Получаем данные из кэша
@@ -58,7 +60,10 @@ class VacancyList(View, VacancyHelpersMixin):
         }
         context["city"] = request.GET.get("city")
         context["job"] = request.GET.get("job")
+
+        # Проверяем добавлена ли вакансия в черный список
         await self.check_vacancy_black_list(self.job_list, request)
+
         # Пагинация
         await self.get_pagination(request, self.job_list, context)
 
