@@ -22,12 +22,12 @@ class SearchingForm(forms.Form):
     date_from = forms.DateField(
         label="Дата от",
         required=False,
-        widget=forms.DateInput(format="%m/%d/%Y", attrs={"type": "date"}),
+        widget=forms.DateInput(format="%d/%m/%Y", attrs={"type": "date"}),
     )
     date_to = forms.DateField(
         label="Дата до",
         required=False,
-        widget=forms.DateInput(format="%m/%d/%Y", attrs={"type": "date"}),
+        widget=forms.DateInput(format="%d/%m/%Y", attrs={"type": "date"}),
     )
     experience = forms.ChoiceField(
         label="Опыт работы",
