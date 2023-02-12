@@ -57,13 +57,13 @@
 
                 <p class="card-text">
                     {% if obj.responsibility  %}
-                    <span class="card-param">Обязанности:</span> {{ obj.requirement|truncatechars:300 }}
+                    <span class="card-param">Обязанности:</span> {{ obj.responsibility|truncatechars:300 }}
                     {% endif %}
                 </p>
 
                 <p class="card-text">
                     {% if obj.requirement %}
-                    <span class="card-param">Требования:</span> {{ obj.responsibility|truncatechars:300 }}
+                    <span class="card-param">Требования:</span> {{ obj.requirement|truncatechars:300 }}
                     {% endif %}
                 </p>
 
