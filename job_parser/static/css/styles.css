@@ -116,3 +116,14 @@ body {
     display: flex;
     justify-content: center;
 }
+
+.scroll {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.fa-arrow-up, .fa-arrow-down {
+    font-size: 20px;
+}
