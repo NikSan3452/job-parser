@@ -41,11 +41,25 @@ class VacancyList(View, VacancyHelpersMixin):
     job_list = []
 
     async def get(self, request, *args, **kwargs):
-        form_data = request.GET.dict()
-        if request.GET.get("city") == 'None':
-            del form_data['city']
-        form = self.form_class(initial=form_data)
-        
+        request_data = request.GET.dict()
+
+        if request_data.get('city') == "None":
+            del request_data["city"]
+        if request_data.get('date_from') == "None":
+            del request_data["date_from"]
+        if request_data.get('date_to') == "None":
+            del request_data["date_to"]
+        if request_data.get('title_search') == "False":
+            del request_data["title_search"]
+        if request_data.get('experience') == "None":
+            del request_data["experience"]
+        if request_data.get('remote') == "False":
+            del request_data["remote"]
+
+        form = self.form_class(initial=request_data)
+
+        print(request_data)
+
         # Получаем данные из кэша
         self.job_list = await self.get_data_from_cache(request)
 
@@ -58,8 +72,14 @@ class VacancyList(View, VacancyHelpersMixin):
             "object_list": self.job_list,
             "list_favourite": list_favourite,
         }
-        context["city"] = request.GET.get("city")
-        context["job"] = request.GET.get("job")
+
+        context["city"] = request_data.get('city')
+        context["job"] = request_data.get('job')
+        context["date_from"] = request_data.get('date_from')
+        context["date_to"] = request_data.get('date_to')
+        context["title_search"] = request_data.get('title_search')
+        context["experience"] = request_data.get('experience')
+        context["remote"] = request_data.get('remote')
 
         # Проверяем добавлена ли вакансия в черный список
         await self.check_vacancy_black_list(self.job_list, request)
@@ -83,7 +103,7 @@ class VacancyList(View, VacancyHelpersMixin):
                 experience,
                 remote,
             ) = await self.get_form_data(form)
-            
+
             # Получаем id города для API HeadHunter и Zarplata
             city_id = await self.get_city_id(city, request)
 
@@ -112,6 +132,11 @@ class VacancyList(View, VacancyHelpersMixin):
                 "object_list": vacancies,
                 "city": city,
                 "job": job,
+                "date_from": date_from,
+                "date_to": date_to,
+                "title_search": title_search,
+                "experience": experience,
+                "remote": remote,
                 "form": form,
             }
 
