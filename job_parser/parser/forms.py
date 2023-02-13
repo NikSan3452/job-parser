@@ -12,11 +12,14 @@ class SearchingForm(forms.Form):
     )
 
     job = forms.CharField(
-        label="Что ищем ?", widget=forms.TextInput(attrs={"placeholder": "Поиск"})
+        label="Что ищем ?",
+        max_length=250,
+        widget=forms.TextInput(attrs={"placeholder": "Поиск"}),
     )
     city = forms.CharField(
         label="Город",
         required=False,
+        max_length=250,
         widget=forms.TextInput(attrs={"placeholder": "Город"}),
     )
     date_from = forms.DateField(
@@ -37,7 +40,9 @@ class SearchingForm(forms.Form):
         widget=forms.Select(),
     )
     title_search = forms.BooleanField(
-        label="Искать в заголовках вакансий (чувствителен к регистру)", required=False, widget=forms.CheckboxInput()
+        label="Искать в заголовках вакансий (чувствителен к регистру)",
+        required=False,
+        widget=forms.CheckboxInput(),
     )
     remote = forms.BooleanField(
         label="Удаленная работа", required=False, widget=forms.CheckboxInput()
