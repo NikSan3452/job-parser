@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-import dj_database_url
 
 load_dotenv()
 
@@ -51,9 +50,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    # 'django.middleware.cache.UpdateCacheMiddleware',
     "django.middleware.common.CommonMiddleware",
-    # 'django.middleware.cache.FetchFromCacheMiddleware',
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -174,16 +171,6 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
-
-# # caches
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-#         'LOCATION': os.path.join(BASE_DIR, 'job_parser_caches'),
-#     }
-# }
-
-# CACHE_MIDDLEWARE_SECONDS = 60
 
 # Redis
 REDIS_HOST = "127.0.0.1"
