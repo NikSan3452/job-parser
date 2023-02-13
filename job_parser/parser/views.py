@@ -36,33 +36,28 @@ class HomePageView(FormView):
 
 
 class VacancyListView(View, VacancyHelpersMixin):
+    """Представление страницы со списком ванкасий."""
+
     form_class = SearchingForm
     template_name = "parser/list.html"
     job_list = []
 
     async def get(self, request, *args, **kwargs):
-        request_data = request.GET.dict()
+        """Отвечает за обработку GET запросов к странице со списком вакансий.
 
-        if request_data.get('city') == "None":
-            del request_data["city"]
-        if request_data.get('date_from') == "None":
-            del request_data["date_from"]
-        if request_data.get('date_to') == "None":
-            del request_data["date_to"]
-        if request_data.get('title_search') == "False":
-            del request_data["title_search"]
-        if request_data.get('experience') == "None":
-            del request_data["experience"]
-        if request_data.get('remote') == "False":
-            del request_data["remote"]
+        Args:
+            request: Запрос.
 
+        Returns: HttpResponse
+        """
+        # Проверяем параметры запроса перед тем, как передать в форму
+        request_data = await self.check_request_data(request)
         form = self.form_class(initial=request_data)
 
         # Получаем данные из кэша
         self.job_list = await self.get_data_from_cache(request)
 
         # Отображаем вакансии, которые в избранном
-
         list_favourite = await self.get_favourite_vacancy(request)
 
         context = {
@@ -71,13 +66,13 @@ class VacancyListView(View, VacancyHelpersMixin):
             "list_favourite": list_favourite,
         }
 
-        context["city"] = request_data.get('city')
-        context["job"] = request_data.get('job')
-        context["date_from"] = request_data.get('date_from')
-        context["date_to"] = request_data.get('date_to')
-        context["title_search"] = request_data.get('title_search')
-        context["experience"] = request_data.get('experience')
-        context["remote"] = request_data.get('remote')
+        context["city"] = request_data.get("city")
+        context["job"] = request_data.get("job")
+        context["date_from"] = request_data.get("date_from")
+        context["date_to"] = request_data.get("date_to")
+        context["title_search"] = request_data.get("title_search")
+        context["experience"] = request_data.get("experience")
+        context["remote"] = request_data.get("remote")
 
         # Проверяем добавлена ли вакансия в черный список
         await self.check_vacancy_black_list(self.job_list, request)
@@ -88,6 +83,13 @@ class VacancyListView(View, VacancyHelpersMixin):
         return render(request, self.template_name, context)
 
     async def post(self, request, *args, **kwargs):
+        """Отвечает за обработку POST запросов к странице со списком вакансий.
+
+        Args:
+            request: Запрос.
+
+        Returns: HttpResponse
+        """
         form = self.form_class(request.POST)
 
         if form.is_valid():
@@ -118,7 +120,9 @@ class VacancyListView(View, VacancyHelpersMixin):
                     remote=remote,
                 )
             except Exception as exc:
-                print(f"Ошибка {exc} Сервер столкнулся с непредвиденной ошибкой")
+                print(
+                    f"Ошибка в функции {self.post.__name__}: {exc} Сервер столкнулся с непредвиденной ошибкой"
+                )
 
             # Сохраняем данные в кэше
             await self.set_data_to_cache(request, self.job_list)

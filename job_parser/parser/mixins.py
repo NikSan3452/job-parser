@@ -19,6 +19,32 @@ cache = redis.Redis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"), 
 class VacancyHelpersMixin:
     """Класс предоставляет вспомогательные методы"""
 
+    async def check_request_data(self, request: Any) -> dict:
+        """Проверяет параметры запроса и если они None или False,
+        удаляет их из словаря.
+
+        Args:
+            request (Any): Запрос.
+
+        Returns:
+            dict: Словарь с параметрами запроса.
+        """
+        request_data = request.GET.dict()
+
+        if request_data.get("city") == "None":
+            del request_data["city"]
+        if request_data.get("date_from") == "None":
+            del request_data["date_from"]
+        if request_data.get("date_to") == "None":
+            del request_data["date_to"]
+        if request_data.get("title_search") == "False":
+            del request_data["title_search"]
+        if request_data.get("experience") == "None":
+            del request_data["experience"]
+        if request_data.get("remote") == "False":
+            del request_data["remote"]
+        return request_data
+
     async def check_vacancy_black_list(
         self, vacancies: list[dict], request: Any
     ) -> list[dict]:
@@ -103,7 +129,7 @@ class VacancyHelpersMixin:
         date_to = form.cleaned_data.get("date_to")
         title_search = form.cleaned_data.get("title_search")
         experience = int(form.cleaned_data.get("experience"))
-        remote = form.cleaned_data.get('remote')
+        remote = form.cleaned_data.get("remote")
         return city, job, date_from, date_to, title_search, experience, remote
 
     async def get_city_id(self, city: Any, request: Any) -> str | None:
@@ -115,7 +141,7 @@ class VacancyHelpersMixin:
             request (Any): Запрос.
         Returns: str | None: id города."""
         city_id = None
-        
+
         if city:
             try:
                 city_from_db = await City.objects.filter(city=city).afirst()
