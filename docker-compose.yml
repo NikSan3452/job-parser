@@ -55,7 +55,6 @@ services:
       app_net:
         ipv4_address: 172.16.238.13
 
-  
   adminer:
     image: adminer
     restart: always
