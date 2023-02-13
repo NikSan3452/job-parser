@@ -35,7 +35,7 @@ class HomePageView(FormView):
         return super().form_valid(form)
 
 
-class VacancyList(View, VacancyHelpersMixin):
+class VacancyListView(View, VacancyHelpersMixin):
     form_class = SearchingForm
     template_name = "parser/list.html"
     job_list = []
@@ -57,8 +57,6 @@ class VacancyList(View, VacancyHelpersMixin):
             del request_data["remote"]
 
         form = self.form_class(initial=request_data)
-
-        print(request_data)
 
         # Получаем данные из кэша
         self.job_list = await self.get_data_from_cache(request)
