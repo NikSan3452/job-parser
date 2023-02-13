@@ -42,3 +42,5 @@ mypy
 psycopg2-binary
 
 dj-database-url
+
+pytest-django
