@@ -53,7 +53,7 @@ class VacancyListView(View, VacancyHelpersMixin):
         # Проверяем параметры запроса перед тем, как передать в форму
         request_data = await self.check_request_data(request)
         form = self.form_class(initial=request_data)
-        
+
         # Получаем данные из кэша
         self.job_list = await self.get_data_from_cache(request)
 
