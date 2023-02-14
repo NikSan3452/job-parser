@@ -131,6 +131,7 @@ class VacancyListView(View, VacancyHelpersMixin):
 
             # Отображаем вакансии, которые в избранном
             list_favourite = await self.get_favourite_vacancy(request)
+            
             context = {
                 "city": city,
                 "job": job,
