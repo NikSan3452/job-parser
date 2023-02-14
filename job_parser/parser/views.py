@@ -53,7 +53,7 @@ class VacancyListView(View, VacancyHelpersMixin):
         # Проверяем параметры запроса перед тем, как передать в форму
         request_data = await self.check_request_data(request)
         form = self.form_class(initial=request_data)
-
+        print('aaaaaaaaaaaaaaaaaaa', request_data)
         # Получаем данные из кэша
         self.job_list = await self.get_data_from_cache(request)
 
@@ -106,7 +106,6 @@ class VacancyListView(View, VacancyHelpersMixin):
 
             # Получаем id города для API HeadHunter и Zarplata
             city_id = await self.get_city_id(city, request)
-
             try:
                 # Получаем список вакансий
                 self.job_list = await parsers.run(
@@ -130,8 +129,9 @@ class VacancyListView(View, VacancyHelpersMixin):
             # Проверяем добавлена ли вакансия в черный список
             vacancies = await self.check_vacancy_black_list(self.job_list, request)
 
+            # Отображаем вакансии, которые в избранном
+            list_favourite = await self.get_favourite_vacancy(request)
             context = {
-                "object_list": vacancies,
                 "city": city,
                 "job": job,
                 "date_from": date_from,
@@ -140,6 +140,8 @@ class VacancyListView(View, VacancyHelpersMixin):
                 "experience": experience,
                 "remote": remote,
                 "form": form,
+                "object_list": vacancies,
+                'list_favourite': list_favourite
             }
 
             # Пагинация
