@@ -37,11 +37,11 @@ class VacancyHelpersMixin:
             del request_data["date_from"]
         if request_data.get("date_to") == "None":
             del request_data["date_to"]
-        if request_data.get("title_search") == "False":
+        if request_data.get("title_search") == "False" or request_data.get("title_search") == 'None':
             del request_data["title_search"]
         if request_data.get("experience") == "None":
             del request_data["experience"]
-        if request_data.get("remote") == "False":
+        if request_data.get("remote") == "False" or request_data.get("remote") == 'None':
             del request_data["remote"]
         return request_data
 
