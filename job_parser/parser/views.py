@@ -131,7 +131,7 @@ class VacancyListView(View, VacancyHelpersMixin):
 
             # Отображаем вакансии, которые в избранном
             list_favourite = await self.get_favourite_vacancy(request)
-            
+
             context = {
                 "city": city,
                 "job": job,
@@ -142,7 +142,7 @@ class VacancyListView(View, VacancyHelpersMixin):
                 "remote": remote,
                 "form": form,
                 "object_list": vacancies,
-                'list_favourite': list_favourite
+                "list_favourite": list_favourite,
             }
 
             # Пагинация
@@ -161,11 +161,12 @@ def add_to_favourite_view(request):
     Returns:
         _type_: JsonResponse.
     """
-    data = json.load(request)
-    vacancy_url = data.get("url")
-    vacancy_title = data.get("title")
-
     if request.method == "POST":
+
+        data = json.load(request)
+        vacancy_url = data.get("url")
+        vacancy_title = data.get("title")
+
         try:
             user = auth.get_user(request)
             FavouriteVacancy.objects.get_or_create(
@@ -186,9 +187,11 @@ def delete_from_favourite_view(request):
     Returns:
         _type_: JsonResponse.
     """
-    data = json.load(request)
-    vacancy_url = data.get("url")
     if request.method == "POST":
+
+        data = json.load(request)
+        vacancy_url = data.get("url")
+
         try:
             user = auth.get_user(request)
             FavouriteVacancy.objects.filter(user=user, url=vacancy_url).delete()
@@ -209,9 +212,11 @@ def add_to_black_list_view(request):
     Returns:
         _type_: JsonResponse.
     """
-    data = json.load(request)
-    vacancy_url = data.get("url")
     if request.method == "POST":
+
+        data = json.load(request)
+        vacancy_url = data.get("url")
+        
         try:
             user = auth.get_user(request)
             VacancyBlackList.objects.get_or_create(user=user, url=vacancy_url)
