@@ -1,90 +1,86 @@
-import httpx
 import json
+import pytest
+
+from typing import Callable
+from django.test import Client
+from django.contrib.auth import get_user_model
+from parser.models import FavouriteVacancy, VacancyBlackList
 from assertions import Assertions
 
 BASE_URL: str = "http://127.0.0.1:8000"
+POSITIVE_STATUS_CODE: int = 200
 
+
+@pytest.mark.django_db
 class TestHomePage:
-    def test_get_homepage(self) -> None:
-        expected_status_code: int = 200
-
-        response = httpx.get(url=BASE_URL)
-        Assertions.assert_code_status(response, expected_status_code)
+    def test_get_homepage(self, client: Client) -> None:
+        response = client.get(path=f"{BASE_URL}")
+        assert response.status_code == POSITIVE_STATUS_CODE
 
 
+@pytest.mark.django_db
 class TestVacancyListPage:
 
-    expected_status_code: int = 200
+    vacancy_url: str = "https://example.com/vacancy"
+    vacancy_title: str = "Example title"
+
+    client: Client = Client()
+    User: Callable[..., User] = get_user_model()
 
     def setup_method(self) -> None:
-        self.client = httpx.Client()
+        self.user = self.User.objects.create_user(
+            username="testuser", password="testpass"
+        )
+        self.client.force_login(self.user)
 
-        response1 = self.client.get(url=BASE_URL)
-        self.csrf_token = response1.cookies["csrftoken"]
-
-        data = {
-            "login": "user",
-            "password": "2x2-XUs-E8W-Pqq",
-            "csrfmiddlewaretoken": self.csrf_token,
-        }
-
-        response2 = self.client.post(url=f"{BASE_URL}/accounts/login/", data=data)
-
-        self.sessionid = response2.cookies["sessionid"]
-        self.auth_csrf = response2.cookies["csrftoken"]
-        self.headers = {"X-CSRFToken": self.auth_csrf}
-
-    def test_post_vacancy_list_page(self) -> None:
-        data = {
-            "job": "Python",
-            "city": "Москва",
-            "experience": "0",
-            "csrfmiddlewaretoken": self.auth_csrf,
-        }
-
-        response = self.client.post(url=f"{BASE_URL}/list/", data=data, timeout=20)
-
-        Assertions.assert_code_status(response, self.expected_status_code)
-
-    def test_add_to_favourite(self) -> None:
-        data = {
-            "url": "https://hh.ru/vacancy/76140465",
-            "title": "Python-разработчик",
-        }
-        data = json.dumps(data)
-
-        self.client.cookies.set("sessionid", self.sessionid)
+    def test_add_to_favourite_view(self) -> None:
+        data = {"url": self.vacancy_url, "title": self.vacancy_title}
 
         response = self.client.post(
-            url=f"{BASE_URL}/favourite/", data=data, headers=self.headers
+            path=f"{BASE_URL}/favourite/",
+            data=json.dumps(data),
+            content_type="application/json",
         )
 
-        Assertions.assert_code_status(response, self.expected_status_code)
+        vacancy = FavouriteVacancy.objects.filter(
+            user=self.user, url=self.vacancy_url
+        ).exists()
 
-    def test_delete_favourite(self) -> None:
-        data = {
-            "url": "https://hh.ru/vacancy/76140465",
-        }
-        data = json.dumps(data)
+        Assertions.assert_code_status(response, POSITIVE_STATUS_CODE)
+        Assertions.assert_add_vacancy_to_favorite(vacancy)
 
-        self.client.cookies.set("sessionid", self.sessionid)
+    def test_delete_from_favourite_view(self) -> None:
+        data = {"url": self.vacancy_url}
+
+        FavouriteVacancy.objects.create(
+            user=self.user, url=self.vacancy_url, title=self.vacancy_title
+        )
 
         response = self.client.post(
-            url=f"{BASE_URL}/delete-favourite/", data=data, headers=self.headers
+            path=f"{BASE_URL}/delete-favourite/",
+            data=json.dumps(data),
+            content_type="application/json",
         )
 
-        Assertions.assert_code_status(response, self.expected_status_code)
+        vacancy = FavouriteVacancy.objects.filter(
+            user=self.user, url=self.vacancy_url
+        ).exists()
 
-    def test_add_to_black_list(self) -> None:
-        data = {
-            "url": "https://hh.ru/vacancy/76140468",
-        }
-        data = json.dumps(data)
+        Assertions.assert_code_status(response, POSITIVE_STATUS_CODE)
+        Assertions.assert_delete_vacancy_from_favourite(vacancy)
 
-        self.client.cookies.set("sessionid", self.sessionid)
+    def test_add_to_black_list_view(self) -> None:
+        data = {"url": self.vacancy_url}
 
         response = self.client.post(
-            url=f"{BASE_URL}/add-to-black-list/", data=data, headers=self.headers
+            path=f"{BASE_URL}/add-to-black-list/",
+            data=json.dumps(data),
+            content_type="application/json",
         )
 
-        Assertions.assert_code_status(response, self.expected_status_code)
+        vacancy = VacancyBlackList.objects.filter(
+            user=self.user, url=self.vacancy_url
+        ).exists()
+
+        Assertions.assert_code_status(response, POSITIVE_STATUS_CODE)
+        Assertions.assert_add_vacancy_to_black_list(vacancy)
