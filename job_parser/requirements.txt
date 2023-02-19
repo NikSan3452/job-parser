@@ -44,3 +44,7 @@ psycopg2-binary
 dj-database-url
 
 pytest-django
+pytest-asyncio
+pytest-mock
+
+mixer
