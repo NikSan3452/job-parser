@@ -3,7 +3,7 @@ import pytest
 
 from typing import Callable
 from django.test import Client
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from parser.models import FavouriteVacancy, VacancyBlackList
 from assertions import Assertions
 
@@ -14,6 +14,11 @@ POSITIVE_STATUS_CODE: int = 200
 @pytest.mark.django_db
 class TestHomePage:
     def test_get_homepage(self, client: Client) -> None:
+        """Тестирует домашнюю страницу.
+
+        Args:
+            client (Client): Клиент.
+        """
         response = client.get(path=f"{BASE_URL}")
         assert response.status_code == POSITIVE_STATUS_CODE
 
@@ -25,15 +30,16 @@ class TestVacancyListPage:
     vacancy_title: str = "Example title"
 
     client: Client = Client()
-    User: Callable[..., User] = get_user_model()
 
     def setup_method(self) -> None:
-        self.user = self.User.objects.create_user(
+        """Создает тестового пользователя и входит под ним."""
+        self.user = User.objects.create_user(
             username="testuser", password="testpass"
         )
         self.client.force_login(self.user)
 
     def test_add_to_favourite_view(self) -> None:
+        """Тестирует представление добавления вакансии в избранное."""
         data = {"url": self.vacancy_url, "title": self.vacancy_title}
 
         response = self.client.post(
@@ -50,6 +56,7 @@ class TestVacancyListPage:
         Assertions.assert_add_vacancy_to_favorite(vacancy)
 
     def test_delete_from_favourite_view(self) -> None:
+        """Тестирует представление удаления вакансии из избранного."""
         data = {"url": self.vacancy_url}
 
         FavouriteVacancy.objects.create(
@@ -70,6 +77,7 @@ class TestVacancyListPage:
         Assertions.assert_delete_vacancy_from_favourite(vacancy)
 
     def test_add_to_black_list_view(self) -> None:
+        """Тестирует представление добавления вакансии в черный список."""
         data = {"url": self.vacancy_url}
 
         response = self.client.post(
