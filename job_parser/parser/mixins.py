@@ -19,6 +19,9 @@ cache = redis.Redis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"), 
 class VacancyHelpersMixin:
     """Класс предоставляет вспомогательные методы"""
 
+    def __init__(self) -> None:
+        self.cache_key = None
+
     async def check_request_data(self, request: Any) -> dict:
         """Проверяет параметры запроса и если они None или False,
         удаляет их из словаря.
@@ -37,11 +40,14 @@ class VacancyHelpersMixin:
             del request_data["date_from"]
         if request_data.get("date_to") == "None":
             del request_data["date_to"]
-        if request_data.get("title_search") == "False" or request_data.get("title_search") == 'None':
+        if (
+            request_data.get("title_search") == "False"
+            or request_data.get("title_search") == "None"
+        ):
             del request_data["title_search"]
         if request_data.get("experience") == "None":
             del request_data["experience"]
-        if request_data.get("remote") == "False" or request_data.get("remote") == 'None':
+        if request_data.get("remote") == "False" or request_data.get("remote") == "None":
             del request_data["remote"]
         return request_data
 
@@ -157,40 +163,6 @@ class VacancyHelpersMixin:
                 )
         return city_id
 
-    async def get_data_from_cache(self, request: Any) -> Any:
-        """Получает данные из кэша.
-
-        Args:
-            request (Any): Запрос.
-
-        Returns:
-            Any: Список вакансий.
-        """
-        cache_key = await self.create_cache_key(request)
-        try:
-            result = cache.get(cache_key)
-            if result:
-                return pickle.loads(result)
-        except Exception as exc:
-            print(f"Ошибка в функции {self.get_data_from_cache.__name__}: {exc}")
-
-    async def set_data_to_cache(self, request: Any, job_list: list[dict]) -> Any:
-        """Добавляет данные в кэш.
-
-        Args:
-            request (Any): Запрос.
-            job_list (list[dict]): Список вакансий.
-
-        Returns:
-            Any: Список вакансий.
-        """
-        cache_key = await self.create_cache_key(request)
-        try:
-            pickle_dump = pickle.dumps(job_list)
-            cache.set(cache_key, pickle_dump, ex=3600)
-        except Exception as exc:
-            print(f"Ошибка в функции {self.set_data_to_cache.__name__}: {exc}")
-
     async def create_cache_key(self, request: Any) -> str:
         """Создает кэш - ключ в виде идетификатора сессии.
 
@@ -201,5 +173,38 @@ class VacancyHelpersMixin:
             str: Ключ
         """
         session_id = request.session.session_key
-        cache_key = f"session_id:{session_id}"
-        return cache_key
+        self.cache_key = f"session_id:{session_id}"
+        return self.cache_key
+
+    async def get_data_from_cache(self) -> Any:
+        """Получает данные из кэша.
+
+        Args:
+            request (Any): Запрос.
+
+        Returns:
+            Any: Список вакансий.
+        """
+        try:
+            result = cache.get(self.cache_key)
+            if result:
+                return pickle.loads(result)
+        except Exception as exc:
+            print(f"Ошибка в функции {self.get_data_from_cache.__name__}: {exc}")
+
+    async def set_data_to_cache(self, job_list: list[dict]) -> Any:
+        """Добавляет данные в кэш.
+
+        Args:
+            request (Any): Запрос.
+            job_list (list[dict]): Список вакансий.
+
+        Returns:
+            Any: Список вакансий.
+        """
+        try:
+            pickle_dump = pickle.dumps(job_list)
+            cache.set(self.cache_key, pickle_dump, ex=3600)
+        except Exception as exc:
+            print(f"Ошибка в функции {self.set_data_to_cache.__name__}: {exc}")
+
