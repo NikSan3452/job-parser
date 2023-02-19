@@ -8,6 +8,8 @@ class TestSearchingForm:
         [
             ("Python", "Москва", "2023-01-01", "2023-02-02", "0", False, False, True),
             ("Python", "Москва", "2023-01-01", "2023-02-02", "1", True, True, True),
+            ("Python", None, "2023-01-01", "2023-02-02", "1", False, False, True),
+            ("Python", None, None, None, "1", False, False, True),
         ],
     )
     def test_valid_searching_form(
