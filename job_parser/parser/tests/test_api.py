@@ -1,7 +1,6 @@
 import json
 import pytest
 
-from typing import Callable
 from django.test import Client
 from django.contrib.auth.models import User
 from parser.models import FavouriteVacancy, VacancyBlackList
