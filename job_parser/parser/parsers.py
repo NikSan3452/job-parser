@@ -34,6 +34,16 @@ class ParserConfig:
 config = ParserConfig()
 
 
+@dataclass
+class RequestParams:
+    city: Optional[str]
+    city_from_db: Optional[int]
+    job: Optional[str]
+    date_to: Optional[str | datetime.date]
+    date_from: Optional[str | datetime.date]
+    experience: int
+
+
 class Utils:
     """Класс со вспомогательными методами"""
 
@@ -143,17 +153,7 @@ class Utils:
                     sorted_list.append(job)
         return sorted_list
 
-
-@dataclass
-class RequestParams:
-    city: Optional[str]
-    city_from_db: Optional[int]
-    job: Optional[str]
-    date_to: Optional[str | datetime.date]
-    date_from: Optional[str | datetime.date]
-    experience: int
-    utils: Utils
-
+utils = Utils()
 
 class Parser:
     """Основной класс парсера."""
@@ -225,10 +225,9 @@ class Parser:
 
 class Headhunter(Parser):
     def __init__(self, params: RequestParams) -> None:
-        self.utils = params.utils
         self.city_from_db = params.city_from_db
         self.job = params.job
-        self.date_from, self.date_to = self.utils.check_date(
+        self.date_from, self.date_to = utils.check_date(
             params.date_from, params.date_to
         )
         self.experience = params.experience
@@ -245,7 +244,7 @@ class Headhunter(Parser):
             self.hh_params["area"] = self.city_from_db
 
         if params.experience > 0:
-            self.experience = self.utils.convert_experience(experience=params.experience)
+            self.experience = utils.convert_experience(experience=params.experience)
             self.hh_params["experience"] = self.experience
 
     async def get_vacancy_from_headhunter(
@@ -306,10 +305,9 @@ class Headhunter(Parser):
 
 class SuperJob(Parser):
     def __init__(self, params: RequestParams) -> None:
-        self.utils = params.utils
         self.city = params.city
         self.job = params.job
-        self.date_from, self.date_to = self.utils.check_date(
+        self.date_from, self.date_to = utils.check_date(
             params.date_from, params.date_to
         )
 
@@ -317,8 +315,8 @@ class SuperJob(Parser):
         self.sj_params = {
             "keyword": self.job,
             "count": 100,
-            "date_published_from": self.utils.convert_date(self.date_from),
-            "date_published_to": self.utils.convert_date(self.date_to),
+            "date_published_from": utils.convert_date(self.date_from),
+            "date_published_to": utils.convert_date(self.date_to),
         }
 
         if self.city:
@@ -444,8 +442,6 @@ async def run(
         list[dict]: Список словарей с вакансиями.
     """
 
-    utils = Utils()
-
     params = RequestParams(
         city=city,
         city_from_db=city_from_db,
@@ -453,7 +449,6 @@ async def run(
         date_from=date_from,
         date_to=date_to,
         experience=experience,
-        utils=utils,
     )
 
     hh = Headhunter(params)
