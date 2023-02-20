@@ -1,5 +1,6 @@
 import json
 import pytest
+import datetime
 
 from django.test import Client
 from django.contrib.auth.models import User
@@ -33,7 +34,7 @@ class TestVacancyListPage:
         self.user = User.objects.create_user(username="testuser", password="testpass")
         self.client.force_login(self.user)
 
-    def test_vacancy_list_method_get(self, mocker):
+    def test_vacancy_list_method_get(self, mocker) -> None:
         """Тестирует GET запросы к представлению списка вакансий."""
         mocker.patch(
             "parser.mixins.VacancyHelpersMixin.get_data_from_cache", return_value=[]
@@ -42,36 +43,66 @@ class TestVacancyListPage:
         client = Client()
         response = client.get(path="/list/")
 
-        assert response.status_code == 200
-        assert "form" in response.context
-        assert "object_list" in response.context
-        assert "list_favourite" in response.context
+        Assertions.assert_code_status(response, 200)
+        Assertions.assert_object_in_response_context("form", response)
+        Assertions.assert_object_in_response_context("object_list", response)
+        Assertions.assert_object_in_response_context("list_favourite", response)
 
-    def test_vacancy_list_method_post(self):
+    @pytest.mark.parametrize(
+        "job, city, date_from, date_to, experience, title_search, remote",
+        [
+            (
+                "Python",
+                "Москва",
+                "2023-01-01",
+                "2023-02-02",
+                "0",
+                False,
+                False,
+            ),
+            ("Python", "Москва", "2023-01-01", "2023-02-02", "1", True, True),
+            ("Python", "", "2023-01-01", "2023-02-02", "1", False, False),
+            ("Python", "", "", "", "1", False, False),
+        ],
+    )
+    def test_vacancy_list_method_post(
+        self,
+        job: str,
+        city: str | None,
+        date_from: str | None,
+        date_to: str | None,
+        experience: str | None,
+        title_search: bool | None,
+        remote: bool | None,
+    ) -> None:
         """Тестирует POST запросы к представлению списка вакансий."""
         client = Client()
+
         data = {
-            "city": "Москва",
-            "job": "Python",
-            "date_from": "2022-01-01",
-            "date_to": "2022-01-31",
-            "title_search": "Python",
-            "experience": "0",
-            "remote": False,
+            "city": city,
+            "job": job,
+            "date_from": date_from,
+            "date_to": date_to,
+            "title_search": title_search,
+            "experience": experience,
+            "remote": remote,
         }
 
         response = client.post(path="/list/", data=data)
 
-        assert response.status_code == 200
-        assert "city" in response.context
-        assert "date_from" in response.context
-        assert "date_to" in response.context
-        assert "title_search" in response.context
-        assert "experience" in response.context
-        assert "remote" in response.context
-        assert "form" in response.context
-        assert "object_list" in response.context
-        assert "list_favourite" in response.context
+        Assertions.assert_code_status(response, 200)
+        Assertions.assert_compare_obj_and_response_obj(job, "job", response)
+        Assertions.assert_compare_obj_and_response_obj(city, "city", response)
+        Assertions.assert_compare_obj_and_response_obj(date_from, "date_from", response)
+        Assertions.assert_compare_obj_and_response_obj(date_to, "date_to", response)
+        Assertions.assert_compare_obj_and_response_obj(
+            title_search, "title_search", response
+        )
+        Assertions.assert_compare_obj_and_response_obj(experience, "experience", response)
+        Assertions.assert_compare_obj_and_response_obj(remote, "remote", response)
+        Assertions.assert_object_in_response_context("form", response)
+        Assertions.assert_object_in_response_context("object_list", response)
+        Assertions.assert_object_in_response_context("list_favourite", response)
 
     def test_add_to_favourite_view(self) -> None:
         """Тестирует представление добавления вакансии в избранное."""
@@ -83,12 +114,12 @@ class TestVacancyListPage:
             content_type="application/json",
         )
 
-        vacancy = FavouriteVacancy.objects.filter(
+        vacancy_exists = FavouriteVacancy.objects.filter(
             user=self.user, url=self.vacancy_url
         ).exists()
 
         Assertions.assert_code_status(response, 200)
-        Assertions.assert_add_vacancy_to_favorite(vacancy)
+        Assertions.assert_add_vacancy_to_favorite(vacancy_exists)
 
     def test_delete_from_favourite_view(self) -> None:
         """Тестирует представление удаления вакансии из избранного."""
@@ -104,12 +135,12 @@ class TestVacancyListPage:
             content_type="application/json",
         )
 
-        vacancy = FavouriteVacancy.objects.filter(
+        vacancy_exists = FavouriteVacancy.objects.filter(
             user=self.user, url=self.vacancy_url
         ).exists()
 
         Assertions.assert_code_status(response, 200)
-        Assertions.assert_delete_vacancy_from_favourite(vacancy)
+        Assertions.assert_delete_vacancy_from_favourite(vacancy_exists)
 
     def test_add_to_black_list_view(self) -> None:
         """Тестирует представление добавления вакансии в черный список."""
@@ -121,9 +152,9 @@ class TestVacancyListPage:
             content_type="application/json",
         )
 
-        vacancy = VacancyBlackList.objects.filter(
+        vacancy_exists = VacancyBlackList.objects.filter(
             user=self.user, url=self.vacancy_url
         ).exists()
 
         Assertions.assert_code_status(response, 200)
-        Assertions.assert_add_vacancy_to_black_list(vacancy)
+        Assertions.assert_add_vacancy_to_black_list(vacancy_exists)
