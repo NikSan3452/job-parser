@@ -8,7 +8,7 @@ from django.core.mail import EmailMultiAlternatives
 
 from .models import Vacancy, City
 from profiles.models import Profile
-from . import parsers
+from .api import parsers
 from job_parser.celery import app
 
 
