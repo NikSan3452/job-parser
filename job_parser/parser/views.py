@@ -55,6 +55,7 @@ class VacancyListView(View, VacancyHelpersMixin):
         form = self.form_class(initial=request_data)
 
         # Получаем данные из кэша
+        await self.create_cache_key(request)
         self.job_list = await self.get_data_from_cache()
 
         # Отображаем вакансии, которые в избранном
