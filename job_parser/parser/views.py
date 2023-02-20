@@ -6,7 +6,7 @@ from django.contrib import auth
 from django.views.generic.edit import FormView
 from django.contrib.auth.decorators import login_required
 
-from parser import parsers
+from parser.api import main
 from parser.forms import SearchingForm
 from parser.mixins import VacancyHelpersMixin
 from parser.models import FavouriteVacancy, VacancyBlackList
@@ -109,7 +109,7 @@ class VacancyListView(View, VacancyHelpersMixin):
             city_id = await self.get_city_id(city, request)
             try:
                 # Получаем список вакансий
-                self.job_list = await parsers.run(
+                self.job_list = await main.run(
                     city=city,
                     city_from_db=city_id,
                     job=job,
