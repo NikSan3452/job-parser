@@ -55,7 +55,7 @@ class VacancyListView(View, VacancyHelpersMixin):
         form = self.form_class(initial=request_data)
 
         # Получаем данные из кэша
-        self.job_list = await self.get_data_from_cache(request)
+        self.job_list = await self.get_data_from_cache()
 
         # Отображаем вакансии, которые в избранном
         list_favourite = await self.get_favourite_vacancy(request)
@@ -124,7 +124,8 @@ class VacancyListView(View, VacancyHelpersMixin):
                 )
 
             # Сохраняем данные в кэше
-            await self.set_data_to_cache(request, self.job_list)
+            await self.create_cache_key(request)
+            await self.set_data_to_cache(self.job_list)
 
             # Проверяем добавлена ли вакансия в черный список
             vacancies = await self.check_vacancy_black_list(self.job_list, request)
