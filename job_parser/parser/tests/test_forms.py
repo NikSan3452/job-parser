@@ -15,13 +15,13 @@ class TestSearchingForm:
     def test_valid_searching_form(
         self,
         job: str,
-        city: str,
-        date_from: str,
-        date_to: str,
-        experience: str,
-        title_search: str,
-        remote: str,
-        validity: bool,
+        city: str | None,
+        date_from: str | None,
+        date_to: str | None,
+        experience: str | None,
+        title_search: str | None,
+        remote: str | None,
+        validity: bool | None,
     ) -> None:
         form = SearchingForm(
             data={
