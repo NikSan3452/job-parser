@@ -33,13 +33,12 @@ class TestVacancyListPage:
         self.user = User.objects.create_user(username="testuser", password="testpass")
         self.client.force_login(self.user)
 
-    def test_vacancy_list_method_get(self, mocker) -> None:
+    def test_vacancy_list_method_get(self, mocker, client: Client) -> None:
         """Тестирует GET запросы к представлению списка вакансий."""
         mocker.patch(
             "parser.mixins.VacancyHelpersMixin.get_data_from_cache", return_value=[]
         )
 
-        client = Client()
         response = client.get(path="/list/")
 
         Assertions.assert_code_status(response, 200)
@@ -73,9 +72,9 @@ class TestVacancyListPage:
         experience: str | None,
         title_search: bool | None,
         remote: bool | None,
+        client: Client,
     ) -> None:
         """Тестирует POST запросы к представлению списка вакансий."""
-        client = Client()
 
         data = {
             "city": city,
