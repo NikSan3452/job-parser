@@ -14,7 +14,27 @@ class City(models.Model):
         return self.city
 
 
-class Vacancy(models.Model):
+class VacancyScraper(models.Model):
+    url = models.URLField(null=False)
+    title = models.CharField(max_length=250, verbose_name="Вакансия")
+    description = models.TextField(null=True, verbose_name="Описание вакансии")
+    city = models.CharField(max_length=250, verbose_name="Город")
+    salary_from = models.CharField(max_length=50, null=True, verbose_name="Зарплата от")
+    salary_to = models.CharField(max_length=50, null=True, verbose_name="Зарплата до")
+    company = models.CharField(max_length=250, verbose_name="Компания")
+    experience = models.CharField(max_length=100, null=True, verbose_name="Опыт работы")
+    published_at = models.DateField(auto_now_add=True, verbose_name="Дата публикации")
+
+    class Meta:
+        verbose_name = "Вакансия"
+        verbose_name_plural = "Вакансии"
+        ordering = ["-published_at"]
+
+    def __str__(self) -> str:
+        return self.title
+
+
+class VacancyCelery(models.Model):
     user = models.ForeignKey(
         Profile, on_delete=models.CASCADE, verbose_name="Пользователь"
     )
@@ -28,7 +48,6 @@ class Vacancy(models.Model):
     )
     city = models.CharField(max_length=250, verbose_name="Город")
     published_at = models.DateField(auto_now_add=True, verbose_name="Дата публикации")
-    favourite = models.BooleanField(default=False, verbose_name="Избраное")
 
     class Meta:
         verbose_name = "Вакансия"
@@ -43,7 +62,6 @@ class FavouriteVacancy(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
     url = models.URLField(null=False, unique=True)
     title = models.CharField(max_length=250, verbose_name="Вакансия")
-    
 
     class Meta:
         verbose_name = "Избранная вакансия"
@@ -51,6 +69,7 @@ class FavouriteVacancy(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
 
 class VacancyBlackList(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
