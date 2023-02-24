@@ -19,7 +19,9 @@ class Utils:
             return converted_to_datetime
         elif isinstance(date, str):
             converted_from_str = datetime.datetime.strptime(date, "%Y-%m-%d")
-            converted_to_datetime = datetime.datetime.combine(converted_from_str, datetime.time()).timestamp()
+            converted_to_datetime = datetime.datetime.combine(
+                converted_from_str, datetime.time()
+            ).timestamp()
             return converted_to_datetime
 
     @staticmethod
