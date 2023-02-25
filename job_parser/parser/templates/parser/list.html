@@ -144,19 +144,19 @@
                         <ul class="pagination overflow-auto">
                             {% if object_list.has_previous %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?city={{ city }}&job={{ job }}&date_from={{ date_from }}&date_to={{ date_to }}&experience={{ experience }}&title_search={{ title_search }}&remote={{ remote }}&page=1" aria-label="Previous">
+                                    <a class="page-link" href="?city={{ city }}&job={{ job }}&date_from={{ date_from }}&date_to={{ date_to }}&experience={{ experience }}&title_search={{ title_search }}&remote={{ remote }}&job_board={{ job_board }}&page=1" aria-label="Previous">
                                         <span aria-hidden="true">&laquo;</span>
                                     </a>
                                 </li>
                             {% endif %}
                             {% for page in object_list.paginator.page_range %}
                                 <li class="page-item {% if page == object_list.number %} active {% endif %}">
-                                    <a class="page-link" href="?city={{ city }}&job={{ job }}&date_from={{ date_from }}&date_to={{ date_to }}&experience={{ experience }}&title_search={{ title_search }}&remote={{ remote }}&page={{ page }}">{{ page }}</a>
+                                    <a class="page-link" href="?city={{ city }}&job={{ job }}&date_from={{ date_from }}&date_to={{ date_to }}&experience={{ experience }}&title_search={{ title_search }}&remote={{ remote }}&job_board={{ job_board }}&page={{ page }}">{{ page }}</a>
                                 </li>
                             {% endfor %}
                             {% if object_list.has_next %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?city={{ city }}&job={{ job }}&date_from={{ date_from }}&date_to={{ date_to }}&experience={{ experience }}&title_search={{ title_search }}&remote={{ remote }}&page={{ object_list.next_page_number }}" aria-label="Next">
+                                    <a class="page-link" href="?city={{ city }}&job={{ job }}&date_from={{ date_from }}&date_to={{ date_to }}&experience={{ experience }}&title_search={{ title_search }}&remote={{ remote }}&job_board={{ job_board }}&page={{ object_list.next_page_number }}" aria-label="Next">
                                         <span aria-hidden="true">&raquo;</span>
                                     </a>
                                 </li>
