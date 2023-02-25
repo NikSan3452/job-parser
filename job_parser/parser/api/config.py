@@ -1,9 +1,11 @@
 import os
 import datetime
-
+from dotenv import load_dotenv
 
 from dataclasses import dataclass
 from typing import Optional
+
+load_dotenv()
 
 
 class ParserConfig:
@@ -28,6 +30,7 @@ class ParserConfig:
 @dataclass
 class RequestConfig:
     """Этот класс хранит параметры запроса парсеров."""
+
     city: Optional[str]
     city_from_db: Optional[int]
     job: Optional[str]
