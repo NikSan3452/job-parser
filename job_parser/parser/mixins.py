@@ -21,9 +21,6 @@ utils = Utils()
 class VacancyHelpersMixin:
     """Класс предоставляет вспомогательные методы"""
 
-    def __init__(self) -> None:
-        self.cache_key = None
-
     async def check_request_data(self, request: Any) -> dict:
         """Проверяет параметры запроса и если они None или False,
         удаляет их из словаря.
