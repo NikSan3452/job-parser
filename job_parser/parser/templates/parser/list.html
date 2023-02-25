@@ -35,48 +35,65 @@
         {% for obj in object_list %}
         <div class="card my-3" id="delete-vacancy-{{forloop.counter}}">
             <h5 class="card-header bg-primary bg-opacity-10">
-                <a class="text-decoration-none" href="{{ obj.url }}" target ="_blank">{{ obj.title }}</a>
+                <a class="text-decoration-none" href="{{ obj.url }}" target ="_blank">{{ obj.title|capfirst }}</a>
             </h5>
             <div class="card-body">
-                <p><span class="card-param">Вакансия с сайта:</span> <span class="card-value">{{ obj.job_board }}</span></p>
+                <p><span class="card-param">Вакансия с сайта:</span> <span class="card-value">{{ obj.job_board|capfirst }}</span></p>
                 
                 <p>
                     {% if obj.salary_from %} <span class="card-param">Зарплата от</span>
-                    <span class="card-value">{{obj.salary_from}}</span> {% endif %}
+                        <span class="card-value">{{obj.salary_from}}</span> {% endif %}
                     {% if obj.salary_to %} <span class="card-param">до</span> 
-                    <span class="card-value">{{obj.salary_to}}</span>{% endif %}
+                        <span class="card-value">{{obj.salary_to}}</span>{% endif %}
                     {% if obj.salary_from or obj.salary_to %}
-                    <span class="card-param">{{ obj.salary_currency }}</span>{% endif %}
+                        <span class="card-param">{{ obj.salary_currency|upper }}</span>{% endif %}
                 </p>
 
                 {% if obj.job_board == 'SuperJob' %}
-                <p><span class="card-param">Тип занятости: </span> <span class="card-value">{{ obj.type_of_work }}</span></p>
-                <p><span class="card-param">Формат работы: </span> <span class="card-value">{{ obj.place_of_work }}</span></p>
+                    <p><span class="card-param">Тип занятости: </span> <span class="card-value">{{ obj.type_of_work|capfirst }}</span></p>
+                    <p><span class="card-param">Формат работы: </span> <span class="card-value">{{ obj.place_of_work|capfirst }}</span></p>
                 {% else %}
-                <p><span class="card-param">Тип занятости: </span> <span class="card-value">{{ obj.type_of_work }}</span></p>
+                    <p><span class="card-param">Тип занятости: </span> <span class="card-value">{{ obj.type_of_work|capfirst }}</span></p>
                 {% endif %}
 
                 {% if obj.experience %}
-                    <p><span class="card-param">Опыт работы: </span> <span class="card-value">{{ obj.experience }}</span></p>
+                    <p><span class="card-param">Опыт работы: </span> <span class="card-value">{{ obj.experience|capfirst }}</span></p>
                 {% endif %}
 
-                <p class="card-text">
-                    {% if obj.responsibility  %}
-                    <span class="card-param">Обязанности:</span> {{ obj.responsibility|truncatechars:300 }}
-                    {% endif %}
-                </p>
+                {% if obj.job_board == "Habr career" %}
+                    <p class="card-text">
+                        {% if obj.description %}
+                            {% if obj.description|length > 300 %}
+                                <span class="card-param">Описание вакансии:</span>
+                                <span class="short-text">{{ obj.description|truncatechars:300 }}</span>
+                                <span class="full-text" style="display:none">{{ obj.description }}</span>
+                                <a href="javascript:void(0);" class="expand-link">Развернуть</a>
+                                <a href="javascript:void(0);" class="collapse-link" style="display:none">Свернуть</a>
+                            {% else %}
+                                <span class="card-param">Описание вакансии:</span> {{ obj.description }}
+                            {% endif %}
+                        {% endif %}
+                    </p>
 
-                <p class="card-text">
-                    {% if obj.requirement %}
-                    <span class="card-param">Требования:</span> {{ obj.requirement|truncatechars:300 }}
-                    {% endif %}
-                </p>
+                {% else %}
+                    <p class="card-text">
+                        {% if obj.responsibility  %}
+                        <span class="card-param">Обязанности:</span> {{ obj.responsibility|truncatechars:300 }}
+                        {% endif %}
+                    </p>
+
+                    <p class="card-text">
+                        {% if obj.requirement %}
+                        <span class="card-param">Требования:</span> {{ obj.requirement|truncatechars:300 }}
+                        {% endif %}
+                    </p>
+                {% endif %}
 
                 <p>
                     <span class="card-param">Город:</span>
-                    <span class="card-value">{{ obj.city }}</span>
+                    <span class="card-value">{{ obj.city|capfirst }}</span>
                     | <span class="card-param">Компания:</span>
-                    <span class="card-value">{{ obj.company}}</span> 
+                    <span class="card-value">{{ obj.company|capfirst}}</span> 
                     | <span class="card-param">Дата публикации:</span>
                     <span class="card-value">{{ obj.published_at }}</span>
                 </p>
@@ -153,4 +170,5 @@
         {% endif %}
 </div>
 <script src="{% static '/js/favourite.js' %}"></script>
+<script src="{% static '/js/expand_description.js' %}"></script>
 {% endblock %}
