@@ -35,9 +35,7 @@ class TestVacancyListPage:
 
     def test_vacancy_list_method_get(self, mocker, client: Client) -> None:
         """Тестирует GET запросы к представлению списка вакансий."""
-        mocker.patch(
-            "parser.mixins.VacancyHelpersMixin.get_data_from_cache", return_value=[]
-        )
+        mocker.patch("parser.mixins.RedisCacheMixin.get_data_from_cache", return_value=[])
 
         response = client.get(path="/list/")
 
@@ -47,7 +45,7 @@ class TestVacancyListPage:
         Assertions.assert_object_in_response_context("list_favourite", response)
 
     @pytest.mark.parametrize(
-        "job, city, date_from, date_to, experience, title_search, remote",
+        "job, city, date_from, date_to, experience, title_search, remote, job_board",
         [
             (
                 "Python",
@@ -57,10 +55,11 @@ class TestVacancyListPage:
                 "0",
                 False,
                 False,
+                "Не имеет значения",
             ),
-            ("Python", "Москва", "2023-01-01", "2023-02-02", "1", True, True),
-            ("Python", "", "2023-01-01", "2023-02-02", "1", False, False),
-            ("Python", "", "", "", "1", False, False),
+            ("Python", "Москва", "2023-01-01", "2023-02-02", "1", True, True, "HeadHunter"),
+            ("Python", "", "2023-01-01", "2023-02-02", "2", False, False, "SuperJob"),
+            ("Python", "", "", "", "1", False, False, "Zarplata"),
         ],
     )
     def test_vacancy_list_method_post(
@@ -70,8 +69,9 @@ class TestVacancyListPage:
         date_from: str | None,
         date_to: str | None,
         experience: str | None,
-        title_search: bool | None,
-        remote: bool | None,
+        title_search: str | None,
+        remote: str | None,
+        job_board: str | None,
         client: Client,
     ) -> None:
         """Тестирует POST запросы к представлению списка вакансий."""
@@ -84,6 +84,7 @@ class TestVacancyListPage:
             "title_search": title_search,
             "experience": experience,
             "remote": remote,
+            "job_board": job_board,
         }
 
         response = client.post(path="/list/", data=data)
@@ -93,11 +94,10 @@ class TestVacancyListPage:
         Assertions.assert_compare_obj_and_response_obj(city, "city", response)
         Assertions.assert_compare_obj_and_response_obj(date_from, "date_from", response)
         Assertions.assert_compare_obj_and_response_obj(date_to, "date_to", response)
-        Assertions.assert_compare_obj_and_response_obj(
-            title_search, "title_search", response
-        )
+        Assertions.assert_compare_obj_and_response_obj(title_search, "title_search", response)
         Assertions.assert_compare_obj_and_response_obj(experience, "experience", response)
         Assertions.assert_compare_obj_and_response_obj(remote, "remote", response)
+        Assertions.assert_compare_obj_and_response_obj(job_board, "job_board", response)
         Assertions.assert_object_in_response_context("form", response)
         Assertions.assert_object_in_response_context("object_list", response)
         Assertions.assert_object_in_response_context("list_favourite", response)
