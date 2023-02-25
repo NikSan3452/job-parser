@@ -47,4 +47,6 @@ pytest-django
 pytest-asyncio
 pytest-mock
 
-mixer
+scrapy
+scrapy-splash
+scrapy-djangoitem
