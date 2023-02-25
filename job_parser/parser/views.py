@@ -110,23 +110,29 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
             # Получаем id города для API HeadHunter и Zarplata
             city_id = await self.get_city_id(city, request)
             try:
-                # Получаем список вакансий
-                self.job_list_from_api = await main.run(
-                    city=city,
-                    city_from_db=city_id,
-                    job=job,
-                    date_from=date_from,
-                    date_to=date_to,
-                    title_search=title_search,
-                    experience=experience,
-                    remote=remote,
-                    job_board=job_board,
-                )
-                # Получаем вакансии из скрапера
-                job_list_from_scraper = await self.get_vacancies_from_scraper(
-                    city, job, date_from, date_to, title_search, experience, remote, job_board
-                )
-
+                if job_board in ("Habr career",):
+                    # Получаем вакансии из скрапера
+                    job_list_from_scraper = await self.get_vacancies_from_scraper(
+                        city, job, date_from, date_to, title_search, experience, remote, job_board
+                    )
+                else:
+                    # Получаем список вакансий из API
+                    self.job_list_from_api = await main.run(
+                        city=city,
+                        city_from_db=city_id,
+                        job=job,
+                        date_from=date_from,
+                        date_to=date_to,
+                        title_search=title_search,
+                        experience=experience,
+                        remote=remote,
+                        job_board=job_board,
+                    )
+                    
+                    job_list_from_scraper = await self.get_vacancies_from_scraper(
+                            city, job, date_from, date_to, title_search, experience, remote, job_board
+                        )
+                
             except Exception as exc:
                 print(
                     f"Ошибка в функции {self.post.__name__}: {exc} Сервер столкнулся с непредвиденной ошибкой"
