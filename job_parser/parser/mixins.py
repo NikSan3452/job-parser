@@ -8,15 +8,12 @@ from django.contrib import auth, messages
 from django.core.paginator import Paginator
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
+from django.conf import settings
 
 from parser.models import City, FavouriteVacancy, VacancyBlackList, VacancyScraper
 from parser.forms import SearchingForm
 from parser.api.utils import Utils
-from dotenv import load_dotenv
 
-load_dotenv()
-
-cache = redis.Redis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"), db=0)
 
 utils = Utils()
 
@@ -164,6 +161,8 @@ class VacancyHelpersMixin:
                 )
         return city_id
 
+
+class RedisCacheMixin:
     async def create_cache_key(self, request: Any) -> str:
         """Создает кэш - ключ в виде идетификатора сессии.
 
@@ -187,7 +186,7 @@ class VacancyHelpersMixin:
             Any: Список вакансий.
         """
         try:
-            result = cache.get(self.cache_key)
+            result = settings.CACHE.get(self.cache_key)
             if result:
                 return pickle.loads(result)
         except Exception as exc:
@@ -205,7 +204,7 @@ class VacancyHelpersMixin:
         """
         try:
             pickle_dump = pickle.dumps(job_list)
-            cache.set(self.cache_key, pickle_dump, ex=3600)
+            settings.CACHE.set(self.cache_key, pickle_dump, ex=3600)
         except Exception as exc:
             print(f"Ошибка в функции {self.set_data_to_cache.__name__}: {exc}")
 
@@ -258,16 +257,22 @@ class VacancyScraperMixin:
         # Если чекбокс с поиском в заголовке вакансии активен,
         # то поиск осуществляется только по столбцу title
         if title_search:
-            job_list_from_scraper = VacancyScraper.objects.filter(
-                title__icontains=job, **params
-            ).order_by("-published_at").values()
+            job_list_from_scraper = (
+                VacancyScraper.objects.filter(title__icontains=job, **params)
+                .order_by("-published_at")
+                .values()
+            )
 
         # Иначе поиск осуществляется также в описании вакансии
         else:
-            job_list_from_scraper = VacancyScraper.objects.filter(
-                Q(title__icontains=job) | Q(description__icontains=job),
-                **params,
-            ).order_by("-published_at").values()
+            job_list_from_scraper = (
+                VacancyScraper.objects.filter(
+                    Q(title__icontains=job) | Q(description__icontains=job),
+                    **params,
+                )
+                .order_by("-published_at")
+                .values()
+            )
 
         return job_list_from_scraper
 

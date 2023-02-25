@@ -8,8 +8,8 @@ from django.contrib.auth.decorators import login_required
 
 from parser.api import main
 from parser.forms import SearchingForm
-from parser.mixins import VacancyHelpersMixin, VacancyScraperMixin
-from parser.models import FavouriteVacancy, VacancyBlackList, VacancyScraper
+from parser.mixins import VacancyHelpersMixin, VacancyScraperMixin, RedisCacheMixin
+from parser.models import FavouriteVacancy, VacancyBlackList
 
 
 class HomePageView(FormView):
@@ -35,7 +35,7 @@ class HomePageView(FormView):
         return super().form_valid(form)
 
 
-class VacancyListView(View, VacancyHelpersMixin, VacancyScraperMixin):
+class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraperMixin):
     """Представление страницы со списком ванкасий."""
 
     form_class = SearchingForm
