@@ -11,6 +11,14 @@ class SearchingForm(forms.Form):
         (4, "от 6 лет"),
     )
 
+    job_board_values = (
+        ("Не имеет значения", "Не имеет значения"),
+        ("HeadHunter", "HeadHunter"),
+        ("SuperJob", "SuperJob"),
+        ("Zarplata", "Zarplata"),
+        ("Habr career", "Habr career"),
+    )
+
     job = forms.CharField(
         label="Что ищем ?",
         max_length=250,
@@ -37,6 +45,13 @@ class SearchingForm(forms.Form):
         initial=exp_values[0],
         required=False,
         choices=exp_values,
+        widget=forms.Select(),
+    )
+    job_board = forms.ChoiceField(
+        label="Площадка",
+        initial=job_board_values[0],
+        required=False,
+        choices=job_board_values,
         widget=forms.Select(),
     )
     title_search = forms.BooleanField(

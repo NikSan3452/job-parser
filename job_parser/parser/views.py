@@ -74,6 +74,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
         context["title_search"] = request_data.get("title_search")
         context["experience"] = request_data.get("experience")
         context["remote"] = request_data.get("remote")
+        context["job_board"] = request_data.get("job_board")
 
         # Проверяем добавлена ли вакансия в черный список
         await self.check_vacancy_black_list(self.job_list_from_api, request)
@@ -103,6 +104,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
                 title_search,
                 experience,
                 remote,
+                job_board,
             ) = await self.get_form_data(form)
 
             # Получаем id города для API HeadHunter и Zarplata
@@ -118,10 +120,11 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
                     title_search=title_search,
                     experience=experience,
                     remote=remote,
+                    job_board=job_board,
                 )
                 # Получаем вакансии из скрапера
                 job_list_from_scraper = await self.get_vacancies_from_scraper(
-                    city, job, date_from, date_to, title_search, experience, remote
+                    city, job, date_from, date_to, title_search, experience, remote, job_board
                 )
 
             except Exception as exc:
@@ -152,6 +155,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
                 "title_search": title_search,
                 "experience": experience,
                 "remote": remote,
+                "job_board": job_board,
                 "form": form,
                 "object_list": vacancies,
                 "list_favourite": list_favourite,

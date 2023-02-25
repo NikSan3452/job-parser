@@ -46,6 +46,8 @@ class VacancyHelpersMixin:
             del request_data["experience"]
         if request_data.get("remote") == "False" or request_data.get("remote") == "None":
             del request_data["remote"]
+        if request_data.get("job_board") == "None":
+            del request_data["job_board"]
         return request_data
 
     async def check_vacancy_black_list(self, vacancies: list[dict], request: Any) -> list[dict]:
@@ -129,7 +131,9 @@ class VacancyHelpersMixin:
         title_search = form.cleaned_data.get("title_search")
         experience = int(form.cleaned_data.get("experience"))
         remote = form.cleaned_data.get("remote")
-        return city, job, date_from, date_to, title_search, experience, remote
+        job_board = form.cleaned_data.get("job_board")
+
+        return city, job, date_from, date_to, title_search, experience, remote, job_board
 
     async def get_city_id(self, city: Any, request: Any) -> str | None:
         """Получет id города из базы данных.
@@ -216,6 +220,7 @@ class VacancyScraperMixin:
         title_search: bool,
         experience: int,
         remote: bool,
+        job_board: str,
     ) -> VacancyScraper:
         """Получает вакансии из скрапера.
 
@@ -243,6 +248,8 @@ class VacancyScraperMixin:
             params.update({"experience": experience})
         if remote:
             params.update({"remote": remote})
+        if job_board != "Не имеет значения":
+            params.update({"job_board": job_board})
         params.update({"published_at__gte": date_from})
         params.update({"published_at__lte": date_to})
 

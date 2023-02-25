@@ -110,3 +110,11 @@ class Utils:
                 elif job.get("place_of_work") == "Удалённая работа (на дому)":
                     sorted_list.append(job)
         return sorted_list
+
+    @staticmethod
+    def sorted_by_job_board(job_board: str, job_list: list[dict]) -> list[dict]:
+        sorted_list: list[dict] = []
+        for job in job_list:
+            if job_board == job["job_board"]:
+                sorted_list.append(job)
+        return sorted_list

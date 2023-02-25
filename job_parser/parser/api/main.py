@@ -20,6 +20,7 @@ async def run(
     title_search: Optional[bool] = False,
     experience: int = 0,
     remote: Optional[bool] = False,
+    job_board: Optional[str] = "Не имеет значения"
 ) -> list[dict]:
     """Отвечает за запуск парсера.
 
@@ -64,6 +65,8 @@ async def run(
 
     # Сортируем получемнный список вакансий
     sorted_job_list = utils.sort_by_date(Parser.general_job_list, "published_at")
+    if job_board != "Не имеет значения":
+        sorted_job_list = utils.sorted_by_job_board(job_board, sorted_job_list)
     if title_search:
         sorted_job_list = utils.sort_by_title(sorted_job_list, job)
     if remote:
