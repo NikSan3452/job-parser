@@ -9,10 +9,14 @@
 <div class="row">
     <div class="col-md-6 my-2 mx-auto">
         <form action="{% url 'list' %}" method="post">
-            <div>
                 {% csrf_token %}
                 {{ form|crispy }}
-            <button type="submit" class="btn btn-primary">Найти</button>
+            <div class="row">
+                <div class="col text-center">
+                    <button type="submit" class="btn btn-primary">Найти</button>
+                </div>
+            </div>
+            
         </form>
     </div>
 </div>
