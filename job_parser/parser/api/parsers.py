@@ -34,7 +34,7 @@ class Headhunter(Parser):
             self.hh_params["experience"] = self.experience
 
     async def get_vacancy_from_headhunter(
-        self, url: ParserConfig = config.headhunter_url, job_board: str = "HeadHunter"
+        self, url: str = config.headhunter_url, job_board: str = "HeadHunter"
     ) -> dict:
         """Формирует словарь с основными полями вакансий с сайта HeadHunter
 
