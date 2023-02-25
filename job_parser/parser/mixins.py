@@ -1,7 +1,5 @@
-import os
 import datetime
 import pickle
-import redis
 from typing import Any
 
 from django.contrib import auth, messages
