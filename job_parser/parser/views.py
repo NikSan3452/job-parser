@@ -8,8 +8,8 @@ from django.contrib.auth.decorators import login_required
 
 from parser.api import main
 from parser.forms import SearchingForm
-from parser.mixins import VacancyHelpersMixin
-from parser.models import FavouriteVacancy, VacancyBlackList
+from parser.mixins import VacancyHelpersMixin, VacancyScraperMixin
+from parser.models import FavouriteVacancy, VacancyBlackList, VacancyScraper
 
 
 class HomePageView(FormView):
@@ -35,12 +35,12 @@ class HomePageView(FormView):
         return super().form_valid(form)
 
 
-class VacancyListView(View, VacancyHelpersMixin):
+class VacancyListView(View, VacancyHelpersMixin, VacancyScraperMixin):
     """Представление страницы со списком ванкасий."""
 
     form_class = SearchingForm
     template_name = "parser/list.html"
-    job_list = []
+    job_list_from_api = []
 
     async def get(self, request, *args, **kwargs):
         """Отвечает за обработку GET запросов к странице со списком вакансий.
@@ -56,14 +56,14 @@ class VacancyListView(View, VacancyHelpersMixin):
 
         # Получаем данные из кэша
         await self.create_cache_key(request)
-        self.job_list = await self.get_data_from_cache()
+        self.job_list_from_api = await self.get_data_from_cache()
 
         # Отображаем вакансии, которые в избранном
         list_favourite = await self.get_favourite_vacancy(request)
 
         context = {
             "form": form,
-            "object_list": self.job_list,
+            "object_list": self.job_list_from_api,
             "list_favourite": list_favourite,
         }
 
@@ -76,10 +76,10 @@ class VacancyListView(View, VacancyHelpersMixin):
         context["remote"] = request_data.get("remote")
 
         # Проверяем добавлена ли вакансия в черный список
-        await self.check_vacancy_black_list(self.job_list, request)
+        await self.check_vacancy_black_list(self.job_list_from_api, request)
 
         # Пагинация
-        await self.get_pagination(request, self.job_list, context)
+        await self.get_pagination(request, self.job_list_from_api, context)
 
         return render(request, self.template_name, context)
 
@@ -109,7 +109,7 @@ class VacancyListView(View, VacancyHelpersMixin):
             city_id = await self.get_city_id(city, request)
             try:
                 # Получаем список вакансий
-                self.job_list = await main.run(
+                self.job_list_from_api = await main.run(
                     city=city,
                     city_from_db=city_id,
                     job=job,
@@ -119,17 +119,27 @@ class VacancyListView(View, VacancyHelpersMixin):
                     experience=experience,
                     remote=remote,
                 )
+                # Получаем вакансии из скрапера
+                job_list_from_scraper = await self.get_vacancies_from_scraper(
+                    city, job, date_from, date_to, title_search, experience, remote
+                )
+
             except Exception as exc:
                 print(
                     f"Ошибка в функции {self.post.__name__}: {exc} Сервер столкнулся с непредвиденной ошибкой"
                 )
 
+            # Добавляем вакансии из скрапера в список вакансий из api
+            await self.add_vacancy_to_job_list_from_api(
+                self.job_list_from_api, job_list_from_scraper
+            )
+
             # Сохраняем данные в кэше
             await self.create_cache_key(request)
-            await self.set_data_to_cache(self.job_list)
+            await self.set_data_to_cache(self.job_list_from_api)
 
             # Проверяем добавлена ли вакансия в черный список
-            vacancies = await self.check_vacancy_black_list(self.job_list, request)
+            vacancies = await self.check_vacancy_black_list(self.job_list_from_api, request)
 
             # Отображаем вакансии, которые в избранном
             list_favourite = await self.get_favourite_vacancy(request)
@@ -148,7 +158,7 @@ class VacancyListView(View, VacancyHelpersMixin):
             }
 
             # Пагинация
-            await self.get_pagination(request, self.job_list, context)
+            await self.get_pagination(request, self.job_list_from_api, context)
 
         return render(request, self.template_name, context)
 
@@ -171,9 +181,7 @@ def add_to_favourite_view(request):
 
         try:
             user = auth.get_user(request)
-            FavouriteVacancy.objects.get_or_create(
-                user=user, url=vacancy_url, title=vacancy_title
-            )
+            FavouriteVacancy.objects.get_or_create(user=user, url=vacancy_url, title=vacancy_title)
         except Exception as exc:
             print(f"Ошибка базы данных в функции {add_to_favourite_view.__name__}: {exc}")
     return JsonResponse({"status": "Вакансия добавлена в избранное"})
@@ -198,9 +206,7 @@ def delete_from_favourite_view(request):
             user = auth.get_user(request)
             FavouriteVacancy.objects.filter(user=user, url=vacancy_url).delete()
         except Exception as exc:
-            print(
-                f"Ошибка базы данных в функции {delete_from_favourite_view.__name__}: {exc}"
-            )
+            print(f"Ошибка базы данных в функции {delete_from_favourite_view.__name__}: {exc}")
     return JsonResponse({"status": "Вакансия удалена из избранного"})
 
 
@@ -218,12 +224,10 @@ def add_to_black_list_view(request):
 
         data = json.load(request)
         vacancy_url = data.get("url")
-        
+
         try:
             user = auth.get_user(request)
             VacancyBlackList.objects.get_or_create(user=user, url=vacancy_url)
         except Exception as exc:
-            print(
-                f"Ошибка базы данных в функции {add_to_black_list_view.__name__}: {exc}"
-            )
+            print(f"Ошибка базы данных в функции {add_to_black_list_view.__name__}: {exc}")
     return JsonResponse({"status": "Вакансия добавлена в черный список"})

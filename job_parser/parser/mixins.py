@@ -222,7 +222,7 @@ class VacancyScraperMixin:
         title_search: bool,
         experience: int,
         remote: bool,
-    ):
+    ) -> VacancyScraper:
         """Получает вакансии из скрапера.
 
         Args:
@@ -258,15 +258,22 @@ class VacancyScraperMixin:
         # Если чекбокс с поиском в заголовке вакансии активен,
         # то поиск осуществляется только по столбцу title
         if title_search:
-            vacancies_from_scraper = VacancyScraper.objects.filter(
+            job_list_from_scraper = VacancyScraper.objects.filter(
                 title__icontains=job, **params
-            ).order_by("-published_at")
+            ).order_by("-published_at").values()
 
         # Иначе поиск осуществляется также в описании вакансии
         else:
-            vacancies_from_scraper = VacancyScraper.objects.filter(
+            job_list_from_scraper = VacancyScraper.objects.filter(
                 Q(title__icontains=job) | Q(description__icontains=job),
                 **params,
-            ).order_by("-published_at")
+            ).order_by("-published_at").values()
 
-        return vacancies_from_scraper
+        return job_list_from_scraper
+
+    async def add_vacancy_to_job_list_from_api(
+        self, job_list_from_api: list[dict], job_list_from_scraper: VacancyScraper
+    ) -> list[dict]:
+        async for job in job_list_from_scraper:
+            job_list_from_api.append(job)
+        return job_list_from_api
