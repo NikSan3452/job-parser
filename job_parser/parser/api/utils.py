@@ -38,10 +38,12 @@ class Utils:
         """
         if date_from == "" or date_from is None:
             new_date_from = datetime.date.today() - datetime.timedelta(days=3)
+        else:
+            new_date_from = date_from
+
         if date_to == "" or date_to is None:
             new_date_to = datetime.date.today()
         else:
-            new_date_from = date_from
             new_date_to = date_to
         return new_date_from, new_date_to
 

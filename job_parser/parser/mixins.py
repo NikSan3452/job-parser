@@ -1,4 +1,5 @@
 import os
+import datetime
 import pickle
 import redis
 from typing import Any
@@ -6,14 +7,18 @@ from typing import Any
 from django.contrib import auth, messages
 from django.core.paginator import Paginator
 from django.contrib.auth.models import AnonymousUser
+from django.db.models import Q
 
-from parser.models import City, FavouriteVacancy, VacancyBlackList
-
+from parser.models import City, FavouriteVacancy, VacancyBlackList, VacancyScraper
+from parser.forms import SearchingForm
+from parser.api.utils import Utils
 from dotenv import load_dotenv
 
 load_dotenv()
 
 cache = redis.Redis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"), db=0)
+
+utils = Utils()
 
 
 class VacancyHelpersMixin:
@@ -51,9 +56,7 @@ class VacancyHelpersMixin:
             del request_data["remote"]
         return request_data
 
-    async def check_vacancy_black_list(
-        self, vacancies: list[dict], request: Any
-    ) -> list[dict]:
+    async def check_vacancy_black_list(self, vacancies: list[dict], request: Any) -> list[dict]:
         """Проверяет добавлена ли вакансия в черный список
         и есла да, то удаляет ее из выдачи и избранного.
 
@@ -100,9 +103,7 @@ class VacancyHelpersMixin:
         except Exception as exc:
             print(f"Ошибка базы данных в функции {self.get_favourite_vacancy}: {exc}")
 
-    async def get_pagination(
-        self, request: Any, job_list: list[dict], context: dict
-    ) -> None:
+    async def get_pagination(self, request: Any, job_list: list[dict], context: dict) -> None:
         """Добавляет пагинацию.
 
         Args:
@@ -115,7 +116,7 @@ class VacancyHelpersMixin:
         page_obj = paginator.get_page(page_number)
         context["object_list"] = page_obj
 
-    async def get_form_data(self, form: Any) -> None:
+    async def get_form_data(self, form: SearchingForm) -> None:
         """Получает данные из формы.
 
         Args:
@@ -208,3 +209,64 @@ class VacancyHelpersMixin:
         except Exception as exc:
             print(f"Ошибка в функции {self.set_data_to_cache.__name__}: {exc}")
 
+
+class VacancyScraperMixin:
+    """Класс содержит методы для получения вакансий из скрапера."""
+
+    async def get_vacancies_from_scraper(
+        self,
+        city: str | None,
+        job: str,
+        date_from: datetime.date,
+        date_to: datetime.date,
+        title_search: bool,
+        experience: int,
+        remote: bool,
+    ):
+        """Получает вакансии из скрапера.
+
+        Args:
+            city (str | None): Город.
+            job (str): Работа.
+            date_from (datetime.date): Дата от.
+            date_to (datetime.date): Дата до.
+            title_search (bool): Поиск в заголовке вакансии.
+            experience (int): Опыт работы.
+            remote (bool): Удаленная работа.
+
+        Returns:
+            _type_: Список вакансий.
+        """
+        params: dict = {}  # Словарь параметров запроса
+
+        # Проверяем дату и если нужно устанавливаем дефолтную
+        date_from, date_to = utils.check_date(date_from, date_to)
+
+        # Формируем словарь с параметрами запроса
+        if city is not None:
+            params.update({"city": city.strip()})
+        if experience > 0:
+            params.update({"experience": experience})
+        if remote:
+            params.update({"remote": remote})
+        params.update({"published_at__gte": date_from})
+        params.update({"published_at__lte": date_to})
+
+        if job is not None:
+            job = job.lower().strip()
+
+        # Если чекбокс с поиском в заголовке вакансии активен,
+        # то поиск осуществляется только по столбцу title
+        if title_search:
+            vacancies_from_scraper = VacancyScraper.objects.filter(
+                title__icontains=job, **params
+            ).order_by("-published_at")
+
+        # Иначе поиск осуществляется также в описании вакансии
+        else:
+            vacancies_from_scraper = VacancyScraper.objects.filter(
+                Q(title__icontains=job) | Q(description__icontains=job),
+                **params,
+            ).order_by("-published_at")
+
+        return vacancies_from_scraper
