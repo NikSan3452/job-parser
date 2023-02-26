@@ -9,6 +9,7 @@
 
 import os
 import sys
+import random
 
 BOT_NAME = "scraper"
 
@@ -28,13 +29,14 @@ ROBOTSTXT_OBEY = True
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-# DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = random.uniform(0.1, 3.0)
+
 # The download delay setting will honor only one of:
 # CONCURRENT_REQUESTS_PER_DOMAIN = 16
 # CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-# COOKIES_ENABLED = False
+COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
 # TELNETCONSOLE_ENABLED = False
@@ -49,7 +51,7 @@ ROBOTSTXT_OBEY = True
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 SPIDER_MIDDLEWARES = {
     "scraper.middlewares.ScraperSpiderMiddleware": 543,
-    "scrapy_splash.SplashDeduplicateArgsMiddleware": 100,
+    "scrapy_splash.SplashDeduplicateArgsMiddleware": 100,  # scrapy-splash
 }
 
 # Enable or disable downloader middlewares
@@ -59,6 +61,11 @@ DOWNLOADER_MIDDLEWARES = {
     "scrapy_splash.SplashCookiesMiddleware": 723,
     "scrapy_splash.SplashMiddleware": 725,
     "scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware": 810,
+    "scrapy.downloadermiddlewares.useragent.UserAgentMiddleware": None,  # scrapy-fake-useragent
+    "scrapy.downloadermiddlewares.retry.RetryMiddleware": None,  # scrapy-fake-useragent
+    "scrapy_fake_useragent.middleware.RandomUserAgentMiddleware": 400,  # scrapy-fake-useragent
+    "scrapy_fake_useragent.middleware.RetryUserAgentMiddleware": 401,  # scrapy-fake-useragent
+
 }
 
 # Enable or disable extensions
@@ -104,6 +111,14 @@ FEED_EXPORT_ENCODING = "utf-8"
 SPLASH_URL = "http://localhost:8050/"
 DUPEFILTER_CLASS = "scrapy_splash.SplashAwareDupeFilter"
 HTTPCACHE_STORAGE = "scrapy_splash.SplashAwareFSCacheStorage"
+
+# scrapy-fake-useragent
+FAKEUSERAGENT_PROVIDERS = [
+    "scrapy_fake_useragent.providers.FakeUserAgentProvider",  # this is the first provider we'll try
+    "scrapy_fake_useragent.providers.FakerProvider",  # if FakeUserAgentProvider fails, we'll use faker to generate a user-agent string for us
+    "scrapy_fake_useragent.providers.FixedUserAgentProvider",  # fall back to USER_AGENT value
+]
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36>"
 
 # Django
 current_path = os.path.abspath(__file__)
