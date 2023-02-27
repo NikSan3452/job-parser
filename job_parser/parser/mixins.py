@@ -84,9 +84,9 @@ class VacancyHelpersMixin:
                         except:
                             pass
                         vacancies.remove(vacancy)
-            return vacancies
         except Exception as exc:
             mixin_logger.exception(exc)
+        return vacancies
 
     async def get_favourite_vacancy(self, request: Any):
         """Получает список вакансий добавленных в избранное.
@@ -273,12 +273,14 @@ class VacancyScraperMixin:
 
         # Проверяем дату и если нужно устанавливаем дефолтную
         date_from, date_to = utils.check_date(date_from, date_to)
+        # Конвертируем опыт
+        converted_experience = await self.convert_experince(experience)
 
         # Формируем словарь с параметрами запроса
         if city is not None:
             params.update({"city": city.strip()})
         if experience > 0:
-            params.update({"experience": experience})
+            params.update({"experience": converted_experience})
         if remote:
             params.update({"remote": remote})
         if job_board != "Не имеет значения":
@@ -325,3 +327,24 @@ class VacancyScraperMixin:
         async for job in job_list_from_scraper:
             job_list_from_api.append(job)
         return job_list_from_api
+
+    @logger.catch(message="Ошибка в методе VacancyScraperMixin.convert_experince()")
+    async def convert_experince(self, experience: int) -> str:
+        """Конвертирует значения опыта работы в понятный
+        для скрапера вид.
+
+        Args:
+            experience (int): Опыт.
+
+        Returns:
+            str: Конвертированный опыт.
+        """
+        if experience == 1:
+            converted_experience = "Без опыта"
+        elif experience == 2:
+            converted_experience = "От 1 до 3-х лет"
+        elif experience == 3:
+            converted_experience = "От 3-х до 6 лет"
+        elif experience == 4:
+            converted_experience = "Более 6 лет"
+        return converted_experience
