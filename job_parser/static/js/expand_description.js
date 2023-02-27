@@ -1,18 +1,20 @@
-const expandLink = document.querySelector(".expand-link");
-const collapseLink = document.querySelector(".collapse-link");
-const shortText = document.querySelector(".short-text");
-const fullText = document.querySelector(".full-text");
+const expandLinks = document.querySelectorAll(".expand-link");
+const collapseLinks = document.querySelectorAll(".collapse-link");
+const shortTexts = document.querySelectorAll(".short-text");
+const fullTexts = document.querySelectorAll(".full-text");
 
-expandLink.addEventListener("click", function () {
-    shortText.style.display = "none";
-    fullText.style.display = "inline";
-    expandLink.style.display = "none";
-    collapseLink.style.display = "inline";
-});
+for (let i = 0; i < expandLinks.length; i++) {
+    expandLinks[i].addEventListener("click", function () {
+        shortTexts[i].style.display = "none";
+        fullTexts[i].style.display = "inline";
+        expandLinks[i].style.display = "none";
+        collapseLinks[i].style.display = "inline";
+    });
 
-collapseLink.addEventListener("click", function () {
-    shortText.style.display = "inline";
-    fullText.style.display = "none";
-    expandLink.style.display = "inline";
-    collapseLink.style.display = "none";
-});
+    collapseLinks[i].addEventListener("click", function () {
+        shortTexts[i].style.display = "inline";
+        fullTexts[i].style.display = "none";
+        expandLinks[i].style.display = "inline";
+        collapseLinks[i].style.display = "none";
+    });
+}
