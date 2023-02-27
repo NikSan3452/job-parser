@@ -57,3 +57,4 @@ db.sqlite3
 .env.prod.db
 test.py
 firebase-debug.log
+parser_views.log
