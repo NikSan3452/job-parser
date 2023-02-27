@@ -44,11 +44,11 @@ class HabrPipeline:
         if item_dict.get("experience"):
             experince = item_dict.get("experience").lower()
 
-            if experince in ("стажёр (intern)", "младший (junior)"):
+            if experince == "стажёр (intern)" or experince is None or experince == '':
                 item_dict["experience"] = "Без опыта"
-            elif experince in ("младший (junior)",):
+            elif experince == "младший (junior)":
                 item_dict["experience"] = "От 1 до 3-х лет"
-            elif experince in ("средний (middle)",):
+            elif experince == "средний (middle)":
                 item_dict["experience"] = "От 3-х до 6 лет"
             elif experince in (
                 "старший (senior)",
