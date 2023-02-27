@@ -5,6 +5,10 @@ from django.contrib import messages, auth
 from parser.models import FavouriteVacancy
 from .models import Profile, User
 from .forms import ProfileForm
+from logger import setup_logging, logger
+
+# Логирование
+setup_logging()
 
 
 @login_required
@@ -13,7 +17,7 @@ def profile(request, username):
         user = User.objects.get(username=username)
         profile = Profile.objects.get(user=user)
     except Exception as exc:
-            print(f"Ошибка базы данных {exc}")
+        logger.exception(exc)
 
     if request.method == "POST":
         form = ProfileForm(request.POST)
@@ -23,6 +27,8 @@ def profile(request, username):
             profile.job = form.cleaned_data["job"].lower()
             profile.subscribe = form.cleaned_data["subscribe"]
             profile.save()
+            logger.debug("Данные профиля сохранены")
+
             if profile.subscribe:
                 messages.success(request, "Вы подписались на рассылку вакансий")
             else:
@@ -32,7 +38,7 @@ def profile(request, username):
         try:
             favourite_vacancy = FavouriteVacancy.objects.filter(user=user).all()
         except Exception as exc:
-            print(f"Ошибка базы данных {exc}")
+            logger.exception(exc)
 
         default_data = {
             "city": profile.city,
