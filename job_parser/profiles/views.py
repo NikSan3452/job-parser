@@ -1,11 +1,11 @@
-from django.shortcuts import render, redirect
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages, auth
-
+from django.shortcuts import redirect, render
+from logger import logger, setup_logging
 from parser.models import FavouriteVacancy
-from .models import Profile, User
+
 from .forms import ProfileForm
-from logger import setup_logging, logger
+from .models import Profile, User
 
 # Логирование
 setup_logging()
