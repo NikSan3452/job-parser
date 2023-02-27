@@ -10,6 +10,10 @@ from parser.api import main
 from parser.forms import SearchingForm
 from parser.mixins import VacancyHelpersMixin, VacancyScraperMixin, RedisCacheMixin
 from parser.models import FavouriteVacancy, VacancyBlackList
+from logger import setup_logging, logger
+
+# Логирование
+setup_logging()
 
 
 class HomePageView(FormView):
@@ -42,6 +46,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
     template_name = "parser/list.html"
     job_list_from_api = []
 
+    @logger.catch(level="CRITICAL", message=f"Ошибка в методе <VacancyListView.get()>")
     async def get(self, request, *args, **kwargs):
         """Отвечает за обработку GET запросов к странице со списком вакансий.
 
@@ -93,6 +98,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
         Returns: HttpResponse
         """
         form = self.form_class(request.POST)
+        view_logger = logger.bind(request=request.POST)
 
         if form.is_valid():
             # Получаем данные из формы
@@ -110,13 +116,22 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
             # Получаем id города для API HeadHunter и Zarplata
             city_id = await self.get_city_id(city, request)
             try:
+                # Если выбранная площадка относится к скраперу - получаем данные только из скрапера
                 if job_board in ("Habr career",):
-                    # Получаем вакансии из скрапера
                     job_list_from_scraper = await self.get_vacancies_from_scraper(
-                        city, job, date_from, date_to, title_search, experience, remote, job_board
+                        request,
+                        city,
+                        job,
+                        date_from,
+                        date_to,
+                        title_search,
+                        experience,
+                        remote,
+                        job_board,
                     )
+                    view_logger.debug("Получены вакансии из скрапера")
                 else:
-                    # Получаем список вакансий из API
+                    # Получаем список вакансий из API и скрапера
                     self.job_list_from_api = await main.run(
                         city=city,
                         city_from_db=city_id,
@@ -128,15 +143,21 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
                         remote=remote,
                         job_board=job_board,
                     )
-                    
+
                     job_list_from_scraper = await self.get_vacancies_from_scraper(
-                            city, job, date_from, date_to, title_search, experience, remote, job_board
-                        )
-                
+                        request,
+                        city,
+                        job,
+                        date_from,
+                        date_to,
+                        title_search,
+                        experience,
+                        remote,
+                        job_board,
+                    )
+                    view_logger.debug("Получены вакансии из API и скрапера")
             except Exception as exc:
-                print(
-                    f"Ошибка в функции {self.post.__name__}: {exc} Сервер столкнулся с непредвиденной ошибкой"
-                )
+                view_logger.exception(exc)
 
             # Добавляем вакансии из скрапера в список вакансий из api
             await self.add_vacancy_to_job_list_from_api(
@@ -183,6 +204,7 @@ def add_to_favourite_view(request):
     Returns:
         _type_: JsonResponse.
     """
+    view_logger = logger.bind(request=request.POST)
     if request.method == "POST":
 
         data = json.load(request)
@@ -192,8 +214,9 @@ def add_to_favourite_view(request):
         try:
             user = auth.get_user(request)
             FavouriteVacancy.objects.get_or_create(user=user, url=vacancy_url, title=vacancy_title)
+            view_logger.info("Вакансия добавлена в избранное")
         except Exception as exc:
-            print(f"Ошибка базы данных в функции {add_to_favourite_view.__name__}: {exc}")
+            view_logger.exception(exc)
     return JsonResponse({"status": "Вакансия добавлена в избранное"})
 
 
@@ -207,6 +230,7 @@ def delete_from_favourite_view(request):
     Returns:
         _type_: JsonResponse.
     """
+    view_logger = logger.bind(request=request.POST)
     if request.method == "POST":
 
         data = json.load(request)
@@ -215,8 +239,9 @@ def delete_from_favourite_view(request):
         try:
             user = auth.get_user(request)
             FavouriteVacancy.objects.filter(user=user, url=vacancy_url).delete()
+            view_logger.info("Вакансия удалена из избранного")
         except Exception as exc:
-            print(f"Ошибка базы данных в функции {delete_from_favourite_view.__name__}: {exc}")
+            view_logger.exception(exc)
     return JsonResponse({"status": "Вакансия удалена из избранного"})
 
 
@@ -230,6 +255,7 @@ def add_to_black_list_view(request):
     Returns:
         _type_: JsonResponse.
     """
+    view_logger = logger.bind(request=request.POST)
     if request.method == "POST":
 
         data = json.load(request)
@@ -238,6 +264,7 @@ def add_to_black_list_view(request):
         try:
             user = auth.get_user(request)
             VacancyBlackList.objects.get_or_create(user=user, url=vacancy_url)
+            view_logger.info("Вакансия добавлена в черный список")
         except Exception as exc:
-            print(f"Ошибка базы данных в функции {add_to_black_list_view.__name__}: {exc}")
+            view_logger.exception(exc)
     return JsonResponse({"status": "Вакансия добавлена в черный список"})

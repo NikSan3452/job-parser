@@ -3,18 +3,22 @@ import scrapy
 from dateutil.parser import parse
 from scrapy_splash import SplashRequest
 from items import VacancyItem
+from logger import setup_logging, logger
 
+# Логирование
+setup_logging()
 
 class HabrSpider(scrapy.Spider):
     name = "habr"
     allowed_domains = ["career.habr.com"]
     pages_count = 3
 
+    @logger.catch(message="Ошибка в методе HabrSpider.start_requests()")
     def start_requests(self):
         yield SplashRequest(
             url="https://career.habr.com/vacancies", callback=self.parse_vacancy_count
         )
-
+    
     def parse_vacancy_count(self, response):
         for page in range(self.pages_count):
             url = f"https://career.habr.com/vacancies?page={page}&type=all"

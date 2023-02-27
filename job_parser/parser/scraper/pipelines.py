@@ -5,11 +5,14 @@
 
 
 # useful for handling different item types with a single interface
-import pytz
-from dateutil.parser import parse
+
 from itemadapter import ItemAdapter
 
 from parser.models import VacancyScraper
+from logger import setup_logging, logger
+
+# Логирование
+setup_logging()
 
 
 class ScraperPipeline:
@@ -18,6 +21,7 @@ class ScraperPipeline:
 
 
 class HabrPipeline:
+    
     def process_item(self, item, spider):
         item_dict = dict(item)
         remote_list = ("можно удалённо",)
@@ -60,7 +64,10 @@ class HabrPipeline:
             item_dict["remote"] = True
 
         item_dict["published_at"] = item_dict.get("published_at")
-
-        VacancyScraper.objects.get_or_create(**item_dict)
+        
+        try:
+            VacancyScraper.objects.get_or_create(**item_dict)
+        except Exception as exc:
+            logger.exception(exc)
 
         return item

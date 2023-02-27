@@ -1,12 +1,18 @@
 import httpx
 import orjson
 from typing import Optional
+from logger import setup_logging, logger
+
+# Логирование
+setup_logging()
+
 
 class Parser:
     """Основной класс парсера."""
 
     general_job_list: list[dict] = []
 
+    @logger.catch(message="Ошибка в методе Parser.create_session()")
     async def create_session(
         self,
         url: str,
@@ -60,11 +66,9 @@ class Parser:
                 json_data = orjson.loads(data)
                 job_list.append(json_data)
 
-                if (
-                    job_list[0][total_pages] - page
-                ) <= 1:  # Проверка на последнюю страницу
+                if (job_list[0][total_pages] - page) <= 1:  # Проверка на последнюю страницу
                     break
             except httpx.RequestError as exc:
-                print(f"Адрес {exc.request.url!r} вернул неверный ответ {exc}")
+                logger.exception(exc)
 
         return job_list

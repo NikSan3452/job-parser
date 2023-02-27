@@ -11,7 +11,10 @@ from django.conf import settings
 from parser.models import City, FavouriteVacancy, VacancyBlackList, VacancyScraper
 from parser.forms import SearchingForm
 from parser.api.utils import Utils
+from logger import setup_logging, logger
 
+# Логирование
+setup_logging()
 
 utils = Utils()
 
@@ -19,6 +22,7 @@ utils = Utils()
 class VacancyHelpersMixin:
     """Класс предоставляет вспомогательные методы"""
 
+    @logger.catch(message=f"Ошибка в методе VacancyHelpersMixin.check_request_data()")
     async def check_request_data(self, request: Any) -> dict:
         """Проверяет параметры запроса и если они None или False,
         удаляет их из словаря.
@@ -61,6 +65,7 @@ class VacancyHelpersMixin:
         Returns:
             list[dict]: Список вакансий без добавленных в черный список.
         """
+        mixin_logger = logger.bind(request=request)
         try:
             user = auth.get_user(request)
 
@@ -76,7 +81,7 @@ class VacancyHelpersMixin:
                         vacancies.remove(vacancy)
             return vacancies
         except Exception as exc:
-            print(f"Ошибка базы данных в функции {self.check_vacancy_black_list}: {exc}")
+            mixin_logger.exception(exc)
 
     async def get_favourite_vacancy(self, request: Any):
         """Получает список вакансий добавленных в избранное.
@@ -87,6 +92,7 @@ class VacancyHelpersMixin:
         Returns:
             FavouriteVacancy: Список вакансий добавленных в избранное.
         """
+        mixin_logger = logger.bind(request=request)
         try:
             user = auth.get_user(request)
             if not isinstance(user, AnonymousUser):
@@ -95,8 +101,9 @@ class VacancyHelpersMixin:
                 list_favourite = []
             return list_favourite
         except Exception as exc:
-            print(f"Ошибка базы данных в функции {self.get_favourite_vacancy}: {exc}")
+            mixin_logger.exception(exc)
 
+    @logger.catch(message="Ошибка в методе VacancyHelpersMixin.get_pagination()")
     async def get_pagination(self, request: Any, job_list: list[dict], context: dict) -> None:
         """Добавляет пагинацию.
 
@@ -110,6 +117,7 @@ class VacancyHelpersMixin:
         page_obj = paginator.get_page(page_number)
         context["object_list"] = page_obj
 
+    @logger.catch(message="Ошибка в методе VacancyHelpersMixin.get_form_data()")
     async def get_form_data(self, form: SearchingForm) -> None:
         """Получает данные из формы.
 
@@ -143,13 +151,14 @@ class VacancyHelpersMixin:
             form (Any): Форма.
             request (Any): Запрос.
         Returns: str | None: id города."""
+        mixin_logger = logger.bind(request=request)
         city_id = None
 
         if city:
             try:
                 city_from_db = await City.objects.filter(city=city).afirst()
             except Exception as exc:
-                print(f"Ошибка базы данных в функции {self.get_city_id.__name__}: {exc}")
+                mixin_logger.exception(exc)
 
             if city_from_db:
                 city_id = city_from_db.city_id
@@ -162,6 +171,9 @@ class VacancyHelpersMixin:
 
 
 class RedisCacheMixin:
+    """Класс отвечает за взаимодействие с Redis"""
+
+    @logger.catch(message="Ошибка в методе RedisCacheMixin.create_cache_key()")
     async def create_cache_key(self, request: Any) -> str:
         """Создает кэш - ключ в виде идетификатора сессии.
 
@@ -184,12 +196,13 @@ class RedisCacheMixin:
         Returns:
             Any: Список вакансий.
         """
+        mixin_logger = logger.bind(cache_key=self.cache_key)
         try:
             result = settings.CACHE.get(self.cache_key)
             if result:
                 return pickle.loads(result)
         except Exception as exc:
-            print(f"Ошибка в функции {self.get_data_from_cache.__name__}: {exc}")
+            mixin_logger.exception(exc)
 
     async def set_data_to_cache(self, job_list: list[dict]) -> Any:
         """Добавляет данные в кэш.
@@ -201,11 +214,12 @@ class RedisCacheMixin:
         Returns:
             Any: Список вакансий.
         """
+        mixin_logger = logger.bind(cache_key=self.cache_key)
         try:
             pickle_dump = pickle.dumps(job_list)
             settings.CACHE.set(self.cache_key, pickle_dump, ex=3600)
         except Exception as exc:
-            print(f"Ошибка в функции {self.set_data_to_cache.__name__}: {exc}")
+            mixin_logger.exception(exc)
 
 
 class VacancyScraperMixin:
@@ -213,6 +227,7 @@ class VacancyScraperMixin:
 
     async def get_vacancies_from_scraper(
         self,
+        request: Any,
         city: str | None,
         job: str,
         date_from: datetime.date,
@@ -236,6 +251,8 @@ class VacancyScraperMixin:
         Returns:
             _type_: Список вакансий.
         """
+        mixin_logger = logger.bind(request=request)
+        
         params: dict = {}  # Словарь параметров запроса
 
         # Проверяем дату и если нужно устанавливаем дефолтную
@@ -259,25 +276,31 @@ class VacancyScraperMixin:
         # Если чекбокс с поиском в заголовке вакансии активен,
         # то поиск осуществляется только по столбцу title
         if title_search:
-            job_list_from_scraper = (
-                VacancyScraper.objects.filter(title__icontains=job, **params)
-                .order_by("-published_at")
-                .values()
-            )
+            try:
+                job_list_from_scraper = (
+                    VacancyScraper.objects.filter(title__icontains=job, **params)
+                    .order_by("-published_at")
+                    .values()
+                )
+            except Exception as exc:
+                mixin_logger.exception(exc)
 
         # Иначе поиск осуществляется также в описании вакансии
         else:
-            job_list_from_scraper = (
-                VacancyScraper.objects.filter(
-                    Q(title__icontains=job) | Q(description__icontains=job),
-                    **params,
+            try:
+                job_list_from_scraper = (
+                    VacancyScraper.objects.filter(
+                        Q(title__icontains=job) | Q(description__icontains=job),
+                        **params,
+                    )
+                    .order_by("-published_at")
+                    .values()
                 )
-                .order_by("-published_at")
-                .values()
-            )
-
+            except Exception as exc:
+                mixin_logger.exception(exc)
         return job_list_from_scraper
 
+    @logger.catch(message="Ошибка в методе VacancyScraperMixin.add_vacancy_to_job_list_from_api()")
     async def add_vacancy_to_job_list_from_api(
         self, job_list_from_api: list[dict], job_list_from_scraper: VacancyScraper
     ) -> list[dict]:

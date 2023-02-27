@@ -5,13 +5,18 @@ from dateutil import parser
 from .utils import Utils
 from .config import ParserConfig, RequestConfig
 from .base_parser import Parser
+from logger import setup_logging, logger
 
+# Логирование
+setup_logging()
 
 config = ParserConfig()
 utils = Utils()
 
 
 class Headhunter(Parser):
+    """Парсер Headhunter."""
+
     def __init__(self, params: RequestConfig) -> None:
         self.city_from_db = params.city_from_db
         self.job = params.job
@@ -33,6 +38,7 @@ class Headhunter(Parser):
             self.experience = utils.convert_experience(experience=params.experience)
             self.hh_params["experience"] = self.experience
 
+    @logger.catch(message="Ошибка в методе Headhunter.get_vacancy_from_headhunter()")
     async def get_vacancy_from_headhunter(
         self, url: str = config.headhunter_url, job_board: str = "HeadHunter"
     ) -> dict:
@@ -85,11 +91,15 @@ class Headhunter(Parser):
             # Добавляем словарь с вакансией в общий список всех вакансий
             Parser.general_job_list.append(job_dict.copy())
 
-        print("Сбор вакансий с сайта Headhunter завершен")
+        if url == config.headhunter_url:
+            logger.debug("Сбор вакансий с Headhunter завершен")
+            
         return job_dict
 
 
 class SuperJob(Parser):
+    """Парсер SuperJob."""
+
     def __init__(self, params: RequestConfig) -> None:
         self.city = params.city
         self.job = params.job
@@ -109,6 +119,7 @@ class SuperJob(Parser):
         if params.experience > 0:
             self.sj_params["experience"] = params.experience
 
+    @logger.catch(message="Ошибка в методе SuperJob.get_vacancy_from_superjob()")
     async def get_vacancy_from_superjob(self) -> dict:
         """Формирует словарь с основными полями вакансий с сайта SuperJob
 
@@ -175,25 +186,31 @@ class SuperJob(Parser):
                 job_dict["experience"] = "Не указано"
 
             # Конвертируем дату в удобочитаемый вид
-            published_date = datetime.datetime.fromtimestamp(
-                job["date_published"]
-            ).replace(tzinfo=pytz.UTC)
+            published_date = datetime.datetime.fromtimestamp(job["date_published"]).replace(
+                tzinfo=pytz.UTC
+            )
             job_dict["published_at"] = published_date
 
             # Добавляем словарь с вакансией в общий список всех вакансий
             Parser.general_job_list.append(job_dict.copy())
 
-        print("Сбор вакансий с сайта SuperJob завершен")
+        logger.debug("Сбор вакансий с SuperJob завершен")
         return job_dict
 
 
 class Zarplata(Headhunter):
+    """Парсер Zarplata."""
+
     def __init__(self, params: RequestConfig) -> None:
         super().__init__(params)
 
+    @logger.catch(message="Ошибка в методе Zarplata.get_vacancy_from_zarplata()")
     async def get_vacancy_from_zarplata(self) -> dict:
-        job_dict = await super().get_vacancy_from_headhunter(
-            config.zarplata_url, "Zarplata"
-        )
-        print("Сбор вакансий с сайта Zarplata завершен")
+        """Отвечает за получение вакансий с сайта Zarplata.
+
+        Returns:
+            dict: Словарь с вакансиями.
+        """
+        job_dict = await super().get_vacancy_from_headhunter(config.zarplata_url, "Zarplata")
+        logger.debug("Сбор вакансий с Zarplata завершен")
         return job_dict
