@@ -50,3 +50,6 @@ pytest-mock
 scrapy
 scrapy-splash
 scrapy-djangoitem
+scrapy-fake-useragent
+
+loguru
