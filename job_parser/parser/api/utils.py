@@ -28,27 +28,32 @@ class Utils:
 
     @staticmethod
     def check_date(
-        date_from: str | None, date_to: str | None
-    ) -> tuple[datetime.date | str]:
+        date_from: str | None | datetime.date, date_to: str | None | datetime.date
+    ) -> tuple[datetime.date | str, datetime.date | str]:
         """Проверяет дату на пустое значение, если истина, то
         будет установлено значение по умолчанию.
 
         Args:
-            date_from (str): Дата от.
-            date_to (str): Дата до.
+            date_from (str | None | datetime.date): Дата от.
+            date_to (str | None | datetime.date): Дата до.
 
         Returns:
-            datetime.date | str: Время задаваемое по умолчанию.
+            tuple[datetime.date | str, datetime.date | str]: Время задаваемое по умолчанию.
         """
-        if date_from == "" or date_from is None:
+        if not date_from or date_from == "":
             new_date_from = datetime.date.today() - datetime.timedelta(days=3)
+        elif isinstance(date_from, str):
+            new_date_from = datetime.datetime.strptime(date_from, "%Y-%m-%d").date()
         else:
             new_date_from = date_from
 
-        if date_to == "" or date_to is None:
+        if not date_to or date_to == "":
             new_date_to = datetime.date.today()
+        elif isinstance(date_to, str):
+            new_date_to = datetime.datetime.strptime(date_to, "%Y-%m-%d").date()
         else:
             new_date_to = date_to
+
         return new_date_from, new_date_to
 
     @staticmethod
@@ -97,14 +102,14 @@ class Utils:
             str: Конвертированный опыт.
         """
         if experience == 1:
-            experience = "noExperience"
+            converted_experience = "noExperience"
         elif experience == 2:
-            experience = "between1And3"
+            converted_experience = "between1And3"
         elif experience == 3:
-            experience = "between3And6"
+            converted_experience = "between3And6"
         elif experience == 4:
-            experience = "moreThan6"
-        return experience
+            converted_experience = "moreThan6"
+        return converted_experience
 
     @staticmethod
     def sorted_by_remote_work(remote: bool, job_list: list[dict]):
