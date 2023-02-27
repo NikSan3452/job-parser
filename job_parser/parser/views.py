@@ -1,16 +1,16 @@
 import json
+
+from django.contrib import auth
+from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views import View
-from django.contrib import auth
 from django.views.generic.edit import FormView
-from django.contrib.auth.decorators import login_required
-
+from logger import logger, setup_logging
 from parser.api import main
 from parser.forms import SearchingForm
-from parser.mixins import VacancyHelpersMixin, VacancyScraperMixin, RedisCacheMixin
+from parser.mixins import RedisCacheMixin, VacancyHelpersMixin, VacancyScraperMixin
 from parser.models import FavouriteVacancy, VacancyBlackList
-from logger import setup_logging, logger
 
 # Логирование
 setup_logging()
