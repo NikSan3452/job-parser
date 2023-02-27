@@ -8,18 +8,25 @@ from logger import setup_logging, logger
 # Логирование
 setup_logging()
 
+
 class HabrSpider(scrapy.Spider):
     name = "habr"
     allowed_domains = ["career.habr.com"]
-    pages_count = 3
+    pages_count = 0
 
     @logger.catch(message="Ошибка в методе HabrSpider.start_requests()")
     def start_requests(self):
         yield SplashRequest(
             url="https://career.habr.com/vacancies", callback=self.parse_vacancy_count
         )
-    
+
     def parse_vacancy_count(self, response):
+        search_total = response.css(".search-total::text").get()
+        for string in search_total.split():
+            if string.isdigit():
+                
+                self.pages_count = int(int(string) / 25)
+
         for page in range(self.pages_count):
             url = f"https://career.habr.com/vacancies?page={page}&type=all"
             yield SplashRequest(url=url, callback=self.parse_pages)
