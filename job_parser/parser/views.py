@@ -44,7 +44,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
 
     form_class = SearchingForm
     template_name = "parser/list.html"
-    job_list_from_api = []
+    job_list_from_api: list[dict] = []
 
     @logger.catch(level="CRITICAL", message="Ошибка в методе <VacancyListView.get()>")
     async def get(self, request, *args, **kwargs):
