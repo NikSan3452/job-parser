@@ -15,7 +15,9 @@ class Utils:
             float: Конвертированная дата.
         """
         if isinstance(date, datetime.date):
-            converted_to_datetime = datetime.datetime.combine(date, datetime.time()).timestamp()
+            converted_to_datetime = datetime.datetime.combine(
+                date, datetime.time()
+            ).timestamp()
             return converted_to_datetime
         elif isinstance(date, str):
             converted_from_str = datetime.datetime.strptime(date, "%Y-%m-%d")
@@ -25,7 +27,9 @@ class Utils:
             return converted_to_datetime
 
     @staticmethod
-    def check_date(date_from: str | None, date_to: str | None) -> tuple[datetime.date | str]:
+    def check_date(
+        date_from: str | None, date_to: str | None
+    ) -> tuple[datetime.date | str]:
         """Проверяет дату на пустое значение, если истина, то
         будет установлено значение по умолчанию.
 
@@ -58,7 +62,9 @@ class Utils:
         Returns:
             list[dict]: Сортированный список вакансий.
         """
-        sorted_list: list[dict] = sorted(job_list, key=lambda _dict: _dict[key], reverse=True)
+        sorted_list: list[dict] = sorted(
+            job_list, key=lambda _dict: _dict[key], reverse=True
+        )
         return sorted_list
 
     @staticmethod

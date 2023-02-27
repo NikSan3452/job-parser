@@ -62,11 +62,15 @@ class Parser:
             params["page"] = page
             page += 1
             try:
-                data = await self.create_session(url=url, params=params, headers=headers)
+                data = await self.create_session(
+                    url=url, params=params, headers=headers
+                )
                 json_data = orjson.loads(data)
                 job_list.append(json_data)
 
-                if (job_list[0][total_pages] - page) <= 1:  # Проверка на последнюю страницу
+                if (
+                    job_list[0][total_pages] - page
+                ) <= 1:  # Проверка на последнюю страницу
                     break
             except httpx.RequestError as exc:
                 logger.exception(exc)

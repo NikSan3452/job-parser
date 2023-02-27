@@ -20,7 +20,9 @@ class Headhunter(Parser):
     def __init__(self, params: RequestConfig) -> None:
         self.city_from_db = params.city_from_db
         self.job = params.job
-        self.date_from, self.date_to = utils.check_date(params.date_from, params.date_to)
+        self.date_from, self.date_to = utils.check_date(
+            params.date_from, params.date_to
+        )
         self.experience = params.experience
 
         # Формируем параметры запроса к API Headhunter
@@ -93,7 +95,7 @@ class Headhunter(Parser):
 
         if url == config.headhunter_url:
             logger.debug("Сбор вакансий с Headhunter завершен")
-            
+
         return job_dict
 
 
@@ -103,7 +105,9 @@ class SuperJob(Parser):
     def __init__(self, params: RequestConfig) -> None:
         self.city = params.city
         self.job = params.job
-        self.date_from, self.date_to = utils.check_date(params.date_from, params.date_to)
+        self.date_from, self.date_to = utils.check_date(
+            params.date_from, params.date_to
+        )
 
         # Формируем параметры запроса к API SuperJob
         self.sj_params = {
@@ -186,9 +190,9 @@ class SuperJob(Parser):
                 job_dict["experience"] = "Не указано"
 
             # Конвертируем дату в удобочитаемый вид
-            published_date = datetime.datetime.fromtimestamp(job["date_published"]).replace(
-                tzinfo=pytz.UTC
-            )
+            published_date = datetime.datetime.fromtimestamp(
+                job["date_published"]
+            ).replace(tzinfo=pytz.UTC)
             job_dict["published_at"] = published_date
 
             # Добавляем словарь с вакансией в общий список всех вакансий
@@ -211,6 +215,8 @@ class Zarplata(Headhunter):
         Returns:
             dict: Словарь с вакансиями.
         """
-        job_dict = await super().get_vacancy_from_headhunter(config.zarplata_url, "Zarplata")
+        job_dict = await super().get_vacancy_from_headhunter(
+            config.zarplata_url, "Zarplata"
+        )
         logger.debug("Сбор вакансий с Zarplata завершен")
         return job_dict

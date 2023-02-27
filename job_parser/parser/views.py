@@ -46,7 +46,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
     template_name = "parser/list.html"
     job_list_from_api = []
 
-    @logger.catch(level="CRITICAL", message=f"Ошибка в методе <VacancyListView.get()>")
+    @logger.catch(level="CRITICAL", message="Ошибка в методе <VacancyListView.get()>")
     async def get(self, request, *args, **kwargs):
         """Отвечает за обработку GET запросов к странице со списком вакансий.
 
@@ -169,7 +169,9 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
             await self.set_data_to_cache(self.job_list_from_api)
 
             # Проверяем добавлена ли вакансия в черный список
-            vacancies = await self.check_vacancy_black_list(self.job_list_from_api, request)
+            vacancies = await self.check_vacancy_black_list(
+                self.job_list_from_api, request
+            )
 
             # Отображаем вакансии, которые в избранном
             list_favourite = await self.get_favourite_vacancy(request)
@@ -213,7 +215,9 @@ def add_to_favourite_view(request):
 
         try:
             user = auth.get_user(request)
-            FavouriteVacancy.objects.get_or_create(user=user, url=vacancy_url, title=vacancy_title)
+            FavouriteVacancy.objects.get_or_create(
+                user=user, url=vacancy_url, title=vacancy_title
+            )
             view_logger.info("Вакансия добавлена в избранное")
         except Exception as exc:
             view_logger.exception(exc)

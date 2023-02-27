@@ -35,7 +35,9 @@ class TestVacancyListPage:
 
     def test_vacancy_list_method_get(self, mocker, client: Client) -> None:
         """Тестирует GET запросы к представлению списка вакансий."""
-        mocker.patch("parser.mixins.RedisCacheMixin.get_data_from_cache", return_value=[])
+        mocker.patch(
+            "parser.mixins.RedisCacheMixin.get_data_from_cache", return_value=[]
+        )
 
         response = client.get(path="/list/")
 
@@ -57,7 +59,16 @@ class TestVacancyListPage:
                 False,
                 "Не имеет значения",
             ),
-            ("Python", "Москва", "2023-01-01", "2023-02-02", "1", True, True, "HeadHunter"),
+            (
+                "Python",
+                "Москва",
+                "2023-01-01",
+                "2023-02-02",
+                "1",
+                True,
+                True,
+                "HeadHunter",
+            ),
             ("Python", "", "2023-01-01", "2023-02-02", "2", False, False, "SuperJob"),
             ("Python", "", "", "", "1", False, False, "Zarplata"),
         ],
@@ -94,8 +105,12 @@ class TestVacancyListPage:
         Assertions.assert_compare_obj_and_response_obj(city, "city", response)
         Assertions.assert_compare_obj_and_response_obj(date_from, "date_from", response)
         Assertions.assert_compare_obj_and_response_obj(date_to, "date_to", response)
-        Assertions.assert_compare_obj_and_response_obj(title_search, "title_search", response)
-        Assertions.assert_compare_obj_and_response_obj(experience, "experience", response)
+        Assertions.assert_compare_obj_and_response_obj(
+            title_search, "title_search", response
+        )
+        Assertions.assert_compare_obj_and_response_obj(
+            experience, "experience", response
+        )
         Assertions.assert_compare_obj_and_response_obj(remote, "remote", response)
         Assertions.assert_compare_obj_and_response_obj(job_board, "job_board", response)
         Assertions.assert_object_in_response_context("form", response)

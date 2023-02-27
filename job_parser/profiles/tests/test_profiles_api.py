@@ -18,7 +18,9 @@ class TestProfile:
 
     def test_profile_view_method_get(self) -> None:
         """Тестирует страницу профиля."""
-        response = self.client.get(reverse("profiles:profile", args=[self.user.username]))
+        response = self.client.get(
+            reverse("profiles:profile", args=[self.user.username])
+        )
 
         assert response.status_code == 200
 
@@ -45,4 +47,4 @@ class TestProfile:
 
         assert profile.city == "Москва".lower()
         assert profile.job == "Backend-разработчик".lower()
-        assert profile.subscribe == True
+        assert profile.subscribe is True

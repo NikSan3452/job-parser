@@ -29,7 +29,7 @@ ROBOTSTXT_OBEY = True
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = random.uniform(0.1, 3.0)
+DOWNLOAD_DELAY = random.uniform(0.1, 5.0)
 
 # The download delay setting will honor only one of:
 # CONCURRENT_REQUESTS_PER_DOMAIN = 16
@@ -65,7 +65,6 @@ DOWNLOADER_MIDDLEWARES = {
     "scrapy.downloadermiddlewares.retry.RetryMiddleware": None,  # scrapy-fake-useragent
     "scrapy_fake_useragent.middleware.RandomUserAgentMiddleware": 400,  # scrapy-fake-useragent
     "scrapy_fake_useragent.middleware.RetryUserAgentMiddleware": 401,  # scrapy-fake-useragent
-
 }
 
 # Enable or disable extensions

@@ -20,7 +20,7 @@ async def run(
     title_search: Optional[bool] = False,
     experience: int = 0,
     remote: Optional[bool] = False,
-    job_board: Optional[str] = "Не имеет значения"
+    job_board: Optional[str] = "Не имеет значения",
 ) -> list[dict]:
     """Отвечает за запуск парсера.
 

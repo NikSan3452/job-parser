@@ -6,7 +6,7 @@ from typing import Optional
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 
-from .models import Vacancy, City
+from .models import VacancyCelery, City
 from profiles.models import Profile
 from .api import parsers
 from job_parser.celery import app
@@ -84,7 +84,7 @@ class SavingVacancy:
                 # Записываем в БД вакансии для конкретного профиля
                 if len(vacancies) > 0:
                     for vacancy in vacancies:
-                        Vacancy.objects.get_or_create(
+                        VacancyCelery.objects.get_or_create(
                             user=profile[0],
                             url=vacancy["url"],
                             title=vacancy["title"],
@@ -112,12 +112,12 @@ def run_parser():
 @app.task
 def sending_emails() -> None:
     """Отвечает за рассылку электронных писем с вакансиями"""
-    
+
     # Выбираем из БД тех пользователей, у которых покдлючена подписка
     for profile in Profile.objects.filter(subscribe=True):
 
         # Выбираем из БД вакансии для конкретного пользователя за сегодня
-        vacancy_list = Vacancy.objects.filter(published_at=date.today()).filter(
+        vacancy_list = VacancyCelery.objects.filter(published_at=date.today()).filter(
             user=profile
         )
 
@@ -138,9 +138,7 @@ def sending_emails() -> None:
             if vacancy.description:
                 html += f"<p>{vacancy.description} </p>"
             html += f"<p>{vacancy.company} </p>"
-            html += (
-                f"<p>Город: {vacancy.city} | Дата публикации: {vacancy.published_at}</p>"
-            )
+            html += f"<p>Город: {vacancy.city} | Дата публикации: {vacancy.published_at}</p>"
 
         # Если вакансий нет, придет сообщение о том, что вакансий на сегодня не нашлось
         _html = html if html else empty

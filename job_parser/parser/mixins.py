@@ -22,7 +22,7 @@ utils = Utils()
 class VacancyHelpersMixin:
     """Класс предоставляет вспомогательные методы"""
 
-    @logger.catch(message=f"Ошибка в методе VacancyHelpersMixin.check_request_data()")
+    @logger.catch(message="Ошибка в методе VacancyHelpersMixin.check_request_data()")
     async def check_request_data(self, request: Any) -> dict:
         """Проверяет параметры запроса и если они None или False,
         удаляет их из словаря.
@@ -48,13 +48,18 @@ class VacancyHelpersMixin:
             del request_data["title_search"]
         if request_data.get("experience") == "None":
             del request_data["experience"]
-        if request_data.get("remote") == "False" or request_data.get("remote") == "None":
+        if (
+            request_data.get("remote") == "False"
+            or request_data.get("remote") == "None"
+        ):
             del request_data["remote"]
         if request_data.get("job_board") == "None":
             del request_data["job_board"]
         return request_data
 
-    async def check_vacancy_black_list(self, vacancies: list[dict], request: Any) -> list[dict]:
+    async def check_vacancy_black_list(
+        self, vacancies: list[dict], request: Any
+    ) -> list[dict]:
         """Проверяет добавлена ли вакансия в черный список
         и есла да, то удаляет ее из выдачи и избранного.
 
@@ -104,7 +109,9 @@ class VacancyHelpersMixin:
             mixin_logger.exception(exc)
 
     @logger.catch(message="Ошибка в методе VacancyHelpersMixin.get_pagination()")
-    async def get_pagination(self, request: Any, job_list: list[dict], context: dict) -> None:
+    async def get_pagination(
+        self, request: Any, job_list: list[dict], context: dict
+    ) -> None:
         """Добавляет пагинацию.
 
         Args:
@@ -141,7 +148,16 @@ class VacancyHelpersMixin:
         remote = form.cleaned_data.get("remote")
         job_board = form.cleaned_data.get("job_board")
 
-        return city, job, date_from, date_to, title_search, experience, remote, job_board
+        return (
+            city,
+            job,
+            date_from,
+            date_to,
+            title_search,
+            experience,
+            remote,
+            job_board,
+        )
 
     async def get_city_id(self, city: Any, request: Any) -> str | None:
         """Получет id города из базы данных.
@@ -252,7 +268,7 @@ class VacancyScraperMixin:
             _type_: Список вакансий.
         """
         mixin_logger = logger.bind(request=request)
-        
+
         params: dict = {}  # Словарь параметров запроса
 
         # Проверяем дату и если нужно устанавливаем дефолтную
@@ -300,7 +316,9 @@ class VacancyScraperMixin:
                 mixin_logger.exception(exc)
         return job_list_from_scraper
 
-    @logger.catch(message="Ошибка в методе VacancyScraperMixin.add_vacancy_to_job_list_from_api()")
+    @logger.catch(
+        message="Ошибка в методе VacancyScraperMixin.add_vacancy_to_job_list_from_api()"
+    )
     async def add_vacancy_to_job_list_from_api(
         self, job_list_from_api: list[dict], job_list_from_scraper: VacancyScraper
     ) -> list[dict]:

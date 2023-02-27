@@ -6,7 +6,6 @@
 
 # useful for handling different item types with a single interface
 
-from itemadapter import ItemAdapter
 
 from parser.models import VacancyScraper
 from logger import setup_logging, logger
@@ -21,18 +20,23 @@ class ScraperPipeline:
 
 
 class HabrPipeline:
-    
     def process_item(self, item, spider):
         item_dict = dict(item)
         remote_list = ("можно удалённо",)
 
         item_dict["url"] = item_dict.get("url").lower()
-        item_dict["title"] = item_dict.get("title").lower() if item_dict.get("title") else None
+        item_dict["title"] = (
+            item_dict.get("title").lower() if item_dict.get("title") else None
+        )
         item_dict["description"] = " ".join(
             [word.lower() for word in item_dict.get("description", [])]
         )
-        item_dict["city"] = item_dict.get("city").lower() if item_dict.get("city") else None
-        item_dict["salary"] = item_dict.get("salary").lower() if item_dict.get("salary") else None
+        item_dict["city"] = (
+            item_dict.get("city").lower() if item_dict.get("city") else None
+        )
+        item_dict["salary"] = (
+            item_dict.get("salary").lower() if item_dict.get("salary") else None
+        )
         item_dict["company"] = (
             item_dict.get("company").lower() if item_dict.get("company") else None
         )
@@ -64,7 +68,7 @@ class HabrPipeline:
             item_dict["remote"] = True
 
         item_dict["published_at"] = item_dict.get("published_at")
-        
+
         try:
             VacancyScraper.objects.get_or_create(**item_dict)
         except Exception as exc:
