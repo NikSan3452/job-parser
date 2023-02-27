@@ -6,8 +6,7 @@ def setup_logging():
     logger.remove()
     logger.add(
         "logs/parser_views.log",
-        colorize=True,
-        format="ВРЕМЯ: {time:MMMM D, YYYY > HH:mm:ss!UTC} | ТИП:: {level} | СООБЩЕНИЕ: {message} | {extra}",
+        format="ВРЕМЯ: {time:MMMM D, YYYY > HH:mm:ss!UTC} | ТИП: {level} | СООБЩЕНИЕ: {message} | {extra}",
         level="ERROR",
         backtrace=False,
         diagnose=False,
