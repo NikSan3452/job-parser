@@ -1,9 +1,9 @@
-import os
 import datetime
-from dotenv import load_dotenv
-
+import os
 from dataclasses import dataclass
 from typing import Optional
+
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -14,7 +14,7 @@ class ParserConfig:
     superjob_domen: str = "https://api.superjob.ru"
     superjob_api_version: str = "2.0"
     superjob_api_path: str = "vacancies"
-    superjob_secret_key: str = os.getenv("SUPERJOB_SECRET_KEY")
+    superjob_secret_key: str | None = os.getenv("SUPERJOB_SECRET_KEY")
     superjob_headers: dict = {"x-api-app-id": superjob_secret_key}
     superjob_url: str = f"{superjob_domen}/{superjob_api_version}/{superjob_api_path}/"
 
