@@ -1,11 +1,12 @@
-import pytz
 import datetime
 
+import pytz
 from dateutil import parser
-from .utils import Utils
-from .config import ParserConfig, RequestConfig
+from logger import logger, setup_logging
+
 from .base_parser import Parser
-from logger import setup_logging, logger
+from .config import ParserConfig, RequestConfig
+from .utils import Utils
 
 # Логирование
 setup_logging()
@@ -23,7 +24,6 @@ class Headhunter(Parser):
         self.date_from, self.date_to = utils.check_date(
             params.date_from, params.date_to
         )
-        self.experience = params.experience
 
         # Формируем параметры запроса к API Headhunter
         self.hh_params = {
@@ -49,14 +49,14 @@ class Headhunter(Parser):
         Returns:
             dict: Словарь с основными полями вакансий
         """
-        job_list = await self.get_vacancies(
+        job_list: list[dict] = await self.get_vacancies(
             url=url,
             params=self.hh_params,
             pages=20,
             total_pages="pages",
         )
 
-        job_dict = {}
+        job_dict: dict = {}
         # Формируем словарь с вакансиями
         for job in job_list[0]["items"]:
             job_dict["job_board"] = job_board
@@ -138,7 +138,7 @@ class SuperJob(Parser):
             headers=config.superjob_headers,
         )
 
-        job_dict = {}
+        job_dict: dict = {}
         # Формируем словарь с вакансиями
         for job in job_list[0]["objects"]:
             job_dict["job_board"] = "SuperJob"
