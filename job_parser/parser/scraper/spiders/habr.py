@@ -3,7 +3,6 @@ import scrapy
 from dateutil.parser import parse
 from items import VacancyItem
 from logger import logger, setup_logging
-from scrapy_splash import SplashRequest
 
 # Логирование
 setup_logging()
@@ -16,8 +15,10 @@ class HabrSpider(scrapy.Spider):
 
     @logger.catch(message="Ошибка в методе HabrSpider.start_requests()")
     def start_requests(self):
-        yield SplashRequest(
-            url="https://career.habr.com/vacancies", callback=self.parse_vacancy_count
+        yield scrapy.Request(
+            url="https://career.habr.com/vacancies",
+            callback=self.parse_vacancy_count,
+            meta=dict(playwright=True),
         )
 
     def parse_vacancy_count(self, response):
@@ -29,13 +30,13 @@ class HabrSpider(scrapy.Spider):
 
         for page in range(self.pages_count):
             url = f"https://career.habr.com/vacancies?page={page}&type=all"
-            yield SplashRequest(url=url, callback=self.parse_pages)
+            yield scrapy.Request(url=url, callback=self.parse_pages)
 
     def parse_pages(self, response):
         for href in response.css('.vacancy-card__title-link::attr("href")').extract():
             url = response.urljoin(href)
 
-            yield SplashRequest(url, callback=self.parse)
+            yield scrapy.Request(url, callback=self.parse)
 
     def parse(self, response, **kwargs):
         item = VacancyItem()
@@ -62,5 +63,7 @@ class HabrSpider(scrapy.Spider):
         item["published_at"] = parse(
             response.css(".basic-date::attr(datetime)").get()
         ).replace(tzinfo=pytz.UTC)
+        
+        logger.debug(response.request.headers.get('User-Agent'))
 
         yield item

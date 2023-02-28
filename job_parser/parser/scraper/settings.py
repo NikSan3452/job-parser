@@ -9,7 +9,6 @@
 
 import os
 import sys
-import random
 
 BOT_NAME = "scraper"
 
@@ -29,7 +28,7 @@ ROBOTSTXT_OBEY = True
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = random.uniform(0.1, 5.0)
+DOWNLOAD_DELAY = 2.5
 
 # The download delay setting will honor only one of:
 # CONCURRENT_REQUESTS_PER_DOMAIN = 16
@@ -51,15 +50,12 @@ COOKIES_ENABLED = False
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 SPIDER_MIDDLEWARES = {
     "scraper.middlewares.ScraperSpiderMiddleware": 543,
-    "scrapy_splash.SplashDeduplicateArgsMiddleware": 100,  # scrapy-splash
 }
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     "scraper.middlewares.ScraperDownloaderMiddleware": 543,
-    "scrapy_splash.SplashCookiesMiddleware": 723,
-    "scrapy_splash.SplashMiddleware": 725,
     "scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware": 810,
     "scrapy.downloadermiddlewares.useragent.UserAgentMiddleware": None,  # scrapy-fake-useragent
     "scrapy.downloadermiddlewares.retry.RetryMiddleware": None,  # scrapy-fake-useragent
@@ -106,11 +102,6 @@ REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
 
-# Scrapy-splash
-SPLASH_URL = "http://localhost:8050/"
-DUPEFILTER_CLASS = "scrapy_splash.SplashAwareDupeFilter"
-HTTPCACHE_STORAGE = "scrapy_splash.SplashAwareFSCacheStorage"
-
 # scrapy-fake-useragent
 FAKEUSERAGENT_PROVIDERS = [
     "scrapy_fake_useragent.providers.FakeUserAgentProvider",  # this is the first provider we'll try
@@ -118,6 +109,13 @@ FAKEUSERAGENT_PROVIDERS = [
     "scrapy_fake_useragent.providers.FixedUserAgentProvider",  # fall back to USER_AGENT value
 ]
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36>"
+
+# scrapy-playwright
+DOWNLOAD_HANDLERS = {
+    "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+    "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
+}
+PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT = 200000
 
 # Django
 current_path = os.path.abspath(__file__)
