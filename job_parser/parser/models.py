@@ -30,7 +30,7 @@ class VacancyScraper(models.Model):
     remote = models.BooleanField(
         default=False, null=True, verbose_name="Удаленная работа"
     )
-    published_at = models.DateField(auto_now_add=True, verbose_name="Дата публикации")
+    published_at = models.DateField(verbose_name="Дата публикации")
 
     class Meta:
         verbose_name = "Вакансия"
@@ -54,7 +54,7 @@ class VacancyCelery(models.Model):
         max_length=5000, null=True, verbose_name="Описание вакансии"
     )
     city = models.CharField(max_length=250, verbose_name="Город")
-    published_at = models.DateField(auto_now_add=True, verbose_name="Дата публикации")
+    published_at = models.DateField(verbose_name="Дата публикации")
 
     class Meta:
         verbose_name = "Вакансия"
