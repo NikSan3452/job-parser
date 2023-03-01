@@ -1,7 +1,7 @@
 import datetime
 
 import pytz
-from dateutil import parser
+from dateutil.parser import parse
 from logger import logger, setup_logging
 
 from .base_parser import Parser
@@ -19,10 +19,14 @@ class Headhunter(Parser):
     """Парсер Headhunter."""
 
     def __init__(self, params: RequestConfig) -> None:
-        self.city_from_db = params.city_from_db
-        self.job = params.job
-        self.date_from, self.date_to = utils.check_date(
-            params.date_from, params.date_to
+        self.params = params
+
+    @logger.catch(message="Ошибка в методе Headhunter.get_request_params()")
+    async def get_request_params(self) -> None:
+        self.city_from_db = self.params.city_from_db
+        self.job = self.params.job
+        self.date_from, self.date_to = await utils.check_date(
+            self.params.date_from, self.params.date_to
         )
 
         # Формируем параметры запроса к API Headhunter
@@ -36,8 +40,8 @@ class Headhunter(Parser):
         if self.city_from_db:
             self.hh_params["area"] = self.city_from_db
 
-        if params.experience > 0:
-            self.experience = utils.convert_experience(experience=params.experience)
+        if self.params.experience > 0:
+            self.experience = await utils.convert_experience(self.params.experience)
             self.hh_params["experience"] = self.experience
 
     @logger.catch(message="Ошибка в методе Headhunter.get_vacancy_from_headhunter()")
@@ -49,6 +53,8 @@ class Headhunter(Parser):
         Returns:
             dict: Словарь с основными полями вакансий
         """
+        await self.get_request_params()
+
         job_list: list[dict] = await self.get_vacancies(
             url=url,
             params=self.hh_params,
@@ -87,7 +93,7 @@ class Headhunter(Parser):
                 job_dict["type_of_work"] = "Не указано"
 
             # Конвертируем дату в удобочитаемый вид
-            published_date = parser.parse(job["published_at"]).replace(tzinfo=pytz.UTC)
+            published_date = parse(job["published_at"]).replace(tzinfo=pytz.UTC)
             job_dict["published_at"] = published_date
 
             # Добавляем словарь с вакансией в общий список всех вакансий
@@ -103,10 +109,14 @@ class SuperJob(Parser):
     """Парсер SuperJob."""
 
     def __init__(self, params: RequestConfig) -> None:
-        self.city = params.city
-        self.job = params.job
-        self.date_from, self.date_to = utils.check_date(
-            params.date_from, params.date_to
+        self.params = params
+
+    @logger.catch(message="Ошибка в методе SuperJob.get_request_params()")
+    async def get_request_params(self) -> None:
+        self.city = self.params.city
+        self.job = self.params.job
+        self.date_from, self.date_to = await utils.check_date(
+            self.params.date_from, self.params.date_to
         )
 
         # Формируем параметры запроса к API SuperJob
@@ -120,8 +130,8 @@ class SuperJob(Parser):
         if self.city:
             self.sj_params["town"] = self.city
 
-        if params.experience > 0:
-            self.sj_params["experience"] = params.experience
+        if self.params.experience > 0:
+            self.sj_params["experience"] = self.params.experience
 
     @logger.catch(message="Ошибка в методе SuperJob.get_vacancy_from_superjob()")
     async def get_vacancy_from_superjob(self) -> dict:
@@ -130,6 +140,8 @@ class SuperJob(Parser):
         Returns:
             dict: Словарь с основными полями вакансий
         """
+        await self.get_request_params()
+
         job_list = await self.get_vacancies(
             url=config.superjob_url,
             params=self.sj_params,
