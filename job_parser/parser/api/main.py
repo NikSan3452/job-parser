@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-from typing import Optional
 
 from parser.api.config import RequestConfig
 from parser.api.parsers import Headhunter, SuperJob, Zarplata
@@ -12,32 +11,24 @@ utils = Utils()
 
 
 async def run(
-    city: Optional[str] = None,
-    city_from_db: Optional[int] = None,
-    job: Optional[str] = "Python",
-    date_to: Optional[str | datetime.date] = None,
-    date_from: Optional[str | datetime.date] = None,
-    title_search: Optional[bool] = False,
-    experience: int = 0,
-    remote: Optional[bool] = False,
-    job_board: Optional[str] = "Не имеет значения",
+    form_params: dict = {},
 ) -> list[dict]:
     """Отвечает за запуск парсера.
 
     Args:
-        city (Optional[str], optional): Город. По умолчанию "Москва".
-        city_from_db (Optional[int], optional): Код города из базы данных.
-        Необходим для поиска в API HeadHUnter. По-умолчанию 1.
-        job (Optional[str], optional): Специальность. По-умолчанию "Python".
-        date_to (Optional[datetime.date], optional): Дата до. По-умолчанию сегодня.
-        date_from (Optional[datetime.date], optional): Дата от.
-        По-умолчанию высчитывается по формуле: 'Сегодня - 10 дней'.
-        title_search (Optional[bool]): Если True, то поиск идет по заголовкам вакансий.
-        experience (int): Опыт работы. По-умолчанию False.
-        remote (Optional[bool]): Если True, то поиск идет по удаленной работе.
+        form_params (dict) Словарь с параметрами поиска.
     Returns:
         list[dict]: Список словарей с вакансиями.
     """
+    city: str | None = form_params.get("city")
+    city_from_db: int | None = form_params.get("city_from_db")
+    job: str = form_params.get("job", "Python")
+    date_to: str | datetime.date | None = form_params.get("date_to")
+    date_from: str | datetime.date | None = form_params.get("date_from")
+    title_search: bool = form_params.get("title_search", False)
+    experience: int = form_params.get("experience", 0)
+    remote: bool = form_params.get("remote", False)
+    job_board: str = form_params.get("job_board", "Не имеет значения")
 
     params = RequestConfig(
         city=city,

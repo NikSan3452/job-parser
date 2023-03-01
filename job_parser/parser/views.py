@@ -65,7 +65,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
         # Получаем данные из кэша
         await self.create_cache_key(request)
         self.job_list_from_api = await self.get_data_from_cache()
-        
+
         # Сортируем вакансии по дате
         sorted_job_list_from_api = await utils.sort_by_date(self.job_list_from_api)
 
@@ -108,58 +108,25 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
 
         if form.is_valid():
             # Получаем данные из формы
-            (
-                city,
-                job,
-                date_from,
-                date_to,
-                title_search,
-                experience,
-                remote,
-                job_board,
-            ) = await self.get_form_data(form)
+            params = await self.get_form_data(form)
 
             # Получаем id города для API HeadHunter и Zarplata
-            city_id = await self.get_city_id(city, request)
+            city_id = await self.get_city_id(params.get("city"), request)
+            params.update({"city_from_db": city_id})
+
             try:
-                # Если выбранная площадка относится к скраперу - получаем данные только из скрапера
-                if job_board in ("Habr career",):
+                # Если выбранная площадка относится к скраперу -
+                # получаем данные только из скрапера
+                if params.get("job_board") in ("Habr career",):
                     job_list_from_scraper = await self.get_vacancies_from_scraper(
-                        request,
-                        city,
-                        job,
-                        date_from,
-                        date_to,
-                        title_search,
-                        experience,
-                        remote,
-                        job_board,
+                        request, params
                     )
                     view_logger.debug("Получены вакансии из скрапера")
                 else:
-                    # Получаем список вакансий из API и скрапера
-                    self.job_list_from_api = await main.run(
-                        city=city,
-                        city_from_db=city_id,
-                        job=job,
-                        date_from=date_from,
-                        date_to=date_to,
-                        title_search=title_search,
-                        experience=experience,
-                        remote=remote,
-                        job_board=job_board,
-                    )
-
+                    # А иначе получаем список вакансий сразу из API и скрапера
+                    self.job_list_from_api = await main.run(form_params=params)
                     job_list_from_scraper = await self.get_vacancies_from_scraper(
-                        request,
-                        city,
-                        job,
-                        date_from,
-                        date_to,
-                        title_search,
-                        experience,
-                        remote,
-                        job_board,
+                        request, params
                     )
                     view_logger.debug("Получены вакансии из API и скрапера")
             except Exception as exc:
@@ -188,14 +155,14 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
             list_favourite = await self.get_favourite_vacancy(request)
 
             context = {
-                "city": city,
-                "job": job,
-                "date_from": date_from,
-                "date_to": date_to,
-                "title_search": title_search,
-                "experience": experience,
-                "remote": remote,
-                "job_board": job_board,
+                "city": params.get("city"),
+                "job": params.get("job"),
+                "date_from": params.get("date_from"),
+                "date_to": params.get("date_to"),
+                "title_search": params.get("title_search"),
+                "experience": params.get("experience"),
+                "remote": params.get("remote"),
+                "job_board": params.get("job_board"),
                 "form": form,
                 "object_list": sorted_shared_vacancies_list,
                 "list_favourite": list_favourite,

@@ -33,7 +33,7 @@ class VacancyHelpersMixin:
         Returns:
             dict: Словарь с параметрами запроса.
         """
-        request_data = request.GET.dict()
+        request_data: dict = request.GET.dict()
 
         if request_data.get("city") == "None":
             del request_data["city"]
@@ -83,6 +83,11 @@ class VacancyHelpersMixin:
                 for vacancy in vacancies
                 if vacancy.get("url") not in blacklist_urls
             ]
+
+            # Если пользователь анонимный, то просто возвращаем отфильтрованный список
+            if user.is_anonymous:
+                return filtered_vacancies
+
             # Если url вакансии был в списке избранных, то удаляем его от туда
             await FavouriteVacancy.objects.filter(
                 user=user, url__in=blacklist_urls
@@ -131,39 +136,30 @@ class VacancyHelpersMixin:
         context["object_list"] = page_obj
 
     @logger.catch(message="Ошибка в методе VacancyHelpersMixin.get_form_data()")
-    async def get_form_data(self, form: SearchingForm) -> tuple:
+    async def get_form_data(self, form: SearchingForm) -> dict:
         """Получает данные из формы.
 
         Args:
-            form (Any): Форма.
+            form (SearchingForm): Форма.
 
         Returns:
-            None: None
+            dict: Словарь со значениями формы.
         """
+        params: dict = {}
+
         city = form.cleaned_data.get("city")
-        if city:
-            city = city.lower()
-        else:
-            city = None
+        city = city.lower() if city else None
 
-        job = form.cleaned_data.get("job")
-        date_from = form.cleaned_data.get("date_from")
-        date_to = form.cleaned_data.get("date_to")
-        title_search = form.cleaned_data.get("title_search")
-        experience = int(form.cleaned_data.get("experience"))
-        remote = form.cleaned_data.get("remote")
-        job_board = form.cleaned_data.get("job_board")
+        params.update({"city": city})
+        params.update({"job": form.cleaned_data.get("job")})
+        params.update({"date_from": form.cleaned_data.get("date_from")})
+        params.update({"date_to": form.cleaned_data.get("date_to")})
+        params.update({"title_search": form.cleaned_data.get("title_search")})
+        params.update({"experience": int(form.cleaned_data.get("experience"))})
+        params.update({"remote": form.cleaned_data.get("remote")})
+        params.update({'job_board': form.cleaned_data.get('job_board')})
 
-        return (
-            city,
-            job,
-            date_from,
-            date_to,
-            title_search,
-            experience,
-            remote,
-            job_board,
-        )
+        return params
 
     async def get_city_id(self, city: Any, request: Any) -> str | None:
         """Получет id города из базы данных.
@@ -248,16 +244,7 @@ class VacancyScraperMixin:
     """Класс содержит методы для получения вакансий из скрапера."""
 
     async def get_vacancies_from_scraper(
-        self,
-        request: Any,
-        city: str | None,
-        job: str,
-        date_from: datetime.date,
-        date_to: datetime.date,
-        title_search: bool,
-        experience: int,
-        remote: bool,
-        job_board: str,
+        self, request: Any, form_params: dict
     ) -> VacancyScraper:
         """Получает вакансии из скрапера.
 
@@ -278,28 +265,32 @@ class VacancyScraperMixin:
         params: dict = {}  # Словарь параметров запроса
 
         # Проверяем дату и если нужно устанавливаем дефолтную
-        date_from, date_to = await utils.check_date(date_from, date_to)
+        date_from, date_to = await utils.check_date(
+            form_params.get("date_from"), form_params.get("date_to")
+        )
 
         # Формируем словарь с параметрами запроса
-        if city is not None:
-            params.update({"city": city.strip()})
-        if experience > 0:
+        if form_params.get("city") is not None:
+            params.update({"city": form_params.get("city", "").strip()})
+        if form_params.get("experience", 0) > 0:
             # Конвертируем опыт
-            converted_experience = await utils.convert_experience(experience, True)
+            converted_experience = await utils.convert_experience(
+                form_params.get("experience"), True
+            )
             params.update({"experience": converted_experience})
-        if remote:
-            params.update({"remote": remote})
-        if job_board != "Не имеет значения":
-            params.update({"job_board": job_board})
+        if form_params.get("remote"):
+            params.update({"remote": form_params.get("remote")})
+        if form_params.get("job_board") != "Не имеет значения":
+            params.update({"job_board": form_params.get("job_board")})
         params.update({"published_at__gte": date_from})
         params.update({"published_at__lte": date_to})
 
-        if job is not None:
-            job = job.lower().strip()
+        if form_params.get("job") is not None:
+            job = form_params.get("job", "").lower().strip()
 
         # Если чекбокс с поиском в заголовке вакансии активен,
         # то поиск осуществляется только по столбцу title
-        if title_search:
+        if form_params.get("title_search"):
             try:
                 job_list_from_scraper = (
                     VacancyScraper.objects.filter(title__icontains=job, **params)
