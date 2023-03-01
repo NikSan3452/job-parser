@@ -64,16 +64,18 @@ async def run(
     await asyncio.gather(task1, task2, task3)
 
     # Сортируем получемнный список вакансий
-    sorted_job_list = utils.sort_by_date(Parser.general_job_list, "published_at")
+    sorted_job_list = await utils.sort_by_date(Parser.general_job_list)
     if job_board != "Не имеет значения":
-        sorted_job_list = utils.sorted_by_job_board(job_board, sorted_job_list)
+        sorted_job_list = await utils.sorted_by_job_board(job_board, sorted_job_list)
     if title_search:
-        sorted_job_list = utils.sort_by_title(sorted_job_list, job)
+        sorted_job_list = await utils.sort_by_title(sorted_job_list, job)
     if remote:
-        sorted_job_list = utils.sorted_by_remote_work(remote, sorted_job_list)
+        sorted_job_list = await utils.sorted_by_remote_work(remote, sorted_job_list)
     if remote and title_search:
-        sorted_job_list_title = utils.sort_by_title(sorted_job_list, job)
-        sorted_job_list = utils.sorted_by_remote_work(remote, sorted_job_list_title)
+        sorted_job_list_title = await utils.sort_by_title(sorted_job_list, job)
+        sorted_job_list = await utils.sorted_by_remote_work(
+            remote, sorted_job_list_title
+        )
 
     # print(f"Количество вакансий: {len(sorted_job_list)}", sorted_job_list)
     return sorted_job_list
