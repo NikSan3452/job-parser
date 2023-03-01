@@ -73,20 +73,26 @@ class VacancyHelpersMixin:
         mixin_logger = logger.bind(request=request)
         try:
             user = auth.get_user(request)
+            # Получаем url из черного списка
+            blacklist_urls = {job.url async for job in VacancyBlackList.objects.all()}
 
-            for vacancy in vacancies.copy():
-                async for job in VacancyBlackList.objects.all():
-                    if vacancy.get("url") == job.url:
-                        try:
-                            FavouriteVacancy.objects.filter(
-                                user=user, url=vacancy.get("url")
-                            ).delete()
-                        except:
-                            pass
-                        vacancies.remove(vacancy)
+            # Проверяем наличие url вакансии в черном списке
+            # и получаем отфильтрованный список
+            filtered_vacancies = [
+                vacancy
+                for vacancy in vacancies
+                if vacancy.get("url") not in blacklist_urls
+            ]
+            # Если url вакансии был в списке избранных, то удаляем его от туда
+            await FavouriteVacancy.objects.filter(
+                user=user, url__in=blacklist_urls
+            ).adelete()
+
         except Exception as exc:
             mixin_logger.exception(exc)
-        return vacancies
+            filtered_vacancies = vacancies
+
+        return filtered_vacancies
 
     async def get_favourite_vacancy(self, request: Any):
         """Получает список вакансий добавленных в избранное.
@@ -125,7 +131,7 @@ class VacancyHelpersMixin:
         context["object_list"] = page_obj
 
     @logger.catch(message="Ошибка в методе VacancyHelpersMixin.get_form_data()")
-    async def get_form_data(self, form: SearchingForm) -> None:
+    async def get_form_data(self, form: SearchingForm) -> tuple:
         """Получает данные из формы.
 
         Args:
@@ -272,14 +278,14 @@ class VacancyScraperMixin:
         params: dict = {}  # Словарь параметров запроса
 
         # Проверяем дату и если нужно устанавливаем дефолтную
-        date_from, date_to = utils.check_date(date_from, date_to)
-        # Конвертируем опыт
-        converted_experience = await self.convert_experince(experience)
+        date_from, date_to = await utils.check_date(date_from, date_to)
 
         # Формируем словарь с параметрами запроса
         if city is not None:
             params.update({"city": city.strip()})
         if experience > 0:
+            # Конвертируем опыт
+            converted_experience = await utils.convert_experience(experience, True)
             params.update({"experience": converted_experience})
         if remote:
             params.update({"remote": remote})
@@ -327,24 +333,3 @@ class VacancyScraperMixin:
         async for job in job_list_from_scraper:
             job_list_from_api.append(job)
         return job_list_from_api
-
-    @logger.catch(message="Ошибка в методе VacancyScraperMixin.convert_experince()")
-    async def convert_experince(self, experience: int) -> str:
-        """Конвертирует значения опыта работы в понятный
-        для скрапера вид.
-
-        Args:
-            experience (int): Опыт.
-
-        Returns:
-            str: Конвертированный опыт.
-        """
-        if experience == 1:
-            converted_experience = "Без опыта"
-        elif experience == 2:
-            converted_experience = "От 1 до 3-х лет"
-        elif experience == 3:
-            converted_experience = "От 3-х до 6 лет"
-        elif experience == 4:
-            converted_experience = "Более 6 лет"
-        return converted_experience
