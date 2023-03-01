@@ -5,7 +5,7 @@ class Utils:
     """Класс со вспомогательными методами"""
 
     @staticmethod
-    def convert_date(date: str | datetime.date) -> float:
+    async def convert_date(date: str | datetime.date) -> float:
         """Проверяет формат даты и при необходимости конвертирует его.
 
         Args:
@@ -27,7 +27,7 @@ class Utils:
             return converted_to_datetime
 
     @staticmethod
-    def check_date(
+    async def check_date(
         date_from: str | None | datetime.date, date_to: str | None | datetime.date
     ) -> tuple[datetime.date | str, datetime.date | str]:
         """Проверяет дату на пустое значение, если истина, то
@@ -57,7 +57,7 @@ class Utils:
         return new_date_from, new_date_to
 
     @staticmethod
-    def sort_by_date(job_list: list[dict], key: str) -> list[dict]:
+    async def sort_by_date(job_list: list[dict], key: str) -> list[dict]:
         """Сортирует список вакансий по дате.
 
         Args:
@@ -73,7 +73,7 @@ class Utils:
         return sorted_list
 
     @staticmethod
-    def sort_by_title(job_list: list[dict], title: str) -> list[dict]:
+    async def sort_by_title(job_list: list[dict], title: str) -> list[dict]:
         """Сортирует список вакансий по наличию в заголовке
         вакансии ключевого слова.
 
@@ -91,7 +91,7 @@ class Utils:
         return sorted_list
 
     @staticmethod
-    def convert_experience(experience: int) -> str:
+    async def convert_experience(experience: int) -> str:
         """Конвертирует значения опыта работы в понятный
         для API HeadHunter и Zarplata вид.
 
@@ -112,7 +112,7 @@ class Utils:
         return converted_experience
 
     @staticmethod
-    def sorted_by_remote_work(remote: bool, job_list: list[dict]):
+    async def sorted_by_remote_work(remote: bool, job_list: list[dict]):
         sorted_list: list[dict] = []
         if remote:
             for job in job_list:
@@ -123,7 +123,7 @@ class Utils:
         return sorted_list
 
     @staticmethod
-    def sorted_by_job_board(job_board: str, job_list: list[dict]) -> list[dict]:
+    async def sorted_by_job_board(job_board: str, job_list: list[dict]) -> list[dict]:
         sorted_list: list[dict] = []
         for job in job_list:
             if job_board == job["job_board"]:
