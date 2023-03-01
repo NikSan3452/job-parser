@@ -1,7 +1,5 @@
 import datetime
 
-import pytz
-from dateutil.parser import parse
 from logger import logger, setup_logging
 
 from .base_parser import Parser
@@ -93,7 +91,9 @@ class Headhunter(Parser):
                 job_dict["type_of_work"] = "Не указано"
 
             # Конвертируем дату в удобочитаемый вид
-            published_date = parse(job["published_at"]).replace(tzinfo=pytz.UTC)
+            published_date = datetime.datetime.strptime(
+                job["published_at"], "%Y-%m-%dT%H:%M:%S%z"
+            ).date()
             job_dict["published_at"] = published_date
 
             # Добавляем словарь с вакансией в общий список всех вакансий
@@ -123,8 +123,8 @@ class SuperJob(Parser):
         self.sj_params = {
             "keyword": self.job,
             "count": 100,
-            "date_published_from": utils.convert_date(self.date_from),
-            "date_published_to": utils.convert_date(self.date_to),
+            "date_published_from": await utils.convert_date(self.date_from),
+            "date_published_to": await utils.convert_date(self.date_to),
         }
 
         if self.city:
@@ -202,9 +202,7 @@ class SuperJob(Parser):
                 job_dict["experience"] = "Не указано"
 
             # Конвертируем дату в удобочитаемый вид
-            published_date = datetime.datetime.fromtimestamp(
-                job["date_published"]
-            ).replace(tzinfo=pytz.UTC)
+            published_date = datetime.date.fromtimestamp(job["date_published"])
             job_dict["published_at"] = published_date
 
             # Добавляем словарь с вакансией в общий список всех вакансий
