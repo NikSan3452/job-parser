@@ -22,7 +22,7 @@ class Assertions:
         Args:
             vacancy_exists (bool): True/False.
         """
-        assert vacancy_exists == True, f"Вакансия не была добавлена в избранное"
+        assert vacancy_exists is True, "Вакансия не была добавлена в избранное"
 
     @staticmethod
     def assert_delete_vacancy_from_favourite(vacancy_exists: bool) -> None:
@@ -31,7 +31,7 @@ class Assertions:
         Args:
             vacancy_exists (bool): True/False.
         """
-        assert vacancy_exists == False, f"Вакансия не была удалена из избранного"
+        assert vacancy_exists is False, "Вакансия не была удалена из избранного"
 
     @staticmethod
     def assert_add_vacancy_to_black_list(vacancy_exists: bool) -> None:
@@ -40,7 +40,7 @@ class Assertions:
         Args:
             vacancy_exists (bool): True/False.
         """
-        assert vacancy_exists == True, f"Вакансия не была добавлена в черный список"
+        assert vacancy_exists is True, "Вакансия не была добавлена в черный список"
 
     @staticmethod
     def assert_object_in_response_context(obj: str, response: HttpResponse) -> None:
