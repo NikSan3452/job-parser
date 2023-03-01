@@ -8,12 +8,15 @@ from django.views import View
 from django.views.generic.edit import FormView
 from logger import logger, setup_logging
 from parser.api import main
+from parser.api.utils import Utils
 from parser.forms import SearchingForm
 from parser.mixins import RedisCacheMixin, VacancyHelpersMixin, VacancyScraperMixin
 from parser.models import FavouriteVacancy, VacancyBlackList
 
 # Логирование
 setup_logging()
+
+utils = Utils()
 
 
 class HomePageView(FormView):
@@ -62,13 +65,16 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
         # Получаем данные из кэша
         await self.create_cache_key(request)
         self.job_list_from_api = await self.get_data_from_cache()
+        
+        # Сортируем вакансии по дате
+        sorted_job_list_from_api = await utils.sort_by_date(self.job_list_from_api)
 
         # Отображаем вакансии, которые в избранном
         list_favourite = await self.get_favourite_vacancy(request)
 
         context = {
             "form": form,
-            "object_list": self.job_list_from_api,
+            "object_list": sorted_job_list_from_api,
             "list_favourite": list_favourite,
         }
 
@@ -82,10 +88,10 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
         context["job_board"] = request_data.get("job_board")
 
         # Проверяем добавлена ли вакансия в черный список
-        await self.check_vacancy_black_list(self.job_list_from_api, request)
+        await self.check_vacancy_black_list(sorted_job_list_from_api, request)
 
         # Пагинация
-        await self.get_pagination(request, self.job_list_from_api, context)
+        await self.get_pagination(request, sorted_job_list_from_api, context)
 
         return render(request, self.template_name, context)
 
@@ -169,8 +175,13 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
             await self.set_data_to_cache(self.job_list_from_api)
 
             # Проверяем добавлена ли вакансия в черный список
-            vacancies = await self.check_vacancy_black_list(
+            shared_vacancies_list = await self.check_vacancy_black_list(
                 self.job_list_from_api, request
+            )
+
+            # Сортируем список вакансий по дате
+            sorted_shared_vacancies_list = await utils.sort_by_date(
+                shared_vacancies_list
             )
 
             # Отображаем вакансии, которые в избранном
@@ -186,12 +197,12 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
                 "remote": remote,
                 "job_board": job_board,
                 "form": form,
-                "object_list": vacancies,
+                "object_list": sorted_shared_vacancies_list,
                 "list_favourite": list_favourite,
             }
 
             # Пагинация
-            await self.get_pagination(request, self.job_list_from_api, context)
+            await self.get_pagination(request, sorted_shared_vacancies_list, context)
 
         return render(request, self.template_name, context)
 
