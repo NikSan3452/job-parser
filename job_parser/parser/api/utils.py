@@ -28,7 +28,8 @@ class Utils:
 
     @staticmethod
     async def check_date(
-        date_from: str | None | datetime.date, date_to: str | None | datetime.date
+        date_from: str | None | datetime.date,
+        date_to: str | None | datetime.date,
     ) -> tuple[datetime.date | str, datetime.date | str]:
         """Проверяет дату на пустое значение, если истина, то
         будет установлено значение по умолчанию.
@@ -53,11 +54,10 @@ class Utils:
             new_date_to = datetime.datetime.strptime(date_to, "%Y-%m-%d").date()
         else:
             new_date_to = date_to
-
         return new_date_from, new_date_to
 
     @staticmethod
-    async def sort_by_date(job_list: list[dict], key: str) -> list[dict]:
+    async def sort_by_date(job_list: list[dict]) -> list[dict]:
         """Сортирует список вакансий по дате.
 
         Args:
@@ -68,7 +68,7 @@ class Utils:
             list[dict]: Сортированный список вакансий.
         """
         sorted_list: list[dict] = sorted(
-            job_list, key=lambda _dict: _dict[key], reverse=True
+            job_list, key=lambda _dict: _dict["published_at"], reverse=True
         )
         return sorted_list
 
@@ -91,24 +91,37 @@ class Utils:
         return sorted_list
 
     @staticmethod
-    async def convert_experience(experience: int) -> str:
+    async def convert_experience(experience: int, scraper: bool = False) -> str:
         """Конвертирует значения опыта работы в понятный
         для API HeadHunter и Zarplata вид.
 
         Args:
             experience (int): Опыт.
+            scraper (bool): Если True, будет конвертироваться опыт для скрапера.
 
         Returns:
             str: Конвертированный опыт.
         """
-        if experience == 1:
-            converted_experience = "noExperience"
-        elif experience == 2:
-            converted_experience = "between1And3"
-        elif experience == 3:
-            converted_experience = "between3And6"
-        elif experience == 4:
-            converted_experience = "moreThan6"
+        if scraper:
+            match experience:
+                case 1:
+                    converted_experience = "noExperience"
+                case 2:
+                    converted_experience = "between1And3"
+                case 3:
+                    converted_experience = "between3And6"
+                case 4:
+                    converted_experience = "moreThan6"
+        else:
+            match experience:
+                case 1:
+                    converted_experience = "Без опыта"
+                case 2:
+                    converted_experience = "от 1 до 3 лет"
+                case 3:
+                    converted_experience = "от 3 до 6 лет"
+                case 4:
+                    converted_experience = "от 6 лет"
         return converted_experience
 
     @staticmethod
