@@ -174,16 +174,19 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
-# Redis
+# Redis Cache
 REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = os.getenv("REDIS_PORT")
 
 CACHE = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
 
 # Celery
-CELERY_BROKER_URL = "redis://" + REDIS_HOST + ":" + REDIS_PORT + "/0"
+REDIS_BROKER_HOST = os.getenv("REDIS_BROKER_HOST", "localhost")
+REDIS_BROKER_PORT = os.getenv("REDIS_BROKER_PORT", 6380)
+
+CELERY_BROKER_URL = f"redis://{REDIS_BROKER_HOST}:{REDIS_BROKER_PORT}/0"
 CELERY_BROKER_TRANSPORT_OPTION = {"visibility_timeout": 3600}
-CELERY_RESULT_BACKEND = "redis://" + REDIS_HOST + ":" + REDIS_PORT + "/0"
+CELERY_RESULT_BACKEND = f"redis://{REDIS_BROKER_HOST}:{REDIS_BROKER_PORT}/0"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
