@@ -22,13 +22,13 @@ class HabrSpider(scrapy.Spider):
         )
 
     def parse_vacancy_count(self, response):
+        # Получаем общее количество страниц
         search_total = response.css(".search-total::text").get()
         for string in search_total.split():
             if string.isdigit():
-
                 self.pages_count = int(int(string) / 25)
 
-        for page in range(self.pages_count):
+        for page in range(self.pages_count + 1):
             url = f"https://career.habr.com/vacancies?page={page}&type=all"
             yield scrapy.Request(url=url, callback=self.parse_pages)
 
@@ -63,7 +63,7 @@ class HabrSpider(scrapy.Spider):
         item["published_at"] = parse(
             response.css(".basic-date::attr(datetime)").get()
         ).replace(tzinfo=pytz.UTC)
-        
-        logger.debug(response.request.headers.get('User-Agent'))
+
+        logger.debug(response.request.headers.get("User-Agent"))
 
         yield item
