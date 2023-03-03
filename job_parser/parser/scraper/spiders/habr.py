@@ -30,6 +30,8 @@ class HabrSpider(scrapy.Spider):
 
         for page in range(self.pages_count + 1):
             url = f"https://career.habr.com/vacancies?page={page}&type=all"
+            if page == self.pages_count + 1:
+                logger.debug('Парсинг страниц окончен')
             yield scrapy.Request(url=url, callback=self.parse_pages)
 
     def parse_pages(self, response):
