@@ -6,7 +6,7 @@
 
 # useful for handling different item types with a single interface
 
-
+import datetime
 from parser.models import VacancyScraper
 from logger import setup_logging, logger
 
@@ -86,8 +86,11 @@ class HabrPipeline:
 
         item_dict["published_at"] = item_dict.get("published_at")
 
+        min_date = datetime.datetime.today() - datetime.timedelta(days=10)
         try:
-            VacancyScraper.objects.get_or_create(**item_dict)
+            if item_dict.get("published_at") is not None:
+                if item_dict.get("published_at").date() >= min_date.date():
+                    VacancyScraper.objects.get_or_create(**item_dict)
         except Exception as exc:
             logger.exception(exc)
 
