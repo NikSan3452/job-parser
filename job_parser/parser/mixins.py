@@ -157,7 +157,7 @@ class VacancyHelpersMixin:
         params.update({"title_search": form.cleaned_data.get("title_search")})
         params.update({"experience": int(form.cleaned_data.get("experience"))})
         params.update({"remote": form.cleaned_data.get("remote")})
-        params.update({'job_board': form.cleaned_data.get('job_board')})
+        params.update({"job_board": form.cleaned_data.get("job_board")})
 
         return params
 
@@ -322,5 +322,6 @@ class VacancyScraperMixin:
         self, job_list_from_api: list[dict], job_list_from_scraper: VacancyScraper
     ) -> list[dict]:
         async for job in job_list_from_scraper:
-            job_list_from_api.append(job)
+            if job not in job_list_from_api:
+                job_list_from_api.append(job)
         return job_list_from_api
