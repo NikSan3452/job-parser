@@ -2,10 +2,8 @@ import pytz
 import scrapy
 from dateutil.parser import parse
 
-from parser.models import VacancyScraper
 from . import items
 from logger import logger, setup_logging
-from ..pipelines import HabrPipeline
 
 # Логирование
 setup_logging()
