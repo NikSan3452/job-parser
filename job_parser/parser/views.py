@@ -66,8 +66,13 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
         await self.create_cache_key(request)
         job_list_from_api = await self.get_data_from_cache()
 
+        # Проверяем добавлена ли вакансия в черный список
+        filtered_job_list = await self.check_vacancy_black_list(
+            job_list_from_api, request
+        )
+
         # Сортируем вакансии по дате
-        sorted_job_list_from_api = await utils.sort_by_date(job_list_from_api)
+        sorted_job_list_from_api = await utils.sort_by_date(filtered_job_list)
 
         # Отображаем вакансии, которые в избранном
         list_favourite = await self.get_favourite_vacancy(request)
@@ -86,9 +91,6 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
         context["experience"] = request_data.get("experience")
         context["remote"] = request_data.get("remote")
         context["job_board"] = request_data.get("job_board")
-
-        # Проверяем добавлена ли вакансия в черный список
-        await self.check_vacancy_black_list(sorted_job_list_from_api, request)
 
         # Пагинация
         await self.get_pagination(request, sorted_job_list_from_api, context)
@@ -125,6 +127,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
                     view_logger.debug("Получены вакансии из скрапера")
                 else:
                     # А иначе получаем список вакансий сразу из API и скрапера
+                    self.job_list_from_api.clear()
                     self.job_list_from_api = await main.run(form_params=params)
                     job_list_from_scraper = await self.get_vacancies_from_scraper(
                         request, params
