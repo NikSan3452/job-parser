@@ -1,6 +1,7 @@
 import os
 from celery import Celery
 from celery.schedules import crontab
+from django.conf import settings
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "job_parser.settings")
 app = Celery("job_parser")
@@ -11,6 +12,12 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     "sending-vacancy-every-day": {
         "task": "parser.tasks.sending_emails",
-        "schedule": crontab(hour=14, minute=0),
+        "schedule": crontab(
+            hour=settings.SENDING_EMAILS_HOURS, minute=settings.SENDING_EMAILS_MINUTES
+        ),
+    },
+    "run-scraping": {
+        "task": "parser.tasks.run_scraper",
+        "schedule": crontab(minute=f"*/{settings.SCRAPING_SCHEDULE_MINUTES}"),
     },
 }
