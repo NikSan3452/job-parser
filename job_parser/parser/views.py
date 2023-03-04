@@ -64,10 +64,10 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
 
         # Получаем данные из кэша
         await self.create_cache_key(request)
-        self.job_list_from_api = await self.get_data_from_cache()
+        job_list_from_api = await self.get_data_from_cache()
 
         # Сортируем вакансии по дате
-        sorted_job_list_from_api = await utils.sort_by_date(self.job_list_from_api)
+        sorted_job_list_from_api = await utils.sort_by_date(job_list_from_api)
 
         # Отображаем вакансии, которые в избранном
         list_favourite = await self.get_favourite_vacancy(request)
@@ -118,6 +118,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
                 # Если выбранная площадка относится к скраперу -
                 # получаем данные только из скрапера
                 if params.get("job_board") in ("Habr career",):
+                    self.job_list_from_api.clear()
                     job_list_from_scraper = await self.get_vacancies_from_scraper(
                         request, params
                     )
@@ -133,23 +134,21 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
                 view_logger.exception(exc)
 
             # Добавляем вакансии из скрапера в список вакансий из api
-            await self.add_vacancy_to_job_list_from_api(
+            shared_job_list = await self.add_vacancy_to_job_list_from_api(
                 self.job_list_from_api, job_list_from_scraper
             )
 
             # Сохраняем данные в кэше
             await self.create_cache_key(request)
-            await self.set_data_to_cache(self.job_list_from_api)
+            await self.set_data_to_cache(shared_job_list)
 
             # Проверяем добавлена ли вакансия в черный список
-            shared_vacancies_list = await self.check_vacancy_black_list(
-                self.job_list_from_api, request
+            filtered_shared_job_list = await self.check_vacancy_black_list(
+                shared_job_list, request
             )
 
             # Сортируем список вакансий по дате
-            sorted_shared_vacancies_list = await utils.sort_by_date(
-                shared_vacancies_list
-            )
+            sorted_shared_job_list = await utils.sort_by_date(filtered_shared_job_list)
 
             # Отображаем вакансии, которые в избранном
             list_favourite = await self.get_favourite_vacancy(request)
@@ -164,12 +163,12 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
                 "remote": params.get("remote"),
                 "job_board": params.get("job_board"),
                 "form": form,
-                "object_list": sorted_shared_vacancies_list,
+                "object_list": sorted_shared_job_list,
                 "list_favourite": list_favourite,
             }
 
             # Пагинация
-            await self.get_pagination(request, sorted_shared_vacancies_list, context)
+            await self.get_pagination(request, sorted_shared_job_list, context)
 
         return render(request, self.template_name, context)
 
