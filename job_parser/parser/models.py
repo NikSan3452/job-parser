@@ -41,30 +41,6 @@ class VacancyScraper(models.Model):
         return self.title
 
 
-class VacancyCelery(models.Model):
-    user = models.ForeignKey(
-        Profile, on_delete=models.CASCADE, verbose_name="Пользователь"
-    )
-    url = models.URLField(null=False)
-    title = models.CharField(max_length=250, verbose_name="Вакансия")
-    salary_from = models.CharField(max_length=50, null=True, verbose_name="Зарплата от")
-    salary_to = models.CharField(max_length=50, null=True, verbose_name="Зарплата до")
-    company = models.CharField(max_length=250, verbose_name="Компания")
-    description = models.TextField(
-        max_length=5000, null=True, verbose_name="Описание вакансии"
-    )
-    city = models.CharField(max_length=250, verbose_name="Город")
-    published_at = models.DateField(verbose_name="Дата публикации")
-
-    class Meta:
-        verbose_name = "Вакансия"
-        verbose_name_plural = "Вакансии"
-        ordering = ["-published_at"]
-
-    def __str__(self) -> str:
-        return self.title
-
-
 class FavouriteVacancy(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, verbose_name="Пользователь"
