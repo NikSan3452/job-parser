@@ -293,7 +293,7 @@ class VacancyScraperMixin:
         if form_params.get("title_search"):
             try:
                 job_list_from_scraper = (
-                    VacancyScraper.objects.filter(title__icontains=job, **params)
+                    VacancyScraper.objects.filter(title__contains=job, **params)
                     .order_by("-published_at")
                     .values()
                 )
@@ -305,7 +305,7 @@ class VacancyScraperMixin:
             try:
                 job_list_from_scraper = (
                     VacancyScraper.objects.filter(
-                        Q(title__icontains=job) | Q(description__icontains=job),
+                        Q(title__contains=job) | Q(description__contains=job),
                         **params,
                     )
                     .order_by("-published_at")
