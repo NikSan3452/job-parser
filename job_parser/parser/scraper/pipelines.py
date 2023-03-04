@@ -21,8 +21,21 @@ class ScraperPipeline:
 
 class HabrPipeline:
     def process_item(self, item, spider):
+        """Обрабатывает полученные данные из парсера
+        и сохраняет их в базу данных.
+
+        Args:
+            item (_type_): Обект содержащий данные.
+            spider (_type_): Паук.
+
+        Returns:
+            _type_: Обект содержащий данные.
+        """
         item_dict = dict(item)
-        remote_list = ("можно удалённо",)
+        remote_list = (
+            "можно удалённо",
+            "можно удаленно",
+        )
 
         item_dict["url"] = item_dict.get("url").lower()
         item_dict["title"] = (
@@ -42,30 +55,34 @@ class HabrPipeline:
         )
 
         if item_dict.get("experience"):
-            experince = item_dict.get("experience").lower()
+            experience = item_dict.get("experience").lower()
 
-            if experince == "стажёр (intern)" or experince is None or experince == "":
+            if (
+                experience == "стажёр (intern)"
+                or experience is None
+                or experience == ""
+            ):
                 item_dict["experience"] = "Без опыта"
-            elif experince == "младший (junior)":
+            elif experience == "младший (junior)":
                 item_dict["experience"] = "от 1 до 3 лет"
-            elif experince == "средний (middle)":
+            elif experience == "средний (middle)":
                 item_dict["experience"] = "от 3 до 6 лет"
-            elif experince in (
+            elif experience in (
                 "старший (senior)",
                 "ведущий (lead)",
             ):
                 item_dict["experience"] = "от 6 лет"
 
-        item_dict["type_of_work"] = ", ".join(
-            [word.lower() for word in item_dict.get("type_of_work", "")]
-        )
-
         if any(
-            string == remote
+            string.strip().lower() == remote
             for string in item_dict.get("type_of_work", "")
             for remote in remote_list
         ):
             item_dict["remote"] = True
+
+        item_dict["type_of_work"] = ", ".join(
+            [word.lower() for word in item_dict.get("type_of_work", "")]
+        )
 
         item_dict["published_at"] = item_dict.get("published_at")
 
