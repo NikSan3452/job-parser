@@ -20,4 +20,11 @@ app.conf.beat_schedule = {
         "task": "parser.tasks.run_scraper",
         "schedule": crontab(minute=f"*/{settings.SCRAPING_SCHEDULE_MINUTES}"),
     },
+    "run-delete-old-vacancies": {
+        "task": "parser.tasks.run_delete_old_vacancies",
+        "schedule": crontab(
+            hour=settings.DELETE_OLD_VACANCIES_HOURS,
+            minute=settings.DELETE_OLD_VACANCIES_MINUTES,
+        ),
+    },
 }
