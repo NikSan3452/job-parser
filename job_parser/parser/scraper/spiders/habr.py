@@ -14,6 +14,12 @@ class HabrSpider(scrapy.Spider):
     allowed_domains = ["career.habr.com"]
     pages_count = 1
 
+    custom_settings = {
+        "ITEM_PIPELINES": {
+            "parser.scraper.pipelines.HabrPipeline": 300,
+        }
+    }
+
     @logger.catch(message="Ошибка в методе HabrSpider.start_requests()")
     def start_requests(self):
         yield scrapy.Request(
@@ -73,9 +79,7 @@ class HabrSpider(scrapy.Spider):
 
         item["url"] = response.url
 
-        item["title"] = (
-            response.css(".page-title__title::text").extract_first("").strip()
-        )
+        item["title"] = response.css(".page-title__title::text").get()
 
         item["city"] = response.xpath(
             "//a[contains(@href, '/vacancies?city_id')]//text()"
