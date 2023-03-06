@@ -119,7 +119,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
             try:
                 # Если выбранная площадка относится к скраперу -
                 # получаем данные только из скрапера
-                if params.get("job_board") in ("Habr career",):
+                if params.get("job_board") in ("Habr career", 'Geekjob'):
                     self.job_list_from_api.clear()
                     job_list_from_scraper = await self.get_vacancies_from_scraper(
                         request, params

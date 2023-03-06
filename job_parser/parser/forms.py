@@ -17,6 +17,7 @@ class SearchingForm(forms.Form):
         ("SuperJob", "SuperJob"),
         ("Zarplata", "Zarplata"),
         ("Habr career", "Habr career"),
+        ("Geekjob", "Geekjob"),
     )
 
     job = forms.CharField(
