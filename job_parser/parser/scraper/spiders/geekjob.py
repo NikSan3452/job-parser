@@ -88,9 +88,9 @@ class GeekjobSpider(scrapy.Spider):
 
         item["company"] = response.css(".company-name > a::text").get()
 
-        item["experience"] = response.css(".jobinfo > .jobformat::text").getall()[1]
+        item["experience"] = response.css(".jobinfo > .jobformat::text").getall()
 
-        item["type_of_work"] = response.css(".jobinfo > .jobformat::text").getall()[0]
+        item["type_of_work"] = response.css(".jobinfo > .jobformat::text").getall()
 
         item["published_at"] = response.css("header > .time::text").get()
 
