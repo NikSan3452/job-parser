@@ -78,7 +78,7 @@ class GeekjobSpider(scrapy.Spider):
 
         item["title"] = response.css("header > h1::text").get()
 
-        item["city"] = response.css("header > .location::text").get()
+        item["city"] = response.css("header > .location::text").get("Не указан")
 
         item["description"] = response.xpath(
             '//div[@id="vacancy-description"]//text()'
@@ -86,7 +86,7 @@ class GeekjobSpider(scrapy.Spider):
 
         item["salary"] = response.css(".jobinfo > .salary::text").get("Не указана")
 
-        item["company"] = response.css(".company-name > a::text").get()
+        item["company"] = response.css(".company-name > a::text").get("Не указана")
 
         item["experience"] = response.css(".jobinfo > .jobformat::text").getall()
 
