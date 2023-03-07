@@ -26,6 +26,11 @@ class ParserConfig:
     zarplata_api_path: str = "vacancies"
     zarplata_url: str = f"{zarplata_domen}/{zarplata_api_path}"
 
+    trudvsem_domen: str = "http://opendata.trudvsem.ru/api"
+    trudvsem_version: str = "v1"
+    trudvsem_api_path: str = "vacancies"
+    trudvsem_url: str = f"{trudvsem_domen}/{trudvsem_version}/{trudvsem_api_path}"
+
 
 @dataclass
 class RequestConfig:
