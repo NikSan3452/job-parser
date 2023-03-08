@@ -16,6 +16,7 @@ class SearchingForm(forms.Form):
         ("HeadHunter", "HeadHunter"),
         ("SuperJob", "SuperJob"),
         ("Zarplata", "Zarplata"),
+        ("Trudvsem", "Trudvsem"),
         ("Habr career", "Habr career"),
         ("Geekjob", "Geekjob"),
     )
