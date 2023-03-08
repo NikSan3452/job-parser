@@ -27,6 +27,21 @@ class Utils:
             return converted_to_datetime
 
     @staticmethod
+    async def convert_date_for_trudvsem(date: datetime.date | str) -> str:
+        """Проверяет формат даты и при необходимости конвертирует его.
+
+        Args:
+            date (datetime.date): Дата.
+
+        Returns:
+            str: Конвертированная дата.
+        """
+        if isinstance(date, datetime.date):
+            datetime_obj = datetime.datetime.combine(date, datetime.time())
+            converted_date = datetime_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
+        return converted_date
+
+    @staticmethod
     async def check_date(
         date_from: str | None | datetime.date,
         date_to: str | None | datetime.date,
@@ -125,7 +140,37 @@ class Utils:
         return converted_experience
 
     @staticmethod
-    async def sorted_by_remote_work(remote: bool, job_list: list[dict]):
+    async def convert_experience_for_trudvsem(experience: int) -> tuple[int, int]:
+        """Конвертирует значения опыта для API Trudvsem.
+
+        Args:
+            experience (int): Опыт из формы.
+
+        Returns:
+            tuple[int, int]: Кортеж из диапазона опыта в годах.
+        """
+        match experience:
+            case 1:
+                converted_experience = (0, 1)
+            case 2:
+                converted_experience = (1, 3)
+            case 3:
+                converted_experience = (3, 6)
+            case 4:
+                converted_experience = (6, 10)
+        return converted_experience
+
+    @staticmethod
+    async def sort_by_remote_work(remote: bool, job_list: list[dict]):
+        """Сортирует вакансии по удаленной работе.
+
+        Args:
+            remote (bool): Если истина, то работа считается удаленной.
+            job_list (list[dict]): Список вакансий.
+
+        Returns:
+            _type_: Сортированный список вакансий.
+        """
         sorted_list: list[dict] = []
         if remote:
             for job in job_list:
@@ -133,12 +178,8 @@ class Utils:
                     sorted_list.append(job)
                 elif job.get("place_of_work") == "Удалённая работа (на дому)":
                     sorted_list.append(job)
-        return sorted_list
-
-    @staticmethod
-    async def sorted_by_job_board(job_board: str, job_list: list[dict]) -> list[dict]:
-        sorted_list: list[dict] = []
-        for job in job_list:
-            if job_board == job["job_board"]:
-                sorted_list.append(job)
+                elif "удаленная" in job.get("responsibility", "").lower():
+                    sorted_list.append(job)
+                elif "удаленная" in job.get("title", "").lower():
+                    sorted_list.append(job)
         return sorted_list
