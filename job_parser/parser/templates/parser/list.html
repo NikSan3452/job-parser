@@ -17,7 +17,7 @@
 </div>  
 
 <div class="row justify-content-center">
-    <div class="col-md-2 my-2">
+    <div class="col-md-3 my-2">
         <form action="{% url 'list' %}" method="post">
                 {% csrf_token %}
                 {{ form|crispy }}
@@ -30,7 +30,7 @@
     </div>
 
     
-    <div class="col-md-10">
+    <div class="col-md-9">
             <p class="scroll"><a href="#down"><i class="fa-sharp fa-solid fa-arrow-down"></i></a></p>
         {% for obj in object_list %}
         <div class="card my-3" id="delete-vacancy-{{forloop.counter}}">
@@ -60,7 +60,7 @@
                     <p><span class="card-param">Опыт работы: </span> <span class="card-value">{{ obj.experience|capfirst }}</span></p>
                 {% endif %}
 
-                {% if obj.job_board == "Habr career" %}
+                {% if obj.job_board == "Habr career" or obj.job_board == "Geekjob" %}
                     <p class="card-text">
                         {% if obj.description %}
                             {% if obj.description|length > 300 %}
@@ -78,7 +78,7 @@
                 {% else %}
                     <p class="card-text">
                         {% if obj.responsibility  %}
-                        <span class="card-param">Обязанности:</span> {{ obj.responsibility|truncatechars:300 }}
+                        <span class="card-param">Обязанности:</span> {{ obj.responsibility|truncatechars:300|striptags }}
                         {% endif %}
                     </p>
 
@@ -91,7 +91,11 @@
 
                 <p>
                     <span class="card-param">Город:</span>
-                    <span class="card-value">{{ obj.city|title }}</span>
+                    {% if obj.job_board == "Geekjob" %}
+                        <span class="card-value">{{ obj.city|title }}</span>
+                    {% else %}
+                        <span class="card-value">{{ obj.city|capfirst }}</span>
+                    {% endif %}
                     | <span class="card-param">Компания:</span>
                     <span class="card-value">{{ obj.company|capfirst}}</span> 
                     | <span class="card-param">Дата публикации:</span>
