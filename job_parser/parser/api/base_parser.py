@@ -1,6 +1,7 @@
 import httpx
 import orjson
 from typing import Optional
+
 from logger import setup_logging, logger
 
 # Логирование
@@ -39,8 +40,8 @@ class Parser:
         url: str,
         params: dict,
         pages: int,
-        total_pages: str,
         headers: Optional[dict] = None,
+        items: Optional[str] = None,
     ) -> list[dict]:
         """Отвечает за постраничное получение вакансий.
 
@@ -48,31 +49,41 @@ class Parser:
             url (str): URL - адрес API.
             params (dict): Параметры запроса.
             page_range (int): Диапазон страниц (максимум 20)
-            total_pages (str): Строковое представление ключа словаря
             с общим количеством страниц, которые вернул сервер. Т.к у каждого API
             разное название этого параметра, его нужно передать здесь.
             Необходимо для проверки на последнюю страницу.
-            headers (Optional[dict], optional): Заголовки запроса. По умолчанию None.
-
+            headers (Optional[dict]): Заголовки запроса. По умолчанию None.
+            items: Optional[str]: Ключ в возвращаемом API словаре, по которому
+            мы можем получить доступ к списку вкансий.
         Returns:
-            list[dict] | str: Список вакансий или исключение.
+            list[dict]: Список вакансий или исключение.
         """
         job_list: list[dict] = []
         for page in range(pages):  # Постраничный вывод вакансий
-            params["page"] = page
-            page += 1
             try:
-                data = await self.create_session(
-                    url=url, params=params, headers=headers
-                )
-                json_data = orjson.loads(data)
-                job_list.append(json_data)
-
-                if (
-                    job_list[0][total_pages] - page
-                ) <= 1:  # Проверка на последнюю страницу
-                    break
-            except httpx.RequestError as exc:
+                # Получаем данные
+                data = await self.create_session(url, headers, params)
+                json_data = orjson.loads(data)  # Упаковываем в json
+            except Exception as exc:
                 logger.exception(exc)
 
+            if items == "results":  # Если запрос к сайту Trudvsem
+                # На каждой итерации получаем новый список вакансий
+                vacancies = json_data.get(items).get("vacancies")
+                if vacancies:  # Если в списке есть данные-добавим их в общий список
+                    job_list.extend(vacancies)
+                if vacancies is None:  # Если список пуст, запросы останавливаются
+                    break
+            else:  # Если запрос к другим сайтам получим список вакансий и
+                job_list.extend(json_data[items])  # добавим их в общий список
+                # Если список пуст запросы останавливаются
+                if len(json_data[items]) == 0:
+                    break
+
+            page += 1
+            # Устанавливаем смещение
+            if items == "results":
+                params["offset"] = page
+            else:
+                params["page"] = page
         return job_list
