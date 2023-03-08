@@ -172,14 +172,33 @@ class Utils:
             _type_: Сортированный список вакансий.
         """
         sorted_list: list[dict] = []
+        remote_list = (
+            "удаленная",
+            "удалённая",
+            "удаленно",
+            "удалённо",
+            "удалённый",
+            "удаленный",
+            "удаленную",
+            "удалённую",
+        )
         if remote:
             for job in job_list:
-                if job.get("type_of_work") == "Удаленная работа":
-                    sorted_list.append(job)
-                elif job.get("place_of_work") == "Удалённая работа (на дому)":
-                    sorted_list.append(job)
-                elif "удаленная" in job.get("responsibility", "").lower():
-                    sorted_list.append(job)
-                elif "удаленная" in job.get("title", "").lower():
-                    sorted_list.append(job)
+                for string in remote_list:
+
+                    if job.get("type_of_work") is not None:
+                        if string in job.get("type_of_work", "").lower():
+                            sorted_list.append(job)
+
+                    elif job.get("place_of_work") is not None:
+                        if string in job.get("place_of_work", "").lower():
+                            sorted_list.append(job)
+
+                    elif job.get("responsibility") is not None:
+                        if string in job.get("responsibility", "").lower():
+                            sorted_list.append(job)
+
+                    elif job.get("responsibility") is not None:
+                        if string in job.get("title", "").lower():
+                            sorted_list.append(job)
         return sorted_list
