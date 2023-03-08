@@ -334,8 +334,12 @@ class Trudvsem(Parser):
             ).date()
             job_dict["published_at"] = published_date
 
-            # Добавляем словарь с вакансией в общий список всех вакансий
-            Parser.general_job_list.append(job_dict.copy())
+            if self.params.city:  # Если при поиске указан город ищем его в адресе
+                if self.params.city in job_dict.get("city", "").lower():
+                    # Добавляем словарь с вакансией в общий список всех вакансий
+                    Parser.general_job_list.append(job_dict.copy())
+            else:
+                Parser.general_job_list.append(job_dict.copy())
 
         logger.debug("Сбор вакансий с Trudvsem завершен")
 
