@@ -2,7 +2,7 @@ import asyncio
 import datetime
 
 from parser.api.config import RequestConfig
-from parser.api.parsers import Headhunter, SuperJob, Zarplata
+from parser.api.parsers import Headhunter, SuperJob, Zarplata, Trudvsem
 from parser.api.utils import Utils
 from parser.api.base_parser import Parser
 
@@ -42,33 +42,45 @@ async def run(
     hh = Headhunter(params)
     sj = SuperJob(params)
     zp = Zarplata(params)
+    tv = Trudvsem(params)
 
     # Очищаем список вакансий
     Parser.general_job_list.clear()
 
-    # Оборачиваем сопрограммы в задачи
-    task1 = asyncio.create_task(hh.get_vacancy_from_headhunter())
-    task2 = asyncio.create_task(sj.get_vacancy_from_superjob())
-    task3 = asyncio.create_task(zp.get_vacancy_from_zarplata())
+    if job_board != "Не имеет значения":
+        # Поиск только по определенной площадке
+        match job_board:
+            case "HeadHunter":
+                await hh.get_vacancy_from_headhunter()
+            case "SuperJob":
+                await sj.get_vacancy_from_superjob()
+            case "Zarplata":
+                await zp.get_vacancy_from_zarplata()
+            case "Trudvsem":
+                await tv.get_vacancy_from_trudvsem()
+    else:
+        # Оборачиваем сопрограммы в задачи
+        task1 = asyncio.create_task(hh.get_vacancy_from_headhunter())
+        task2 = asyncio.create_task(sj.get_vacancy_from_superjob())
+        task3 = asyncio.create_task(zp.get_vacancy_from_zarplata())
+        task4 = asyncio.create_task(tv.get_vacancy_from_trudvsem())
 
-    # Запускаем задачи
-    await asyncio.gather(task1, task2, task3)
+        # Запускаем задачи
+        await asyncio.gather(task1, task2, task3, task4)
 
     # Сортируем получемнный список вакансий
     sorted_job_list = await utils.sort_by_date(Parser.general_job_list)
-    if job_board != "Не имеет значения":
-        sorted_job_list = await utils.sorted_by_job_board(job_board, sorted_job_list)
     if title_search:
         sorted_job_list = await utils.sort_by_title(sorted_job_list, job)
     if remote:
-        sorted_job_list = await utils.sorted_by_remote_work(remote, sorted_job_list)
+        sorted_job_list = await utils.sort_by_remote_work(remote, sorted_job_list)
     if remote and title_search:
         sorted_job_list_title = await utils.sort_by_title(sorted_job_list, job)
-        sorted_job_list = await utils.sorted_by_remote_work(
+        sorted_job_list = await utils.sort_by_remote_work(
             remote, sorted_job_list_title
         )
 
-    # print(f"Количество вакансий: {len(sorted_job_list)}", sorted_job_list)
+    print(f"Количество вакансий: {len(sorted_job_list)}")
     return sorted_job_list
 
 
