@@ -68,16 +68,17 @@ class Parser:
                 logger.exception(exc)
 
             if items == "results":  # Если запрос к сайту Trudvsem
-                # На каждой итерации получаем новый список вакансий
-                vacancies = json_data.get(items).get("vacancies")
-                if vacancies:  # Если в списке есть данные-добавим их в общий список
-                    job_list.extend(vacancies)
-                if vacancies is None:  # Если список пуст, запросы останавливаются
-                    break
+                if json_data.get(items):
+                    # На каждой итерации получаем новый список вакансий
+                    vacancies = json_data.get(items).get("vacancies")
+                    if vacancies:  # Если в списке есть данные-добавим их в общий список
+                        job_list.extend(vacancies)
+                    if vacancies is None:  # Если список пуст, запросы останавливаются
+                        break
             else:  # Если запрос к другим сайтам получим список вакансий и
-                job_list.extend(json_data[items])  # добавим их в общий список
+                job_list.extend(json_data.get(items, ""))  # добавим их в общий список
                 # Если список пуст запросы останавливаются
-                if len(json_data[items]) == 0:
+                if len(json_data.get(items, "")) == 0:
                     break
 
             page += 1
