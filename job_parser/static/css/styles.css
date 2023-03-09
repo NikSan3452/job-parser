@@ -121,6 +121,11 @@ body {
     color: red;
 }
 
+.hidden-companies-name {
+    padding: 0;
+    margin: 0;
+}
+
 .btn-wrap {
     display: flex;
     justify-content: center;
