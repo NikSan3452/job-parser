@@ -32,6 +32,7 @@
     
     <div class="col-md-9">
             <p class="scroll"><a href="#down"><i class="fa-sharp fa-solid fa-arrow-down"></i></a></p>
+            <p class="total-vacancies">Количество вакансий по Вашему запросу: <span class=total-vacancies-count>{{ total_vacancies }}</span></p>
         {% for obj in object_list %}
         <div class="card my-3" id="delete-vacancy-{{forloop.counter}}">
             <h5 class="card-header bg-primary bg-opacity-10">
@@ -81,10 +82,10 @@
                         <span class="card-param">Обязанности:</span> {{ obj.responsibility|truncatechars:300|striptags }}
                         {% endif %}
                     </p>
-
+                    
                     <p class="card-text">
                         {% if obj.requirement %}
-                        <span class="card-param">Требования:</span> {{ obj.requirement|truncatechars:300 }}
+                        <span class="card-param">Требования:</span> {{ obj.requirement|truncatechars:300|striptags }}
                         {% endif %}
                     </p>
                 {% endif %}
@@ -107,7 +108,7 @@
                 </p>
 
                 <div class="row favourite justify-content-end">
-                    <div class="col-12 text-end">
+                    <div class="col-12 text-center">
                         {% if user.is_authenticated %}
                             <input 
                             type="checkbox"

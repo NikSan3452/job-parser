@@ -178,6 +178,7 @@ class VacancyHelpersMixin:
         page_number = request.GET.get("page")
         page_obj = paginator.get_page(page_number)
         context["object_list"] = page_obj
+        context["total_vacancies"] = len(job_list)
 
     @logger.catch(message="Ошибка в методе VacancyHelpersMixin.get_form_data()")
     async def get_form_data(self, form: SearchingForm) -> dict:
