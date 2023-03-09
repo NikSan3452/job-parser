@@ -96,9 +96,13 @@
                     {% else %}
                         <span class="card-value">{{ obj.city|capfirst }}</span>
                     {% endif %}
-                    | <span class="card-param">Компания:</span>
-                    <span class="card-value">{{ obj.company|capfirst}}</span> 
-                    | <span class="card-param">Дата публикации:</span>
+                    |
+                    <span class="card-param">Компания:</span>
+                    <span class="card-value">
+                        <a href="#" class="company-name" data-company="{{ obj.company|capfirst }}">{{ obj.company|capfirst }}</a>
+                    </span>
+                    |
+                    <span class="card-param">Дата публикации:</span>
                     <span class="card-value">{{ obj.published_at }}</span>
                 </p>
 
@@ -175,4 +179,5 @@
 </div>
 <script src="{% static '/js/favourite.js' %}"></script>
 <script src="{% static '/js/expand_description.js' %}"></script>
+<script src="{% static '/js/hide_company.js' %}"></script>
 {% endblock %}

@@ -11,7 +11,7 @@ from parser.api import main
 from parser.api.utils import Utils
 from parser.forms import SearchingForm
 from parser.mixins import RedisCacheMixin, VacancyHelpersMixin, VacancyScraperMixin
-from parser.models import FavouriteVacancy, VacancyBlackList
+from parser.models import FavouriteVacancy, VacancyBlackList, HiddenCompanies
 
 # Логирование
 setup_logging()
@@ -64,11 +64,16 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
 
         # Получаем данные из кэша
         await self.create_cache_key(request)
-        job_list_from_api = await self.get_data_from_cache()
+        job_list_from_cache = await self.get_data_from_cache()
+
+        # Проверяем находится ли компания в списке скрытых
+        job_from_hidden_companies = await self.check_company_in_hidden_list(
+            job_list_from_cache, request
+        )
 
         # Проверяем добавлена ли вакансия в черный список
-        filtered_job_list = await self.check_vacancy_black_list(
-            job_list_from_api, request
+        filtered_job_list = await self.check_vacancy_in_black_list(
+            job_from_hidden_companies, request
         )
 
         # Сортируем вакансии по дате
@@ -119,7 +124,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
             try:
                 # Если выбранная площадка относится к скраперу -
                 # получаем данные только из скрапера
-                if params.get("job_board") in ("Habr career", 'Geekjob'):
+                if params.get("job_board") in ("Habr career", "Geekjob"):
                     self.job_list_from_api.clear()
                     job_list_from_scraper = await self.get_vacancies_from_scraper(
                         request, params
@@ -145,9 +150,14 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
             await self.create_cache_key(request)
             await self.set_data_to_cache(shared_job_list)
 
-            # Проверяем добавлена ли вакансия в черный список
-            filtered_shared_job_list = await self.check_vacancy_black_list(
+            # Проверяем находится ли компания в списке скрытых
+            job_from_hidden_companies = await self.check_company_in_hidden_list(
                 shared_job_list, request
+            )
+
+            # Проверяем добавлена ли вакансия в черный список
+            filtered_shared_job_list = await self.check_vacancy_in_black_list(
+                job_from_hidden_companies, request
             )
 
             # Сортируем список вакансий по дате
@@ -198,10 +208,10 @@ def add_to_favourite_view(request):
             FavouriteVacancy.objects.get_or_create(
                 user=user, url=vacancy_url, title=vacancy_title
             )
-            view_logger.info("Вакансия добавлена в избранное")
+            view_logger.info(f"Вакансия {vacancy_title} добавлена в избранное")
         except Exception as exc:
             view_logger.exception(exc)
-    return JsonResponse({"status": "Вакансия добавлена в избранное"})
+    return JsonResponse({"status": f"Вакансия {vacancy_title} добавлена в избранное"})
 
 
 @login_required
@@ -223,10 +233,10 @@ def delete_from_favourite_view(request):
         try:
             user = auth.get_user(request)
             FavouriteVacancy.objects.filter(user=user, url=vacancy_url).delete()
-            view_logger.info("Вакансия удалена из избранного")
+            view_logger.info(f"Вакансия {vacancy_url} удалена из избранного")
         except Exception as exc:
             view_logger.exception(exc)
-    return JsonResponse({"status": "Вакансия удалена из избранного"})
+    return JsonResponse({"status": f"Вакансия {vacancy_url} удалена из избранного"})
 
 
 @login_required
@@ -248,7 +258,32 @@ def add_to_black_list_view(request):
         try:
             user = auth.get_user(request)
             VacancyBlackList.objects.get_or_create(user=user, url=vacancy_url)
-            view_logger.info("Вакансия добавлена в черный список")
+            view_logger.info(f"Вакансия {vacancy_url} добавлена в черный список")
         except Exception as exc:
             view_logger.exception(exc)
-    return JsonResponse({"status": "Вакансия добавлена в черный список"})
+    return JsonResponse({"status": f"Вакансия {vacancy_url} добавлена в черный список"})
+
+
+@login_required
+def hide_company_view(request):
+    """Скрывает вакансии компании из выдачи.
+
+    Args:
+        request (_type_): Запрос.
+
+    Returns:
+        _type_: JsonResponse.
+    """
+    view_logger = logger.bind(request=request.POST)
+    if request.method == "POST":
+
+        data = json.load(request)
+        company = data.get("company")
+
+        try:
+            user = auth.get_user(request)
+            HiddenCompanies.objects.get_or_create(user=user, name=company)
+            view_logger.info(f"Компания {company} скрыта")
+        except Exception as exc:
+            view_logger.exception(exc)
+    return JsonResponse({"status": f"Компания {company} скрыта"})

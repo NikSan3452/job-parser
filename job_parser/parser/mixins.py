@@ -8,7 +8,13 @@ from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
 from django.conf import settings
 
-from parser.models import City, FavouriteVacancy, VacancyBlackList, VacancyScraper
+from parser.models import (
+    City,
+    FavouriteVacancy,
+    VacancyBlackList,
+    VacancyScraper,
+    HiddenCompanies,
+)
 from parser.forms import SearchingForm
 from parser.api.utils import Utils
 from logger import setup_logging, logger
@@ -57,14 +63,14 @@ class VacancyHelpersMixin:
             del request_data["job_board"]
         return request_data
 
-    async def check_vacancy_black_list(
+    async def check_vacancy_in_black_list(
         self, vacancies: list[dict], request: Any
     ) -> list[dict]:
         """Проверяет добавлена ли вакансия в черный список
         и есла да, то удаляет ее из выдачи и избранного.
 
         Args:
-            vacancies (list[dict]): Список вакансий из API.
+            vacancies (list[dict]): Список вакансий.
             request (Any): Запрос.
 
         Returns:
@@ -92,6 +98,44 @@ class VacancyHelpersMixin:
             await FavouriteVacancy.objects.filter(
                 user=user, url__in=blacklist_urls
             ).adelete()
+
+        except Exception as exc:
+            mixin_logger.exception(exc)
+            filtered_vacancies = vacancies
+
+        return filtered_vacancies
+
+    async def check_company_in_hidden_list(
+        self, vacancies: list[dict], request: Any
+    ) -> list[dict]:
+        """Проверяет скрыта ли вакансия из поисковой выдачи.
+
+        Args:
+            vacancies (list[dict]): Список вакансий.
+            request (Any): Запрос.
+
+        Returns:
+            list[dict]: Список вакансий без вакансий тех компаний, которые скрыты.
+        """
+        mixin_logger = logger.bind(request=request)
+        try:
+            user = auth.get_user(request)
+            # Получаем компании из списка скрытых
+            hidden_companies = {
+                company.name async for company in HiddenCompanies.objects.all()
+            }
+
+            # Проверяем наличие компании в списке скрытых
+            # и получаем отфильтрованный список
+            filtered_vacancies = [
+                vacancy
+                for vacancy in vacancies
+                if vacancy.get("company") not in hidden_companies
+            ]
+
+            # Если пользователь анонимный, то просто возвращаем отфильтрованный список
+            if user.is_anonymous:
+                return filtered_vacancies
 
         except Exception as exc:
             mixin_logger.exception(exc)
