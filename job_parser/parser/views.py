@@ -254,10 +254,13 @@ def add_to_black_list_view(request):
 
         data = json.load(request)
         vacancy_url = data.get("url")
+        vacancy_title = data.get("title")
 
         try:
             user = auth.get_user(request)
-            VacancyBlackList.objects.get_or_create(user=user, url=vacancy_url)
+            VacancyBlackList.objects.get_or_create(
+                user=user, url=vacancy_url, title=vacancy_title
+            )
             view_logger.info(f"Вакансия {vacancy_url} добавлена в черный список")
         except Exception as exc:
             view_logger.exception(exc)

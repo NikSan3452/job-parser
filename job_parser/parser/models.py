@@ -61,6 +61,7 @@ class VacancyBlackList(models.Model):
         User, on_delete=models.CASCADE, verbose_name="Пользователь"
     )
     url = models.URLField(null=False, unique=True)
+    title = models.CharField(max_length=250, verbose_name="Вакансия")
 
     class Meta:
         verbose_name = "Вакансия в черном списке"
