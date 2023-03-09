@@ -1,16 +1,31 @@
 version: '3.8'
 
 services:
-  redis:
+  cache:
       image: redis
       restart: always
       volumes:
-      - "redis:/data"
+      - "cache:/data"
       networks:
         app_net:
           ipv4_address: 172.16.238.10
       env_file:
       - ./job_parser/.env
+      ports:
+        - 6379:6379
+  
+  broker:
+      image: redis
+      restart: always
+      volumes:
+      - "broker:/data"
+      networks:
+        app_net:
+          ipv4_address: 172.16.238.11
+      env_file:
+      - ./job_parser/.env
+      ports:
+        - 6380:6379
 
   db:
     image: postgres:latest
@@ -23,7 +38,7 @@ services:
     restart: always
     networks:
       app_net:
-        ipv4_address: 172.16.238.11
+        ipv4_address: 172.16.238.12
   
   django:
     build:
@@ -37,9 +52,10 @@ services:
       - media_volume:/home/job_parser/django/mediafiles
     networks:
       app_net:
-        ipv4_address: 172.16.238.12
+        ipv4_address: 172.16.238.13
     depends_on: 
-    - redis
+    - cache
+    - broker
     - db
 
   nginx:
@@ -53,7 +69,7 @@ services:
       - media_volume:/home/job_parser/django/mediafiles
     networks:
       app_net:
-        ipv4_address: 172.16.238.13
+        ipv4_address: 172.16.238.14
 
   adminer:
     image: adminer
@@ -66,7 +82,7 @@ services:
         - ./job_parser/.env
     networks:
       app_net:
-        ipv4_address: 172.16.238.14
+        ipv4_address: 172.16.238.15
 
 volumes:
   postgres_data:
