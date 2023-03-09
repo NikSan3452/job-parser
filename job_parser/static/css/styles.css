@@ -86,6 +86,10 @@ body {
     color: rgb(72, 165, 72);
 }
 
+.total-vacancies-count {
+    color: rgb(72, 165, 72);
+}
+
 .add-to-favourite, .add-to-black-list {
     border: #323c4b;
 }
