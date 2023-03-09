@@ -68,3 +68,17 @@ class VacancyBlackList(models.Model):
 
     def __str__(self) -> str:
         return self.url
+
+
+class HiddenCompanies(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, verbose_name="Пользователь"
+    )
+    name = models.CharField(max_length=255, verbose_name="Компания")
+
+    class Meta:
+        verbose_name = "Скрытая компания"
+        verbose_name_plural = "Скрытые компании"
+
+    def __str__(self) -> str:
+        return self.company
