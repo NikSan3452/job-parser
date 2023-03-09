@@ -1,8 +1,10 @@
-from django.contrib import messages
+import json
+from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from logger import logger, setup_logging
-from parser.models import FavouriteVacancy
+from parser.models import FavouriteVacancy, VacancyBlackList, HiddenCompanies
 
 from .forms import ProfileForm
 from .models import Profile, User
@@ -37,6 +39,8 @@ def profile(request, username):
     else:
         try:
             favourite_vacancy = FavouriteVacancy.objects.filter(user=user).all()
+            black_list = VacancyBlackList.objects.filter(user=user).all()
+            hidden_companies = HiddenCompanies.objects.filter(user=user).all()
         except Exception as exc:
             logger.exception(exc)
 
@@ -55,5 +59,57 @@ def profile(request, username):
             "form": form,
             "user": user,
             "favourite_vacancy": favourite_vacancy,
+            "black_list": black_list,
+            "hidden_companies": hidden_companies,
         },
     )
+
+
+@login_required
+def delete_from_blacklist_view(request, username):
+    """Удаляет вакансию из черного списка.
+
+    Args:
+        request (_type_): Запрос.
+
+    Returns:
+        _type_: JsonResponse.
+    """
+    view_logger = logger.bind(request=request.POST)
+    if request.method == "POST":
+
+        data = json.load(request)
+        vacancy_url = data.get("url")
+
+        try:
+            user = auth.get_user(request)
+            VacancyBlackList.objects.filter(user=user, url=vacancy_url).delete()
+            view_logger.info(f"Вакансия {vacancy_url} удалена из черного списка")
+        except Exception as exc:
+            view_logger.exception(exc)
+    return JsonResponse({"status": f"Вакансия {vacancy_url} удалена из черного списка"})
+
+
+@login_required
+def delete_from_hidden_companies_view(request, username):
+    """Удаляет компанию из списка скрытых.
+
+    Args:
+        request (_type_): Запрос.
+
+    Returns:
+        _type_: JsonResponse.
+    """
+    view_logger = logger.bind(request=request.POST)
+    if request.method == "POST":
+
+        data = json.load(request)
+        company = data.get("name")
+
+        try:
+            user = auth.get_user(request)
+            HiddenCompanies.objects.filter(user=user, name=company).delete()
+            view_logger.info(f"Компания {company} удалена из списка скрытых")
+        except Exception as exc:
+            view_logger.exception(exc)
+    return JsonResponse({"status": f"Компания {company} удалена из списка скрытых"})
