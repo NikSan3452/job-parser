@@ -77,14 +77,14 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
         )
 
         # Сортируем вакансии по дате
-        sorted_job_list_from_api = await utils.sort_by_date(filtered_job_list)
+        sorted_job_list = await utils.sort_by_date(filtered_job_list)
 
         # Отображаем вакансии, которые в избранном
         list_favourite = await self.get_favourite_vacancy(request)
 
         context = {
             "form": form,
-            "object_list": sorted_job_list_from_api,
+            "object_list": sorted_job_list,
             "list_favourite": list_favourite,
         }
 
@@ -98,7 +98,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
         context["job_board"] = request_data.get("job_board")
 
         # Пагинация
-        await self.get_pagination(request, sorted_job_list_from_api, context)
+        await self.get_pagination(request, sorted_job_list, context)
 
         return render(request, self.template_name, context)
 
@@ -146,10 +146,6 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
                 self.job_list_from_api, job_list_from_scraper
             )
 
-            # Сохраняем данные в кэше
-            await self.create_cache_key(request)
-            await self.set_data_to_cache(shared_job_list)
-
             # Проверяем находится ли компания в списке скрытых
             job_from_hidden_companies = await self.check_company_in_hidden_list(
                 shared_job_list, request
@@ -165,6 +161,10 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
 
             # Отображаем вакансии, которые в избранном
             list_favourite = await self.get_favourite_vacancy(request)
+
+            # Сохраняем данные в кэше
+            await self.create_cache_key(request)
+            await self.set_data_to_cache(sorted_shared_job_list)
 
             context = {
                 "city": params.get("city"),
