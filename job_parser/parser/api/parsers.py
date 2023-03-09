@@ -272,7 +272,7 @@ class Trudvsem(Parser):
         await self.get_request_params()
 
         job_list: list[dict] = await self.get_vacancies(
-            url=config.trudvsem_url, params=self.tv_params, pages=100, items="results"
+            url=config.trudvsem_url, params=self.tv_params, pages=30, items="results"
         )
 
         job_dict: dict = {}
