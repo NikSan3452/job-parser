@@ -24,35 +24,113 @@
             </form>
         </div>
     </div>
-    <div class="row justify-content-center">
-        <div class="col-10">
-            {% for vacancy in favourite_vacancy %}
-                <div class="card my-3" id="favourite-block-{{forloop.counter}}">
-                    <div class="row favourite">
-                        <div class="col-10">
-                            <h5 class="card-header bg-primary bg-opacity-10">
-                                <a class="text-decoration-none" href="{{ vacancy.url }}"> {{ vacancy.title }}</a>
-                            </h5>
+
+    <nav>
+        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+          <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Избранное</button>
+          <button class="nav-link" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Черный список</button>
+          <button class="nav-link" id="nav-contact-tab" data-bs-toggle="tab" data-bs-target="#nav-contact" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Скрытые компании</button>
+        </div>
+      </nav>
+    <!-- Избранное -->
+      <div class="tab-content" id="nav-tabContent">
+        <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    {% for vacancy in favourite_vacancy %}
+                        <div class="card my-3" id="favourite-block-{{forloop.counter}}">
+                            <div class="row favourite">
+                                <div class="col-10">
+                                    <h5 class="card-header bg-primary bg-opacity-10">
+                                        <a class="text-decoration-none" href="{{ vacancy.url }}"> {{ vacancy.title }}</a>
+                                    </h5>
+                                </div>
+                                <div class="col-2 text-center my-auto">
+                                    {% if user.is_authenticated %}
+                                        <input {% for favourite in list_favourite %} {% if favourite.url == obj.url %}
+                                        checked
+                                        {% endif %}
+                                        {% endfor %}
+                                        type="checkbox"
+                                        class="btn-check favourite-list"
+                                        id="btn-check-outlined-{{forloop.counter}}"
+                                        autocomplete="off"
+                                        onclick="removeFavouriteFromProfile('{{ forloop.counter }}', '{{ vacancy.url }}')">
+                                        <label class="btn btn-outline-primary add-to-favourite my-auto" for="btn-check-outlined-{{forloop.counter}}">
+                                            <i class="fa-solid fa-trash-can trash" style="color:red"></i>
+                                        </label>
+                                    {% endif %}
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-2 text-center my-auto">
-                            {% if user.is_authenticated %}
-                                <input {% for favourite in list_favourite %} {% if favourite.url == obj.url %}
-                                checked
-                                {% endif %}
-                                {% endfor %}
-                                type="checkbox"
-                                class="btn-check favourite-list"
-                                id="btn-check-outlined-{{forloop.counter}}"
-                                autocomplete="off"
-                                onclick="removeFavouriteFromProfile('{{ forloop.counter }}', '{{ vacancy.url }}')">
-                                <label class="btn btn-outline-primary add-to-favourite my-auto" for="btn-check-outlined-{{forloop.counter}}">
-                                    <i class="fa-solid fa-trash-can trash" style="color:red"></i>
-                                </label>
-                            {% endif %}
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
+            </div>
+        </div>
+        <!-- Черный список -->
+        <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    {% for vacancy in black_list %}
+                        <div class="card my-3" id="btn-delete-from-black-list-{{forloop.counter}}">
+                            <div class="row blacklist">
+                                <div class="col-10">
+                                    <h5 class="card-header bg-primary bg-opacity-10">
+                                        <a class="text-decoration-none" href="{{ vacancy.url }}"> {{ vacancy.title }}</a>
+                                    </h5>
+                                </div>
+                                <div class="col-2 text-center my-auto">
+                                    {% if user.is_authenticated %}
+                                    <input 
+                                        type="checkbox"
+                                        class="btn-check black-list"
+                                        id="btn-check-delete-{{forloop.counter}}"
+                                        autocomplete="off"
+                                        onchange="removeVacancyFromBlackList('{{forloop.counter}}', '{{ vacancy.url }}', '{{ vacancy.title }}')">
+
+                                        <label class="btn btn-outline-primary add-to-black-list" for="btn-check-delete-{{forloop.counter}}">
+                                            <i class="fa-solid fa-trash-can trash" style="color:red"></i>
+                                        </label>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <!-- Скрытые компании -->
+        <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab" tabindex="0">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    {% for company in hidden_companies %}
+                        <div class="card my-3" id="btn-delete-from-hidden-companies-{{forloop.counter}}">
+                            <div class="row hidden-companies">
+                                <div class="col-10">
+                                    <h5 class="card-header bg-primary bg-opacity-10">
+                                        <p class="hidden-companies-name">{{ company.name }}</p>
+                                    </h5>
+                                </div>
+                                <div class="col-2 text-center my-auto">
+                                    {% if user.is_authenticated %}
+                                    <input 
+                                        type="checkbox"
+                                        class="btn-check hidden-companies"
+                                        id="hidden-companies-{{forloop.counter}}"
+                                        autocomplete="off"
+                                        onchange="removeCompanyFromHiddenList('{{forloop.counter}}', '{{ company.name }}')">
+
+                                        <label class="btn btn-outline-primary add-to-black-list" for="hidden-companies-{{forloop.counter}}">
+                                            <i class="fa-solid fa-trash-can trash" style="color:red"></i>
+                                        </label>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
         </div>
     </div>
     <script src="{% static '/js/favourite.js' %}"></script>
