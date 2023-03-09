@@ -35,7 +35,15 @@ function addToFavourite(index, vacancyUrl, vacancyTitle) {
 function addVacancyToBlackList(index, vacancyUrl) {
     let vacancy = document.getElementById(`delete-vacancy-${index}`);
     vacancy.remove();
-
+    // Получить текущее значение total_vacancies
+    let totalVacanciesElement = document.getElementById("total-vacancies");
+    let currentTotalVacancies = parseInt(
+        totalVacanciesElement.textContent.split(": ")[1]
+    );
+    // Обновить значение total_vacancies и обновить элемент DOM
+    totalVacanciesElement.textContent = `По Вашему запросу найдено: ${
+        currentTotalVacancies - 1
+    }`;
     fetch("/add-to-black-list/", {
         method: "POST",
         credentials: "same-origin",
