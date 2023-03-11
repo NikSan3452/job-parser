@@ -85,26 +85,16 @@ TEMPLATES = [
 WSGI_APPLICATION = "job_parser.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
-
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB"),
+        "USER": os.getenv("POSTGRES_USER"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+        "HOST": os.getenv("POSTGRES_SERVER"),
+        "PORT": os.getenv("POSTGRES_PORT"),
     }
 }
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": os.getenv("POSTGRES_DB"),
-#         "USER": os.getenv("POSTGRES_USER"),
-#         "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-#         "HOST": os.getenv("POSTGRES_SERVER"),
-#         "PORT": os.getenv("POSTGRES_PORT"),
-#     }
-# }
 
 
 # Password validation
@@ -194,7 +184,6 @@ CELERY_RESULT_SERIALIZER = "json"
 SENDING_EMAILS_HOURS = os.getenv("SENDING_EMAILS_HOURS", 14)
 SENDING_EMAILS_MINUTES = os.getenv("SENDING_EMAILS_MINUTES", 0)
 
-SCRAPING_DELAY = os.getenv("SCRAPING_DELAY", 2.5)
 SCRAPING_SCHEDULE_MINUTES = os.getenv("SCRAPING_SCHEDULE_MINUTES", 200)
 DELETE_OLD_VACANCIES_HOURS = os.getenv('DELETE_OLD_VACANCIES', 0)
 DELETE_OLD_VACANCIES_MINUTES = os.getenv('DELETE_OLD_VACANCIES_MINUTES', 0)
