@@ -43,6 +43,8 @@ RUN apt-get update && apt-get install -y netcat
 COPY --from=builder /job_parser/wheels /wheels
 COPY --from=builder /job_parser/requirements.txt .
 RUN pip install --no-cache /wheels/*
+RUN playwright install
+RUN playwright install-deps
 
 COPY ./entrypoint.sh .
 RUN sed -i 's/\r$//g'  $JOB_PARSER_HOME/entrypoint.sh
