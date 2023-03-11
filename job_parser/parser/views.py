@@ -261,6 +261,9 @@ def add_to_black_list_view(request):
             VacancyBlackList.objects.get_or_create(
                 user=user, url=vacancy_url, title=vacancy_title
             )
+            FavouriteVacancy.objects.filter(
+                user=user, url=vacancy_url
+            ).delete()
             view_logger.info(f"Вакансия {vacancy_url} добавлена в черный список")
         except Exception as exc:
             view_logger.exception(exc)
