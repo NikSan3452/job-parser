@@ -10,6 +10,7 @@ body {
     background-color: rgb(15, 23, 36);
 }
 
+
 .navbar {
     padding: 0;
     margin: 0;
@@ -61,6 +62,10 @@ body {
     border-color: #C6D3E7;
 }
 
+.card-header > a:visited {
+    color: blueviolet;
+}
+
 .card-param {
     color: rgba(145, 247, 145, 0.76);
 }
@@ -78,6 +83,10 @@ body {
 }
 
 .success-message {
+    color: rgb(72, 165, 72);
+}
+
+.total-vacancies-count {
     color: rgb(72, 165, 72);
 }
 
@@ -112,7 +121,79 @@ body {
     color: red;
 }
 
+.hidden-companies-name {
+    padding: 0;
+    margin: 0;
+}
+
 .btn-wrap {
     display: flex;
     justify-content: center;
+}
+
+.scroll {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+}
+
+.fa-arrow-up, .fa-arrow-down {
+    font-size: 20px;
+}
+
+.company-menu {
+    display: inline;
+}
+
+.modal {
+    width: 150px;
+    height: 90px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    font-size: 10px;
+    transform: translate(-50%, -50%);
+    z-index: 999;
+    overflow: hidden;
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #323c4b;
+    margin: 5px auto;
+    width: 90%;
+    height: 90%;
+    text-align: center;
+    position: relative;
+}
+
+.modal-content > p {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    padding: 0;
+    margin: 0;
+    color: white;
+}
+
+.close {
+    flex: 1;
+    top: 0;
+    right: 0;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.hide-company-btn {
+    flex: 1;
+    width: 70%;
+    margin: 5px auto;
+    background-color: rgb(226, 58, 58);
+    border: 1px solid #323c4b;
+    border-radius: 5px;
+    color: white;
 }
