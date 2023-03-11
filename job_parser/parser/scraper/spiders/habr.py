@@ -1,12 +1,17 @@
+import os
 import pytz
 import scrapy
 from dateutil.parser import parse
+from dotenv import load_dotenv
 
 from . import items
 from logger import logger, setup_logging
 
 # Логирование
 setup_logging()
+
+load_dotenv()
+HABR_SCRAPING_DELAY = os.getenv("HABR_SCRAPING_DELAY")
 
 
 class HabrSpider(scrapy.Spider):
@@ -17,7 +22,8 @@ class HabrSpider(scrapy.Spider):
     custom_settings = {
         "ITEM_PIPELINES": {
             "parser.scraper.pipelines.HabrPipeline": 300,
-        }
+        },
+        "DOWNLOAD_DELAY": HABR_SCRAPING_DELAY,
     }
 
     @logger.catch(message="Ошибка в методе HabrSpider.start_requests()")

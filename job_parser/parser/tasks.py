@@ -72,7 +72,6 @@ def sending_emails() -> None:
 
 @dataclass
 class ScraperSettings:
-    DOWNLOAD_DELAY: int = settings.SCRAPING_DELAY
     TWISTED_REACTOR: str = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
     DOWNLOAD_HANDLERS: dict = field(
         default_factory=lambda: {

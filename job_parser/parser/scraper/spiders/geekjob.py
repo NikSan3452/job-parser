@@ -1,4 +1,6 @@
+import os
 import scrapy
+from dotenv import load_dotenv
 
 from . import items
 from logger import logger, setup_logging
@@ -6,6 +8,8 @@ from logger import logger, setup_logging
 # Логирование
 setup_logging()
 
+load_dotenv()
+GEEKJOB_SCRAPING_DELAY = os.getenv('GEEKJOB_SCRAPING_DELAY')
 
 class GeekjobSpider(scrapy.Spider):
     name = "geekjob"
@@ -15,7 +19,8 @@ class GeekjobSpider(scrapy.Spider):
     custom_settings = {
         "ITEM_PIPELINES": {
             "parser.scraper.pipelines.GeekjobPipeline": 400,
-        }
+        },
+        "DOWNLOAD_DELAY": GEEKJOB_SCRAPING_DELAY,
     }
 
     @logger.catch(message="Ошибка в методе GeekjobSpider.start_requests()")
