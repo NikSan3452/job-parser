@@ -21,8 +21,6 @@ crispy-bootstrap5
 
 django-debug-toolbar
 
-orjson
-
 aiofiles
 
 celery
@@ -40,8 +38,6 @@ ruff
 mypy
 
 psycopg2-binary
-
-dj-database-url
 
 pytest-django
 pytest-asyncio
