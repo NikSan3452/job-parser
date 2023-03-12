@@ -1,5 +1,5 @@
 import httpx
-import orjson
+import json
 from typing import Optional
 
 from logger import setup_logging, logger
@@ -63,7 +63,7 @@ class Parser:
             try:
                 # Получаем данные
                 data = await self.create_session(url, headers, params)
-                json_data = orjson.loads(data)  # Упаковываем в json
+                json_data = json.loads(data)  # Упаковываем в json
             except Exception as exc:
                 logger.exception(exc)
 
