@@ -79,7 +79,7 @@ class ScraperSettings:
             "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
         }
     )
-    PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT: int = 200000
+    PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT: int = 300000
     REQUEST_FINGERPRINTER_IMPLEMENTATION: str = "2.7"
     FAKEUSERAGENT_PROVIDERS: list = field(
         default_factory=lambda: [
