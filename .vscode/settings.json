@@ -2,5 +2,6 @@
     "sqltools.connections": [],
     "python.analysis.extraPaths": [
         "./job_parser"
-    ]
+    ],
+    "python.analysis.typeCheckingMode": "off"
 }

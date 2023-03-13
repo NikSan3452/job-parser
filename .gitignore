@@ -58,3 +58,5 @@ db.sqlite3
 test.py
 firebase-debug.log
 parser_views.log
+job_parser.code-workspace
+.ruff_cache
