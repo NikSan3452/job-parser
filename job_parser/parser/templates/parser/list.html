@@ -100,7 +100,11 @@
                     |
                     <span class="card-param">Компания:</span>
                     <span class="card-value">
-                        <a href="#" class="company-name" data-company="{{ obj.company|capfirst }}">{{ obj.company|capfirst }}</a>
+                        {% if user.is_authenticated %}
+                            <a href="#" class="company-name" data-company="{{ obj.company|capfirst }}">{{ obj.company|capfirst }}</a>
+                        {% else %}
+                            <span>{{ obj.company|capfirst }}</span>
+                        {% endif %}
                     </span>
                     |
                     <span class="card-param">Дата публикации:</span>
