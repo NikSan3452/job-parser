@@ -8,12 +8,10 @@ from logger import setup_logging, logger
 setup_logging()
 
 
-class Parser:
-    """Основной класс парсера."""
+class CreateConnection:
+    """Класс подключения к API площадок"""
 
-    general_job_list: list[dict] = []
-
-    @logger.catch(message="Ошибка в методе Parser.create_session()")
+    @logger.catch(message="Ошибка в методе CreateConnection.create_session()")
     async def create_session(
         self,
         url: str,
@@ -34,6 +32,13 @@ class Parser:
             response = await client.get(url=url, headers=headers, params=params)
             data = response.content.decode()
         return data
+
+
+class Parser:
+    """Основной класс парсера."""
+
+    general_job_list: list[dict] = []
+    connection = CreateConnection()
 
     async def get_vacancies(
         self,
@@ -59,18 +64,22 @@ class Parser:
             list[dict]: Список вакансий или исключение.
         """
         job_list: list[dict] = []
+        data: str = ""
+        json_data: dict = {}
+
         for page in range(pages):  # Постраничный вывод вакансий
             try:
                 # Получаем данные
-                data = await self.create_session(url, headers, params)
+                data = await self.connection.create_session(url, headers, params)
                 json_data = json.loads(data)  # Упаковываем в json
             except Exception as exc:
                 logger.exception(exc)
 
             if items == "results":  # Если запрос к сайту Trudvsem
+                vacancies: dict = {}
                 if json_data.get(items):
                     # На каждой итерации получаем новый список вакансий
-                    vacancies = json_data.get(items).get("vacancies")
+                    vacancies = json_data[items]["vacancies"]
                     if vacancies:  # Если в списке есть данные-добавим их в общий список
                         job_list.extend(vacancies)
                     if vacancies is None:  # Если список пуст, запросы останавливаются
@@ -82,9 +91,11 @@ class Parser:
                     break
 
             page += 1
+
             # Устанавливаем смещение
             if items == "results":
                 params["offset"] = page
             else:
                 params["page"] = page
+                
         return job_list
