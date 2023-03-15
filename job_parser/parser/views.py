@@ -121,6 +121,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
             city_id = await self.get_city_id(params.get("city"), request)
             params.update({"city_from_db": city_id})
 
+            job_list_from_scraper = []
             try:
                 # Если выбранная площадка относится к скраперу -
                 # получаем данные только из скрапера
