@@ -1,13 +1,13 @@
 document.addEventListener("DOMContentLoaded", function () {
-    var companyLinks = document.querySelectorAll(".company-name");
+    let companyLinks = document.querySelectorAll(".company-name");
 
     companyLinks.forEach(function (link) {
-        var modal;
+        let modal;
 
         link.addEventListener("click", function (e) {
             e.preventDefault();
 
-            var companyName = link.dataset.company;
+            let companyName = link.dataset.company;
 
             modal = document.createElement("div");
             modal.className = "modal";
@@ -18,12 +18,12 @@ document.addEventListener("DOMContentLoaded", function () {
         <button class="hide-company-btn">Подтвердить</button>
     </div>
 `;
-            var hideCompanyBtn = modal.querySelector(".hide-company-btn");
+            let hideCompanyBtn = modal.querySelector(".hide-company-btn");
             hideCompanyBtn.addEventListener("click", function () {
-                var vacancies = document.querySelectorAll(".card");
+                let vacancies = document.querySelectorAll(".card");
 
                 vacancies.forEach(function (vacancy) {
-                    var vacancyCompany =
+                    let vacancyCompany =
                         vacancy.querySelector(".company-name").dataset.company;
                     if (vacancyCompany === companyName) {
                         vacancy.style.display = "none";
@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 modal.style.display = "none";
             });
 
-            var closeModal = modal.querySelector(".close");
+            let closeModal = modal.querySelector(".close");
             closeModal.addEventListener("click", function () {
                 modal.style.display = "none";
             });
@@ -67,8 +67,8 @@ document.addEventListener("DOMContentLoaded", function () {
             link.parentNode.insertBefore(modal, link.nextSibling);
 
             // Установка позиции окна при открытии
-            var linkRect = link.getBoundingClientRect();
-            var modalRect = modal.getBoundingClientRect();
+            let linkRect = link.getBoundingClientRect();
+            let modalRect = modal.getBoundingClientRect();
             modal.style.left =
                 linkRect.left + linkRect.width / 2 - modalRect.width / 2 + "px";
             modal.style.top =
