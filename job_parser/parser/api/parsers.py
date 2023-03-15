@@ -20,27 +20,35 @@ class Headhunter(Parser):
         self.params = params
 
     @logger.catch(message="Ошибка в методе Headhunter.get_request_params()")
-    async def get_request_params(self) -> None:
-        self.city_from_db = self.params.city_from_db
-        self.job = self.params.job
-        self.date_from, self.date_to = await utils.check_date(
+    async def get_request_params(self) -> dict:
+        """Формирует параметры запросов к API.
+
+        Returns:
+            dict: словарь с параметрами.
+        """
+        city_from_db = self.params.city_from_db
+        job = self.params.job
+        experience = "noExperience"
+        date_from, date_to = await utils.check_date(
             self.params.date_from, self.params.date_to
         )
 
         # Формируем параметры запроса к API Headhunter
-        self.hh_params = {
-            "text": f"NAME:{self.job}",
+        hh_params = {
+            "text": f"NAME:{job}",
             "per_page": 100,
-            "date_from": self.date_from,
-            "date_to": self.date_to,
+            "date_from": date_from,
+            "date_to": date_to,
         }
 
-        if self.city_from_db:
-            self.hh_params["area"] = self.city_from_db
+        if city_from_db:
+            hh_params["area"] = city_from_db
 
         if self.params.experience > 0:
-            self.experience = await utils.convert_experience(self.params.experience)
-            self.hh_params["experience"] = self.experience
+            experience = await utils.convert_experience(self.params.experience)
+            hh_params["experience"] = experience
+
+        return hh_params
 
     @logger.catch(message="Ошибка в методе Headhunter.get_vacancy_from_headhunter()")
     async def get_vacancy_from_headhunter(
@@ -51,10 +59,10 @@ class Headhunter(Parser):
         Returns:
             dict: Словарь с основными полями вакансий
         """
-        await self.get_request_params()
+        hh_params = await self.get_request_params()
 
         job_list: list[dict] = await self.get_vacancies(
-            url=url, params=self.hh_params, pages=20, items="items"
+            url=url, params=hh_params, pages=20, items="items"
         )
 
         job_dict: dict = {}
@@ -109,26 +117,33 @@ class SuperJob(Parser):
         self.params = params
 
     @logger.catch(message="Ошибка в методе SuperJob.get_request_params()")
-    async def get_request_params(self) -> None:
-        self.city = self.params.city
-        self.job = self.params.job
-        self.date_from, self.date_to = await utils.check_date(
+    async def get_request_params(self) -> dict:
+        """Формирует параметры запросов к API.
+
+        Returns:
+            dict: словарь с параметрами.
+        """
+        city = self.params.city
+        job = self.params.job
+        date_from, date_to = await utils.check_date(
             self.params.date_from, self.params.date_to
         )
 
         # Формируем параметры запроса к API SuperJob
-        self.sj_params = {
-            "keyword": self.job,
+        sj_params = {
+            "keyword": job,
             "count": 100,
-            "date_published_from": await utils.convert_date(self.date_from),
-            "date_published_to": await utils.convert_date(self.date_to),
+            "date_published_from": await utils.convert_date(date_from),
+            "date_published_to": await utils.convert_date(date_to),
         }
 
-        if self.city:
-            self.sj_params["town"] = self.city
+        if city:
+            sj_params["town"] = city
 
         if self.params.experience > 0:
-            self.sj_params["experience"] = self.params.experience
+            sj_params["experience"] = self.params.experience
+
+        return sj_params
 
     @logger.catch(message="Ошибка в методе SuperJob.get_vacancy_from_superjob()")
     async def get_vacancy_from_superjob(self) -> dict:
@@ -137,11 +152,11 @@ class SuperJob(Parser):
         Returns:
             dict: Словарь с основными полями вакансий
         """
-        await self.get_request_params()
+        sj_params = await self.get_request_params()
 
         job_list = await self.get_vacancies(
             url=config.superjob_url,
-            params=self.sj_params,
+            params=sj_params,
             pages=5,
             headers=config.superjob_headers,
             items="objects",
@@ -236,31 +251,33 @@ class Trudvsem(Parser):
         self.params = params
 
     @logger.catch(message="Ошибка в методе Trudvsem.get_request_params()")
-    async def get_request_params(self) -> None:
-        """Отвечает за получение вакансий с сайта Trudvsem.
+    async def get_request_params(self) -> dict:
+        """Формирует параметры запросов к API.
 
         Returns:
-            dict: Словарь с вакансиями.
+            dict: словарь с параметрами.
         """
-        self.job = self.params.job
-        self.date_from, self.date_to = await utils.check_date(
+        job = self.params.job
+        date_from, date_to = await utils.check_date(
             self.params.date_from, self.params.date_to
         )
 
         # Формируем параметры запроса к API Trudvsem
-        self.tv_params = {
-            "text": self.job,
+        tv_params = {
+            "text": job,
             "limit": 100,
             "offset": 0,
-            "modifiedFrom": await utils.convert_date_for_trudvsem(self.date_from),
-            "modifiedTo": await utils.convert_date_for_trudvsem(self.date_to),
+            "modifiedFrom": await utils.convert_date_for_trudvsem(date_from),
+            "modifiedTo": await utils.convert_date_for_trudvsem(date_to),
         }
 
         if self.params.experience > 0:
             (
-                self.tv_params["experienceFrom"],
-                self.tv_params["experienceTo"],
+                tv_params["experienceFrom"],
+                tv_params["experienceTo"],
             ) = await utils.convert_experience_for_trudvsem(self.params.experience)
+
+        return tv_params
 
     @logger.catch(message="Ошибка в методе Trudvsem.get_vacancy_from_trudvsem()")
     async def get_vacancy_from_trudvsem(self) -> dict:
@@ -269,10 +286,9 @@ class Trudvsem(Parser):
         Returns:
             dict: Словарь с основными полями вакансий
         """
-        await self.get_request_params()
-
+        tv_params = await self.get_request_params()
         job_list: list[dict] = await self.get_vacancies(
-            url=config.trudvsem_url, params=self.tv_params, pages=30, items="results"
+            url=config.trudvsem_url, params=tv_params, pages=20, items="results"
         )
 
         job_dict: dict = {}
@@ -280,66 +296,62 @@ class Trudvsem(Parser):
         for job in job_list:
             job_dict["job_board"] = "Trudvsem"
 
-            if job.get("vacancy", "").get("vac_url"):
-                job_dict["url"] = job.get("vacancy", "").get("vac_url")
+            vacancy: dict = job.get("vacancy", None)
 
-            job_dict["title"] = job.get("vacancy", "").get("job-name")
+            if vacancy is not None:
+                job_dict["url"] = vacancy.get("vac_url")
 
-            if job.get("vacancy", "").get("salary_min"):
-                job_dict["salary_from"] = job.get("vacancy", "").get("salary_min")
-            else:
-                job_dict["salary_from"] = None
+                job_dict["title"] = vacancy.get("job-name")
 
-            job_dict["salary_currency"] = "RUR"
+                if vacancy.get("salary_min"):
+                    job_dict["salary_from"] = vacancy.get("salary_min")
+                else:
+                    job_dict["salary_from"] = None
 
-            if job.get("vacancy", "").get("salary_max"):
-                job_dict["salary_to"] = job.get("vacancy", "").get("salary_max")
-            else:
-                job_dict["salary_to"] = None
+                job_dict["salary_currency"] = "RUR"
 
-            if job.get("vacancy", "").get("duty"):
-                job_dict["responsibility"] = job.get("vacancy", "").get("duty")
-            else:
-                job_dict["responsibility"] = "Нет описания"
+                if vacancy.get("salary_max"):
+                    job_dict["salary_to"] = vacancy.get("salary_max")
+                else:
+                    job_dict["salary_to"] = None
 
-            if job.get("vacancy", "").get("requirement"):
-                if job.get("vacancy", "").get("requirement").get("education"):
-                    education = (
-                        job.get("vacancy", "").get("requirement").get("education")
-                    )
-                if job.get("vacancy", "").get("requirement").get("experience"):
-                    experience = (
-                        job.get("vacancy", "").get("requirement").get("experience")
-                    )
-                    job_dict[
-                        "requirement"
-                    ] = f"{education} образование, опыт работы (лет): {experience}"
-            else:
-                job_dict["requirement"] = "Нет описания"
+                if vacancy.get("duty"):
+                    job_dict["responsibility"] = vacancy.get("duty")
+                else:
+                    job_dict["responsibility"] = "Нет описания"
 
-            job_dict["city"] = (
-                job.get("vacancy", "").get("addresses").get("address")[0]["location"]
-            )
+                if vacancy.get("requirement"):
+                    if vacancy["requirement"]["education"]:
+                        education = vacancy["requirement"]["education"]
+                    if vacancy["requirement"]["experience"]:
+                        experience = vacancy["requirement"]["experience"]
+                        job_dict[
+                            "requirement"
+                        ] = f"{education} образование, опыт работы (лет): {experience}"
+                else:
+                    job_dict["requirement"] = "Нет описания"
 
-            job_dict["company"] = job.get("vacancy", "").get("company").get("name")
+                job_dict["city"] = vacancy["addresses"]["address"][0]["location"]
 
-            if job.get("vacancy", "").get("schedule"):
-                job_dict["type_of_work"] = job.get("vacancy", "").get("schedule")
-            else:
-                job_dict["type_of_work"] = "Не указано"
+                job_dict["company"] = vacancy["company"]["name"]
 
-            # Конвертируем дату в удобочитаемый вид
-            published_date = datetime.datetime.strptime(
-                job.get("vacancy", "").get("creation-date"), "%Y-%m-%d"
-            ).date()
-            job_dict["published_at"] = published_date
+                if vacancy.get("schedule"):
+                    job_dict["type_of_work"] = vacancy.get("schedule")
+                else:
+                    job_dict["type_of_work"] = "Не указано"
 
-            if self.params.city:  # Если при поиске указан город ищем его в адресе
-                if self.params.city in job_dict.get("city", "").lower():
-                    # Добавляем словарь с вакансией в общий список всех вакансий
+                # Конвертируем дату в удобочитаемый вид
+                published_date = datetime.datetime.strptime(
+                    vacancy.get("creation-date", ""), "%Y-%m-%d"
+                ).date()
+                job_dict["published_at"] = published_date
+
+                if self.params.city:  # Если при поиске указан город ищем его в адресе
+                    if self.params.city in job_dict.get("city", "").lower():
+                        # Добавляем словарь с вакансией в общий список всех вакансий
+                        Parser.general_job_list.append(job_dict.copy())
+                else:
                     Parser.general_job_list.append(job_dict.copy())
-            else:
-                Parser.general_job_list.append(job_dict.copy())
 
         logger.debug("Сбор вакансий с Trudvsem завершен")
 
