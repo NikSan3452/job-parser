@@ -279,6 +279,7 @@ class RedisCacheMixin:
         """
         mixin_logger = logger.bind(cache_key=self.cache_key)
         try:
+            settings.CACHE.delete(self.cache_key)
             pickle_dump = pickle.dumps(job_list)
             settings.CACHE.set(self.cache_key, pickle_dump, ex=3600)
         except Exception as exc:
