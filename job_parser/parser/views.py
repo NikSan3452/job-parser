@@ -66,21 +66,26 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
         await self.create_cache_key(request)
         job_list_from_cache = await self.get_data_from_cache()
 
-        # Проверяем находится ли компания в списке скрытых
-        job_from_hidden_companies = await self.check_company_in_hidden_list(
-            job_list_from_cache, request
-        )
+        list_favourite = []
 
-        # Проверяем добавлена ли вакансия в черный список
-        filtered_job_list = await self.check_vacancy_in_black_list(
-            job_from_hidden_companies, request
-        )
+        if request.user.is_authenticated:
+            # Проверяем находится ли компания в списке скрытых
+            job_from_hidden_companies = await self.check_company_in_hidden_list(
+                job_list_from_cache, request
+            )
+
+            # Проверяем добавлена ли вакансия в черный список
+            filtered_job_list = await self.check_vacancy_in_black_list(
+                job_from_hidden_companies, request
+            )
+
+            # Отображаем вакансии, которые в избранном
+            list_favourite = await self.get_favourite_vacancy(request)
+
+            job_list_from_cache = filtered_job_list
 
         # Сортируем вакансии по дате
-        sorted_job_list = await utils.sort_by_date(filtered_job_list)
-
-        # Отображаем вакансии, которые в избранном
-        list_favourite = await self.get_favourite_vacancy(request)
+        sorted_job_list = await utils.sort_by_date(job_list_from_cache)
 
         context = {
             "form": form,
@@ -147,21 +152,26 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
                 self.job_list_from_api, job_list_from_scraper
             )
 
-            # Проверяем находится ли компания в списке скрытых
-            job_from_hidden_companies = await self.check_company_in_hidden_list(
-                shared_job_list, request
-            )
+            list_favourite = []
 
-            # Проверяем добавлена ли вакансия в черный список
-            filtered_shared_job_list = await self.check_vacancy_in_black_list(
-                job_from_hidden_companies, request
-            )
+            if request.user.is_authenticated:
+                # Проверяем находится ли компания в списке скрытых
+                job_from_hidden_companies = await self.check_company_in_hidden_list(
+                    shared_job_list, request
+                )
+
+                # Проверяем добавлена ли вакансия в черный список
+                filtered_shared_job_list = await self.check_vacancy_in_black_list(
+                    job_from_hidden_companies, request
+                )
+
+                # Отображаем вакансии, которые в избранном
+                list_favourite = await self.get_favourite_vacancy(request)
+
+                shared_job_list = filtered_shared_job_list
 
             # Сортируем список вакансий по дате
-            sorted_shared_job_list = await utils.sort_by_date(filtered_shared_job_list)
-
-            # Отображаем вакансии, которые в избранном
-            list_favourite = await self.get_favourite_vacancy(request)
+            sorted_shared_job_list = await utils.sort_by_date(shared_job_list)
 
             # Сохраняем данные в кэше
             await self.create_cache_key(request)
@@ -262,9 +272,7 @@ def add_to_black_list_view(request):
             VacancyBlackList.objects.get_or_create(
                 user=user, url=vacancy_url, title=vacancy_title
             )
-            FavouriteVacancy.objects.filter(
-                user=user, url=vacancy_url
-            ).delete()
+            FavouriteVacancy.objects.filter(user=user, url=vacancy_url).delete()
             view_logger.info(f"Вакансия {vacancy_url} добавлена в черный список")
         except Exception as exc:
             view_logger.exception(exc)
