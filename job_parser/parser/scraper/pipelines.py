@@ -122,10 +122,13 @@ class HabrPipeline:
 
     def get_type_of_work(self):
         """Получает тип занятости."""
-        if self.item_dict.get("type_of_work"):
+        type_of_work = self.item_dict.get("type_of_work")
+        if type_of_work and len(type_of_work) > 0:
             self.item_dict["type_of_work"] = ", ".join(
                 [word.lower() for word in self.item_dict.get("type_of_work", "")]
             )
+        else:
+            self.item_dict["type_of_work"] = "Не указано"
 
     def get_published_at(self):
         """Получает дату публикации вакансии.
