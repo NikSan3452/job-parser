@@ -51,7 +51,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware", # whitenoise
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # whitenoise
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -177,12 +177,17 @@ REDIS_PORT = os.getenv("REDIS_PORT")
 CACHE = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
 
 # Celery
-REDIS_BROKER_HOST = os.getenv("REDIS_BROKER_HOST", "localhost")
-REDIS_BROKER_PORT = os.getenv("REDIS_BROKER_PORT", 6380)
 
-CELERY_BROKER_URL = f"redis://{REDIS_BROKER_HOST}:{REDIS_BROKER_PORT}/0"
+BROKER_TRANSPORT = os.getenv("BROKER_TRANSPORT")
+BROKER_USER = os.getenv("BROKER_USER")
+BROKER_PASSWORD = os.getenv("BROKER_PASSWORD")
+BROKER_HOST = os.getenv("REDIS_BROKER_HOST", "localhost")
+BROKER_VHOST = os.getenv("BROKER_VHOST")
+BROKER_PORT = os.getenv("REDIS_BROKER_PORT", 5672)
+
+CELERY_BROKER_URL = f"{BROKER_TRANSPORT}://{BROKER_USER}:{BROKER_PASSWORD}@{BROKER_HOST}:{BROKER_PORT}/{BROKER_VHOST}"
 CELERY_BROKER_TRANSPORT_OPTION = {"visibility_timeout": 3600}
-CELERY_RESULT_BACKEND = f"redis://{REDIS_BROKER_HOST}:{REDIS_BROKER_PORT}/0"
+# CELERY_RESULT_BACKEND = f"{BROKER_TRANSPORT}://{BROKER_USER}:{BROKER_PASSWORD}@{BROKER_HOST}:{BROKER_PORT}/{BROKER_VHOST}"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
