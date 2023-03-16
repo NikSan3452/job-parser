@@ -117,7 +117,7 @@ class Utils:
         Returns:
             str: Конвертированный опыт.
         """
-        if scraper:
+        if not scraper:
             match experience:
                 case 1:
                     converted_experience = "noExperience"
