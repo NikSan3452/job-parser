@@ -177,22 +177,22 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
             await self.create_cache_key(request)
             await self.set_data_to_cache(sorted_shared_job_list)
 
-            context = {
-                "city": params.get("city"),
-                "job": params.get("job"),
-                "date_from": params.get("date_from"),
-                "date_to": params.get("date_to"),
-                "title_search": params.get("title_search"),
-                "experience": params.get("experience"),
-                "remote": params.get("remote"),
-                "job_board": params.get("job_board"),
-                "form": form,
-                "object_list": sorted_shared_job_list,
-                "list_favourite": list_favourite,
-            }
+        context = {
+            "city": params.get("city"),
+            "job": params.get("job"),
+            "date_from": params.get("date_from"),
+            "date_to": params.get("date_to"),
+            "title_search": params.get("title_search"),
+            "experience": params.get("experience"),
+            "remote": params.get("remote"),
+            "job_board": params.get("job_board"),
+            "form": form,
+            "object_list": sorted_shared_job_list,
+            "list_favourite": list_favourite,
+        }
 
-            # Пагинация
-            await self.get_pagination(request, sorted_shared_job_list, context)
+        # Пагинация
+        await self.get_pagination(request, sorted_shared_job_list, context)
 
         return render(request, self.template_name, context)
 
