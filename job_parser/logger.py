@@ -1,11 +1,17 @@
+import os
 import sys
 from loguru import logger
 
 
 def setup_logging():
+    log_filename = "parser_views.log"
+    log_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "logs", log_filename
+    )
+
     logger.remove()
     logger.add(
-        "job_parser/logs/parser_views.log",
+        log_path,
         format="ВРЕМЯ {time:MMMM D, YYYY > HH:mm:ss!UTC} | ТИП {level} | СООБЩЕНИЕ {message} | {extra}",
         level="ERROR",
         backtrace=False,
