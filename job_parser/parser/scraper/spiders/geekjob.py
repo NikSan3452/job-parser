@@ -9,6 +9,7 @@ from logger import logger, setup_logging
 setup_logging()
 
 load_dotenv()
+
 GEEKJOB_SCRAPING_DELAY = os.getenv('GEEKJOB_SCRAPING_DELAY')
 
 class GeekjobSpider(scrapy.Spider):
