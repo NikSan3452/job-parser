@@ -139,6 +139,6 @@ def run_scraper() -> None:
 
 
 @app.task
-def run_delete_old_vacancies():
+def run_delete_old_vacancies() -> None:
     """Запуск удаления старых вакансий"""
     scraper.delete_old_vacancies()
