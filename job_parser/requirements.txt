@@ -55,3 +55,4 @@ whitenoise==6.4.0
 
 huey==2.4.5
 gevent==22.10.3
+memory_profiler==0.61.0
