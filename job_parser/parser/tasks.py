@@ -3,22 +3,21 @@ import datetime
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
-
+from huey import SqliteHuey, crontab
+from huey.contrib.djhuey import periodic_task
 from logger import logger, setup_logging
-from parser.scraper.spiders.habr import HabrSpider
-from parser.scraper.spiders.geekjob import GeekjobSpider
+from memory_profiler import profile as memory
+from parser.scraping.run import run
 from profiles.models import Profile
-from scrapy.crawler import CrawlerProcess
-from dataclasses import asdict, dataclass, field
 
-from job_parser.celery import app
 from .api import main
 from .models import VacancyScraper
 
 setup_logging()
 
 
-@app.task
+@memory
+@periodic_task(crontab(hour=f"{settings.SENDING_EMAILS_HOURS}"))
 def sending_emails() -> None:
     """Отвечает за рассылку электронных писем с вакансиями"""
     try:
@@ -70,75 +69,15 @@ def sending_emails() -> None:
         logger.exception(exc)
 
 
-@dataclass
-class ScraperSettings:
-    TWISTED_REACTOR: str = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
-    DOWNLOAD_HANDLERS: dict = field(
-        default_factory=lambda: {
-            "http": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-            "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
-        }
-    )
-    PLAYWRIGHT_DEFAULT_NAVIGATION_TIMEOUT: int = 300000
-    REQUEST_FINGERPRINTER_IMPLEMENTATION: str = "2.7"
-    FAKEUSERAGENT_PROVIDERS: list = field(
-        default_factory=lambda: [
-            "scrapy_fake_useragent.providers.FakeUserAgentProvider",
-            "scrapy_fake_useragent.providers.FakerProvider",
-            "scrapy_fake_useragent.providers.FixedUserAgentProvider",
-        ],
-    )
-    USER_AGENT: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-    DOWNLOADER_MIDDLEWARES: dict = field(
-        default_factory=lambda: {
-            "parser.scraper.middlewares.ScraperDownloaderMiddleware": 543,
-            "scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware": 810,
-            "scrapy.downloadermiddlewares.useragent.UserAgentMiddleware": None,
-            "scrapy.downloadermiddlewares.retry.RetryMiddleware": None,
-            "scrapy_fake_useragent.middleware.RandomUserAgentMiddleware": 400,
-            "scrapy_fake_useragent.middleware.RetryUserAgentMiddleware": 401,
-        },
-    )
-    SPIDER_MIDDLEWARES: dict = field(
-        default_factory=lambda: {
-            "parser.scraper.middlewares.ScraperSpiderMiddleware": 543,
-        },
-    )
-    COOKIES_ENABLED: bool = False
+@memory
+@periodic_task(crontab(hour=f"{settings.DELETE_OLD_VACANCIES_HOURS}"))
+def delete_old_vacancies(self):
+    """Удаляет вакансии старше 10 дней."""
+    min_date = datetime.datetime.today() - datetime.timedelta(days=10)
+    VacancyScraper.objects.filter(published_at__lte=min_date).delete()
 
 
-class ScraperCelery:
-    def __init__(self, scraper_settings: ScraperSettings) -> None:
-        self.scraper_settings = scraper_settings
-        self.process = CrawlerProcess(asdict(self.scraper_settings))
-
-    def run_spiders(self) -> None:
-        """Отвечает за запуск пауков"""
-
-        # Добавляем пауков в процесс
-        self.process.crawl(HabrSpider)
-        self.process.crawl(GeekjobSpider)
-
-        # Запуск
-        self.process.start(stop_after_crawl=False)
-
-    def delete_old_vacancies(self):
-        """Удаляет вакансии старше 10 дней."""
-        min_date = datetime.datetime.today() - datetime.timedelta(days=10)
-        VacancyScraper.objects.filter(published_at__lte=min_date).delete()
-
-
-scraper_settings = ScraperSettings()
-scraper = ScraperCelery(scraper_settings)
-
-
-@app.task
-def run_scraper() -> None:
-    """Запуск скрапера."""
-    scraper.run_spiders()
-
-
-@app.task
-def run_delete_old_vacancies() -> None:
-    """Запуск удаления старых вакансий"""
-    scraper.delete_old_vacancies()
+@memory
+@periodic_task(crontab(minute=f"*/{settings.SCRAPING_SCHEDULE_MINUTES}"))
+def run_parser():
+    asyncio.run(run())
