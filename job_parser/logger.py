@@ -4,7 +4,7 @@ from loguru import logger
 
 
 def setup_logging():
-    log_filename = "parser_views.log"
+    log_filename = "parser_views.json"
     log_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..", "logs", log_filename
     )
