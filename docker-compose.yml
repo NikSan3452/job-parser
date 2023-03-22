@@ -31,19 +31,6 @@ services:
       - ./job_parser/.env.prod
       ports:
         - 6379:6379
-  
-  broker:
-      image: redis
-      restart: always
-      volumes:
-      - redis:/data/broker
-      networks:
-        app_net:
-          ipv4_address: 172.16.238.11
-      env_file:
-      - ./job_parser/.env.prod
-      ports:
-        - 6380:6379
 
   db:
     image: postgres:latest
@@ -57,33 +44,6 @@ services:
     networks:
       app_net:
         ipv4_address: 172.16.238.12
-
-  celery:
-    build: ./job_parser
-    command: celery -A job_parser worker -l info
-    volumes:
-      - ./job_parser:/usr/src/app
-    env_file:
-      - ./job_parser/.env.prod
-    depends_on:
-      - django
-      - broker
-    networks:
-      app_net:
-        ipv4_address: 172.16.238.14
-  
-  celery-beat:
-    build: ./job_parser
-    command: celery -A job_parser beat -l info
-    volumes:
-      - ./job_parser:/usr/src/app
-    env_file:
-      - ./job_parser/.env.prod
-    depends_on:
-      - broker
-    networks:
-      app_net:
-        ipv4_address: 172.16.238.15
 
   nginx:
     build: ./job_parser/nginx
