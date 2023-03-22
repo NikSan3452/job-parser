@@ -1,25 +1,25 @@
 # job-parser
-Сайт - агрегатор вакансий с различных площадок по поиску работы. На данный момент собирает данные с 3-х популярных сайтов: [Headhunter](https://hh.ru/), [SuperJob](https://superjob.ru) и [Zarplata](https://zarplata.ru).
-Написан при помощи: Django, PostgreSQL, Redis, Docker, Celery, Bootstrap
+Сайт - агрегатор вакансий с различных площадок по поиску работы. На данный момент собирает данные с 6-х популярных сайтов: [Headhunter](https://hh.ru/), [SuperJob](https://superjob.ru), [Zarplata](https://zarplata.ru), [Trudvsem](https://trudvsem.ru/), [HabrCareer](https://career.habr.com/), [Geekjob](https://geekjob.ru/).
+
+Написан при помощи: Django, PostgreSQL, Redis, Docker, Huey, Bootstrap
 ### Особенности:
 
 - Парсер асинхронный
 - Аутентификация пользователей через Django-allauth
+- Фильтр по различным критериям
 - Подписка на рассылку вакансий
-- Работает с официальными API
+- Работает, как с официальными API, так и парсит те площадки нет нет API
 - Возможность добавить вакансию в избранное
 - Возможность добавить вакансию в черный список
-- Фильтр по критериям
+- Возможность скрыть вакансии компании
 - Можно запустить с помощью Docker  
 
-Главная страница
+### Демонстрация:
 
-![home.png](/screenshots/home.png)
+**Поиск**
+![home.png](/screenshots/searching.gif)
 
-Список вакансий
+**Манипуляции с поисковой выдачей**
 
-![list.png](/screenshots/list.png)
+![list.png](/screenshots/list.gif)
 
-Профиль
-
-![profile.png](/screenshots/profile.png)
