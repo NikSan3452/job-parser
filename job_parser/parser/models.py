@@ -1,5 +1,5 @@
 from django.db import models
-from profiles.models import Profile, User
+from django.contrib.auth.models import User
 
 
 class City(models.Model):
@@ -30,7 +30,7 @@ class VacancyScraper(models.Model):
     remote = models.BooleanField(
         default=False, null=True, verbose_name="Удаленная работа"
     )
-    published_at = models.DateField(verbose_name="Дата публикации")
+    published_at = models.DateField(null=True, verbose_name="Дата публикации")
 
     class Meta:
         verbose_name = "Вакансия"
