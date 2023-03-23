@@ -41,4 +41,5 @@ class RequestConfig:
     job: Optional[str]
     date_to: Optional[str | datetime.date]
     date_from: Optional[str | datetime.date]
+    remote: bool
     experience: int

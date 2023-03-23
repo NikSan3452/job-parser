@@ -29,13 +29,14 @@ class Headhunter(Parser):
         city_from_db = self.params.city_from_db
         job = self.params.job
         experience = "noExperience"
+        remote = self.params.remote
         date_from, date_to = await utils.check_date(
             self.params.date_from, self.params.date_to
         )
 
         # Формируем параметры запроса к API Headhunter
         hh_params = {
-            "text": f"NAME:{job}",
+            "text": job,
             "per_page": 100,
             "date_from": date_from,
             "date_to": date_to,
@@ -43,6 +44,9 @@ class Headhunter(Parser):
 
         if city_from_db:
             hh_params["area"] = city_from_db
+
+        if remote:
+            hh_params["schedule"] = "remote"
 
         if self.params.experience > 0:
             experience = await utils.convert_experience(self.params.experience)
@@ -128,6 +132,7 @@ class SuperJob(Parser):
         date_from, date_to = await utils.check_date(
             self.params.date_from, self.params.date_to
         )
+        remote = self.params.remote
 
         # Формируем параметры запроса к API SuperJob
         sj_params = {
@@ -139,6 +144,9 @@ class SuperJob(Parser):
 
         if city:
             sj_params["town"] = city
+
+        if remote:
+            sj_params["place_of_work"] = 2
 
         if self.params.experience > 0:
             sj_params["experience"] = self.params.experience

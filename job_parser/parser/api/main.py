@@ -36,6 +36,7 @@ async def run(
         job=job,
         date_from=date_from,
         date_to=date_to,
+        remote=remote,
         experience=experience,
     )
 
@@ -73,12 +74,10 @@ async def run(
     if title_search:
         sorted_job_list = await utils.sort_by_title(sorted_job_list, job)
     if remote:
-        sorted_job_list = await utils.sort_by_remote_work(remote, sorted_job_list)
+        sorted_job_list = await utils.sort_by_remote_work(sorted_job_list)
     if remote and title_search:
         sorted_job_list_title = await utils.sort_by_title(sorted_job_list, job)
-        sorted_job_list = await utils.sort_by_remote_work(
-            remote, sorted_job_list_title
-        )
+        sorted_job_list = await utils.sort_by_remote_work(sorted_job_list_title)
 
     print(f"Количество вакансий: {len(sorted_job_list)}")
     return sorted_job_list

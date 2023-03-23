@@ -57,7 +57,7 @@ class Utils:
             tuple[datetime.date | str, datetime.date | str]: Время задаваемое по умолчанию.
         """
         if not date_from or date_from == "":
-            new_date_from = datetime.date.today() - datetime.timedelta(days=3)
+            new_date_from = datetime.date.today() - datetime.timedelta(days=1)
         elif isinstance(date_from, str):
             new_date_from = datetime.datetime.strptime(date_from, "%Y-%m-%d").date()
         else:
@@ -161,7 +161,7 @@ class Utils:
         return converted_experience
 
     @staticmethod
-    async def sort_by_remote_work(remote: bool, job_list: list[dict]):
+    async def sort_by_remote_work(job_list: list[dict]):
         """Сортирует вакансии по удаленной работе.
 
         Args:
@@ -182,23 +182,20 @@ class Utils:
             "удаленную",
             "удалённую",
         )
-        if remote:
-            for job in job_list:
+        for job in job_list:
+            if job.get("job_board") in ("HeadHunter", "Zarplata", "SuperJob"):
+                    sorted_list.append(job)
+            else:
                 for string in remote_list:
-
                     if job.get("type_of_work") is not None:
                         if string in job.get("type_of_work", "").lower():
                             sorted_list.append(job)
 
-                    elif job.get("place_of_work") is not None:
-                        if string in job.get("place_of_work", "").lower():
-                            sorted_list.append(job)
-
-                    elif job.get("responsibility") is not None:
+                    if job.get("responsibility") is not None:
                         if string in job.get("responsibility", "").lower():
                             sorted_list.append(job)
 
-                    elif job.get("responsibility") is not None:
+                    if job.get("responsibility") is not None:
                         if string in job.get("title", "").lower():
                             sorted_list.append(job)
         return sorted_list
