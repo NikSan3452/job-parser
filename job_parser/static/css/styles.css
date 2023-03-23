@@ -193,10 +193,11 @@ body {
 
 .hide-company-btn {
     flex: 1;
-    width: 70%;
+    width: 75%;
     margin: 5px auto;
     background-color: rgb(226, 58, 58);
     border: 1px solid #323c4b;
     border-radius: 5px;
     color: white;
+    font-size: 10px;
 }
