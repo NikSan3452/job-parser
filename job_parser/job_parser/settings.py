@@ -200,3 +200,10 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 LOGGING_CONFIG = None
+
+
+HUEY = {
+    "huey_class": "huey.SqliteHuey",
+    "filename": "./huey.db",
+    "immediate": False,
+}
