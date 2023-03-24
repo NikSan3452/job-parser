@@ -44,15 +44,15 @@ class GeekjobParser:
             vacancy["remote"],
             vacancy["published_at"],
         ) = await asyncio.gather(
-            self.get_title(soup),
-            self.get_city(soup),
-            self.get_description(soup),
-            self.get_salary(soup),
-            self.get_company(soup),
-            self.get_experience(soup),
-            self.get_type_of_work(soup),
-            self.get_remote(soup),
-            self.get_published_at(soup),
+            self.__get_title(soup),
+            self.__get_city(soup),
+            self.__get_description(soup),
+            self.__get_salary(soup),
+            self.__get_company(soup),
+            self.__get_experience(soup),
+            self.__get_type_of_work(soup),
+            self.__get_remote(soup),
+            self.__get_published_at(soup),
         )
 
         logger.debug(
@@ -60,7 +60,7 @@ class GeekjobParser:
         )
         yield vacancy
 
-    async def get_title(self, soup: BeautifulSoup) -> str:
+    async def __get_title(self, soup: BeautifulSoup) -> str:
         """Получает заголовок вакансии.
 
         Args:
@@ -75,7 +75,7 @@ class GeekjobParser:
             title = h1.text.strip().lower()
         return title
 
-    async def get_city(self, soup: BeautifulSoup) -> str:
+    async def __get_city(self, soup: BeautifulSoup) -> str:
         """Получает город вакансии.
 
         Args:
@@ -90,7 +90,7 @@ class GeekjobParser:
             city = location.text.strip().lower()
         return city
 
-    async def get_description(self, soup: BeautifulSoup) -> str:
+    async def __get_description(self, soup: BeautifulSoup) -> str:
         """Получает описание вакансии.
 
         Args:
@@ -105,7 +105,7 @@ class GeekjobParser:
             description = vacancy_description.text.strip().lower()
         return description
 
-    async def get_salary(self, soup: BeautifulSoup) -> str:
+    async def __get_salary(self, soup: BeautifulSoup) -> str:
         """Получает зарплату вакансии.
 
         Args:
@@ -120,7 +120,7 @@ class GeekjobParser:
             salary = vacancy_salary.text.strip().lower()
         return salary
 
-    async def get_company(self, soup: BeautifulSoup) -> str:
+    async def __get_company(self, soup: BeautifulSoup) -> str:
         """Получает компанию вакансии.
 
         Args:
@@ -135,7 +135,7 @@ class GeekjobParser:
             company = company_name.find("a").text.strip().lower()
         return company
 
-    async def get_experience(self, soup: BeautifulSoup) -> str:
+    async def __get_experience(self, soup: BeautifulSoup) -> str:
         """Получает требуемый опыт вакансии.
 
         Args:
@@ -168,7 +168,7 @@ class GeekjobParser:
 
         return experience
 
-    async def get_type_of_work(self, soup: BeautifulSoup) -> str:
+    async def __get_type_of_work(self, soup: BeautifulSoup) -> str:
         """Получает тип занятости вакансии.
 
         Args:
@@ -189,7 +189,7 @@ class GeekjobParser:
             type_of_work = " ".join(string_list)
         return type_of_work
 
-    async def get_remote(self, soup: BeautifulSoup) -> bool:
+    async def __get_remote(self, soup: BeautifulSoup) -> bool:
         """Определяет является ли вакансия удаленной.
 
         Args:
@@ -199,12 +199,12 @@ class GeekjobParser:
             bool: True/False
         """
         remote = False
-        type_of_work = await self.get_type_of_work(soup)
+        type_of_work = await self.__get_type_of_work(soup)
         if "удаленная" in type_of_work:
             remote = True
         return remote
 
-    async def get_published_at(self, soup: BeautifulSoup) -> datetime.date | None:
+    async def __get_published_at(self, soup: BeautifulSoup) -> datetime.date | None:
         """Получает дату публикации вакансии.
 
         Args:
@@ -216,10 +216,10 @@ class GeekjobParser:
         published_at = None
         date = soup.find("div", class_="time")
         if date:
-            published_at = await self.convert_date(date.text)
+            published_at = await self.__convert_date(date.text)
         return published_at
 
-    async def convert_date(self, date: str) -> datetime.date:
+    async def __convert_date(self, date: str) -> datetime.date:
         """Конвертирует полученное значение даты.
 
         Args:
