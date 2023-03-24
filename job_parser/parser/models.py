@@ -82,4 +82,4 @@ class HiddenCompanies(models.Model):
         verbose_name_plural = "Скрытые компании"
 
     def __str__(self) -> str:
-        return self.company
+        return self.name
