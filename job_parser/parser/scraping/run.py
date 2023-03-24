@@ -22,37 +22,39 @@ class StartParsers:
     def __init__(self, session: aiohttp.ClientSession) -> None:
         self.session = session
 
-    async def save_geekjob_data(self) -> int:
-        """Сохраняет данные с сайта Geekjob в базе."""
-        geekjob_fetcher = Fetcher(
+    async def initial_params(self) -> None:
+        """Инициализирует параметры парсера."""
+        self.geekjob_fetcher = Fetcher(
             config.GEEKJOB_URL, self.session, config.GEEKJOB_PAGES_COUNT
         )
-        geekjob_links = await geekjob_fetcher.fetch_vacancy_links("Geekjob")
-        geekjob_parser = GeekjobParser(geekjob_fetcher)
-        vacancy_counter = 0
+        self.habr_fetcher = Fetcher(
+            config.HABR_URL, self.session, config.HABR_PAGES_COUNT
+        )
 
-        async for page in geekjob_fetcher.fetch_vacancy_pages(geekjob_links):
-            async for vacancy in geekjob_parser.get_vacancy_details(page):
+        self.geekjob_parser = GeekjobParser(self.geekjob_fetcher)
+        self.habr_parser = HabrParser(self.habr_fetcher)
+
+        self.geekjob_links = await self.geekjob_fetcher.fetch_vacancy_links("Geekjob")
+        self.habr_links = await self.habr_fetcher.fetch_vacancy_links("Habr")
+
+    async def save_data(
+        self, links: list[str], fetcher: Fetcher, parser: GeekjobParser | HabrParser
+    ) -> int:
+        """Сохраняет данные в БД.
+
+        Args:
+            links (list[str]): Список ссылок на страницы с вакансиями.
+            fetcher (Fetcher): Экземпляр класса Fetcher.
+            parser (GeekjobParser | HabrParser): Экземпляр класса парсера.
+
+        Returns:
+            int: Количество объектов записанных в БД.
+        """
+        vacancy_counter = 0
+        async for page in fetcher.fetch_vacancy_pages(links):
+            async for vacancy in parser.get_vacancy_details(page):
                 try:
                     await VacancyScraper.objects.aget_or_create(**vacancy)
-                    logger.debug("Вакансия успешно записана в базу")
-                except (Error, IntegrityError, DatabaseError, ProgrammingError) as exc:
-                    logger.exception(exc)
-                vacancy_counter += 1
-        return vacancy_counter
-
-    async def save_habr_data(self) -> int:
-        """Сохраняет данные с сайта Habr career в базе."""
-        habr_fetcher = Fetcher(config.HABR_URL, self.session, config.HABR_PAGES_COUNT)
-        habr_links = await habr_fetcher.fetch_vacancy_links("Habr")
-        habr_parser = HabrParser(habr_fetcher)
-        vacancy_counter = 0
-
-        async for page in habr_fetcher.fetch_vacancy_pages(habr_links):
-            async for vacancy in habr_parser.get_vacancy_details(page):
-                try:
-                    await VacancyScraper.objects.aget_or_create(**vacancy)
-                    logger.debug("Вакансия успешно записана в базу")
                 except (Error, IntegrityError, DatabaseError, ProgrammingError) as exc:
                     logger.exception(exc)
                 vacancy_counter += 1
@@ -61,13 +63,18 @@ class StartParsers:
     async def run_parsers(self) -> asyncio.Future[list]:
         """Запускает асинхронные задачи парсеров."""
         tasks: list[asyncio.Future] = []
-        task1 = asyncio.create_task(self.save_geekjob_data())
-        task2 = asyncio.create_task(self.save_habr_data())
+        await self.initial_params()
+        task1 = asyncio.create_task(
+            self.save_data(
+                self.geekjob_links, self.geekjob_fetcher, self.geekjob_parser
+            )
+        )
+        task2 = asyncio.create_task(
+            self.save_data(self.habr_links, self.habr_fetcher, self.habr_parser)
+        )
         tasks.append(task1)
         tasks.append(task2)
-        logger.debug(
-            f"Количество вакансий записанных в базу: {await task1 + await task2}"
-        )
+        logger.debug(f"Вакансий записано в базу: {await task1 + await task2}")
         return await asyncio.gather(*tasks)
 
 
