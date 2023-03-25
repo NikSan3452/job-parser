@@ -45,7 +45,7 @@ class VacancyHelpersMixin:
 
         # Т.к во время итерации и удаления ключей размер словаря меняется,
         # чтобы исбежать ошибки RuntimeError, оборачиваем список ключей в list,
-        # тем самым делаем копию списка ключей.
+        # тем самым делаем его копию.
         for key in list(request_data.keys()):
             if request_data.get(key) in values:
                 del request_data[key]
