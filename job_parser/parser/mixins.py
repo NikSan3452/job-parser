@@ -41,27 +41,14 @@ class VacancyHelpersMixin:
             dict: Словарь с параметрами запроса.
         """
         request_data: dict = request.GET.dict()
+        values: tuple = ("None", "False")
 
-        if request_data.get("city") == "None":
-            del request_data["city"]
-        if request_data.get("date_from") == "None":
-            del request_data["date_from"]
-        if request_data.get("date_to") == "None":
-            del request_data["date_to"]
-        if (
-            request_data.get("title_search") == "False"
-            or request_data.get("title_search") == "None"
-        ):
-            del request_data["title_search"]
-        if request_data.get("experience") == "None":
-            del request_data["experience"]
-        if (
-            request_data.get("remote") == "False"
-            or request_data.get("remote") == "None"
-        ):
-            del request_data["remote"]
-        if request_data.get("job_board") == "None":
-            del request_data["job_board"]
+        # Т.к во время итерации и удаления ключей размер словаря меняется,
+        # чтобы исбежать ошибки RuntimeError, оборачиваем список ключей в list,
+        # тем самым делаем копию списка ключей.
+        for key in list(request_data.keys()):
+            if request_data.get(key) in values:
+                del request_data[key]
         return request_data
 
     async def check_vacancy_in_black_list(
