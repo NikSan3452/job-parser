@@ -6,7 +6,7 @@ from django.core.paginator import Paginator
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q
 from django.conf import settings
-from django.http import HttpRequest
+from django.http import QueryDict
 
 
 from parser.models import (
@@ -30,7 +30,7 @@ class VacancyHelpersMixin:
     """Класс предоставляет вспомогательные методы"""
 
     @logger.catch(message="Ошибка в методе VacancyHelpersMixin.check_request_data()")
-    async def check_request_data(self, request: HttpRequest) -> dict:
+    async def check_request_data(self, request: QueryDict) -> dict:
         """Проверяет параметры запроса и если они None или False,
         удаляет их из словаря.
 
@@ -65,7 +65,7 @@ class VacancyHelpersMixin:
         return request_data
 
     async def check_vacancy_in_black_list(
-        self, vacancies: list[dict], request: HttpRequest
+        self, vacancies: list[dict], request: QueryDict
     ) -> list[dict]:
         """Проверяет добавлена ли вакансия в черный список
         и есла да, то удаляет ее из выдачи и избранного.
@@ -107,7 +107,7 @@ class VacancyHelpersMixin:
         return filtered_vacancies
 
     async def check_company_in_hidden_list(
-        self, vacancies: list[dict], request: HttpRequest
+        self, vacancies: list[dict], request: QueryDict
     ) -> list[dict]:
         """Проверяет скрыта ли вакансия из поисковой выдачи.
 
@@ -144,7 +144,7 @@ class VacancyHelpersMixin:
 
         return filtered_vacancies
 
-    async def get_favourite_vacancy(self, request: HttpRequest):
+    async def get_favourite_vacancy(self, request: QueryDict):
         """Получает список вакансий добавленных в избранное.
 
         Args:
@@ -166,7 +166,7 @@ class VacancyHelpersMixin:
 
     @logger.catch(message="Ошибка в методе VacancyHelpersMixin.get_pagination()")
     async def get_pagination(
-        self, request: HttpRequest, job_list: list[dict], context: dict
+        self, request: QueryDict, job_list: list[dict], context: dict
     ) -> None:
         """Добавляет пагинацию.
 
@@ -208,7 +208,7 @@ class VacancyHelpersMixin:
         return params
 
     async def get_city_id(
-        self, city: SearchingForm, request: HttpRequest
+        self, city: SearchingForm, request: QueryDict
     ) -> str | None:
         """Получет id города из базы данных.
             Данный id необходим для API Headhunter и Zarplata,
@@ -240,7 +240,7 @@ class RedisCacheMixin:
     """Класс отвечает за взаимодействие с Redis"""
 
     @logger.catch(message="Ошибка в методе RedisCacheMixin.create_cache_key()")
-    async def create_cache_key(self, request: HttpRequest) -> str:
+    async def create_cache_key(self, request: QueryDict) -> str:
         """Создает кэш - ключ в виде идетификатора сессии.
 
         Args:
@@ -293,7 +293,7 @@ class VacancyScraperMixin:
     """Класс содержит методы для получения вакансий из скрапера."""
 
     async def get_vacancies_from_scraper(
-        self, request: HttpRequest, form_params: dict
+        self, request: QueryDict, form_params: dict
     ) -> VacancyScraper:
         """Получает вакансии из скрапера.
 
