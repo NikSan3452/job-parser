@@ -1,24 +1,23 @@
 import pickle
-from typing import Any
-
-from django.contrib import auth, messages
-from django.core.paginator import Paginator
-from django.contrib.auth.models import AnonymousUser
-from django.db.models import Q
-from django.conf import settings
-from django.http import HttpRequest
-
-
+from parser.api.utils import Utils
+from parser.forms import SearchingForm
 from parser.models import (
     City,
     FavouriteVacancy,
+    HiddenCompanies,
     VacancyBlackList,
     VacancyScraper,
-    HiddenCompanies,
 )
-from parser.forms import SearchingForm
-from parser.api.utils import Utils
-from logger import setup_logging, logger
+from typing import Any
+
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.models import AnonymousUser
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.http import HttpRequest
+from logger import logger, setup_logging
+from django.db.models import QuerySet
 
 # Логирование
 setup_logging()
@@ -66,9 +65,15 @@ class VacancyHelpersMixin:
         """
         mixin_logger = logger.bind(request=request)
         try:
-            user = auth.get_user(request)
+            user = request.user
+            # Если пользователь анонимный, то просто возвращаем изначальный список
+            if user.is_anonymous:
+                return vacancies
+
             # Получаем url из черного списка
-            blacklist_urls = {job.url async for job in VacancyBlackList.objects.all()}
+            blacklist_urls = {
+                job.url async for job in VacancyBlackList.objects.filter(user=user)
+            }
 
             # Проверяем наличие url вакансии в черном списке
             # и получаем отфильтрованный список
@@ -77,10 +82,6 @@ class VacancyHelpersMixin:
                 for vacancy in vacancies
                 if vacancy.get("url") not in blacklist_urls
             ]
-
-            # Если пользователь анонимный, то просто возвращаем отфильтрованный список
-            if user.is_anonymous:
-                return filtered_vacancies
 
             # Если url вакансии был в списке избранных, то удаляем его от туда
             await FavouriteVacancy.objects.filter(
@@ -107,10 +108,15 @@ class VacancyHelpersMixin:
         """
         mixin_logger = logger.bind(request=request)
         try:
-            user = auth.get_user(request)
+            user = user = request.user
+            # Если пользователь анонимный, то просто возвращаем изначальный список
+            if user.is_anonymous:
+                return vacancies
+
             # Получаем компании из списка скрытых
             hidden_companies = {
-                company.name async for company in HiddenCompanies.objects.all()
+                company.name
+                async for company in HiddenCompanies.objects.filter(user=user)
             }
 
             # Проверяем наличие компании в списке скрытых
@@ -121,35 +127,32 @@ class VacancyHelpersMixin:
                 if vacancy.get("company") not in hidden_companies
             ]
 
-            # Если пользователь анонимный, то просто возвращаем отфильтрованный список
-            if user.is_anonymous:
-                return filtered_vacancies
-
         except Exception as exc:
             mixin_logger.exception(exc)
             filtered_vacancies = vacancies
 
         return filtered_vacancies
 
-    async def get_favourite_vacancy(self, request: HttpRequest):
+    async def get_favourite_vacancy(
+        self, request: HttpRequest
+    ) -> FavouriteVacancy | list | None:
         """Получает список вакансий добавленных в избранное.
 
         Args:
             request (HttpRequest): Запрос.
 
         Returns:
-            FavouriteVacancy: Список вакансий добавленных в избранное.
+            FavouriteVacancy | list: Список вакансий добавленных в избранное.
         """
         mixin_logger = logger.bind(request=request)
         try:
-            user = auth.get_user(request)
+            user = request.user
             if not isinstance(user, AnonymousUser):
-                list_favourite = FavouriteVacancy.objects.filter(user=user)
-            else:
-                list_favourite = []
-            return list_favourite
+                list_favourite = FavouriteVacancy.objects.filter(user=user).all()
         except Exception as exc:
             mixin_logger.exception(exc)
+            list_favourite = []
+        return list_favourite
 
     @logger.catch(message="Ошибка в методе VacancyHelpersMixin.get_pagination()")
     async def get_pagination(
@@ -179,43 +182,47 @@ class VacancyHelpersMixin:
             dict: Словарь со значениями формы.
         """
         params: dict = {}
+        fields = [
+            "city",
+            "job",
+            "date_from",
+            "date_to",
+            "title_search",
+            "experience",
+            "remote",
+            "job_board",
+        ]
 
-        city = form.cleaned_data.get("city")
-        city = city.lower() if city else None
-
-        params.update({"city": city})
-        params.update({"job": form.cleaned_data.get("job")})
-        params.update({"date_from": form.cleaned_data.get("date_from")})
-        params.update({"date_to": form.cleaned_data.get("date_to")})
-        params.update({"title_search": form.cleaned_data.get("title_search")})
-        params.update({"experience": int(form.cleaned_data.get("experience"))})
-        params.update({"remote": form.cleaned_data.get("remote")})
-        params.update({"job_board": form.cleaned_data.get("job_board")})
+        for field in fields:
+            value = form.cleaned_data.get(field)
+            if field == "city":
+                value = value.lower() if value else None
+            elif field == "experience":
+                value = int(value)
+            params[field] = value
 
         return params
 
-    async def get_city_id(
-        self, city: SearchingForm, request: HttpRequest
-    ) -> str | None:
+    async def get_city_id(self, city: str, request: HttpRequest) -> str | None:
         """Получет id города из базы данных.
-            Данный id необходим для API Headhunter и Zarplata,
-            т.к поиск по городам осуществляется по их id.
+        Данный id необходим для API Headhunter и Zarplata,
+        т.к поиск по городам осуществляется по их id.
         Args:
-            form (SearchingForm): Форма.
+            city (str): Город.
             request (HttpRequest): Запрос.
         Returns: str | None: id города."""
         mixin_logger = logger.bind(request=request)
         city_id = None
 
-        if city:
+        if city:  # Если город передан в запросе получаем его id из базы
             try:
                 city_from_db = await City.objects.filter(city=city).afirst()
             except Exception as exc:
                 mixin_logger.exception(exc)
 
-            if city_from_db:
-                city_id = city_from_db.city_id
-            else:
+            if city_from_db:  # Если для города существует id в базе
+                city_id = city_from_db.city_id  # то получаем его
+            else:  # А иначе выводим сообщение
                 messages.error(
                     request,
                     """Город с таким названием отсуствует в базе""",
@@ -281,7 +288,7 @@ class VacancyScraperMixin:
 
     async def get_vacancies_from_scraper(
         self, request: HttpRequest, form_params: dict
-    ) -> VacancyScraper:
+    ) -> QuerySet:
         """Получает вакансии из скрапера.
 
         Args:
@@ -350,7 +357,7 @@ class VacancyScraperMixin:
         message="Ошибка в методе VacancyScraperMixin.add_vacancy_to_job_list_from_api()"
     )
     async def add_vacancy_to_job_list_from_api(
-        self, job_list_from_api: list[dict], job_list_from_scraper: VacancyScraper
+        self, job_list_from_api: list[dict], job_list_from_scraper: QuerySet
     ) -> list[dict]:
         """Объединяет списки вакансий из скрапера и API.
 
@@ -361,7 +368,7 @@ class VacancyScraperMixin:
         Returns:
             list[dict]: Общий список.
         """
-        async for job in job_list_from_scraper:
+        for job in job_list_from_scraper:
             if job not in job_list_from_api:
                 job_list_from_api.append(job)
         return job_list_from_api
