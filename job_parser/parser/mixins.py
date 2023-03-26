@@ -135,7 +135,7 @@ class VacancyHelpersMixin:
 
     async def get_favourite_vacancy(
         self, request: HttpRequest
-    ) -> FavouriteVacancy | list | None:
+    ) -> QuerySet | list | None:
         """Получает список вакансий добавленных в избранное.
 
         Args:
