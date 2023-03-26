@@ -14,10 +14,9 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.models import AnonymousUser
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.http import HttpRequest
 from logger import logger, setup_logging
-from django.db.models import QuerySet
 
 # Логирование
 setup_logging()
@@ -26,7 +25,7 @@ utils = Utils()
 
 
 class VacancyHelpersMixin:
-    """Класс предоставляет вспомогательные методы"""
+    """Класс предоставляет вспомогательные методы."""
 
     @logger.catch(message="Ошибка в методе VacancyHelpersMixin.check_request_data()")
     async def check_request_data(self, request: HttpRequest) -> dict:
@@ -64,6 +63,7 @@ class VacancyHelpersMixin:
             list[dict]: Список вакансий без добавленных в черный список.
         """
         mixin_logger = logger.bind(request=request)
+        filtered_vacancies: list[dict] = []
         try:
             user = request.user
             # Если пользователь анонимный, то просто возвращаем изначальный список
@@ -145,13 +145,13 @@ class VacancyHelpersMixin:
             FavouriteVacancy | list: Список вакансий добавленных в избранное.
         """
         mixin_logger = logger.bind(request=request)
+        list_favourite: list = []
         try:
             user = request.user
             if not isinstance(user, AnonymousUser):
                 list_favourite = FavouriteVacancy.objects.filter(user=user).all()
         except Exception as exc:
             mixin_logger.exception(exc)
-            list_favourite = []
         return list_favourite
 
     @logger.catch(message="Ошибка в методе VacancyHelpersMixin.get_pagination()")
@@ -249,10 +249,6 @@ class RedisCacheMixin:
 
     async def get_data_from_cache(self) -> Any:
         """Получает данные из кэша.
-
-        Args:
-            request (Any): Запрос.
-
         Returns:
             Any: Список вакансий.
         """
@@ -368,7 +364,8 @@ class VacancyScraperMixin:
         Returns:
             list[dict]: Общий список.
         """
-        for job in job_list_from_scraper:
-            if job not in job_list_from_api:
-                job_list_from_api.append(job)
+        job_list_from_scraper = [
+            job for job in job_list_from_scraper if job not in job_list_from_api
+        ]
+        job_list_from_api.extend(job_list_from_scraper)
         return job_list_from_api
