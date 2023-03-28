@@ -41,7 +41,7 @@ function addVacancyToBlackList(index, vacancyUrl, vacancyTitle) {
         totalVacanciesElement.textContent.split(": ")[1]
     );
     // Обновить значение total_vacancies и обновить элемент DOM
-    totalVacanciesElement.textContent = `Количество вакансий по Вашему запросу: ${
+    totalVacanciesElement.textContent = `Найдено вакансий: ${
         currentTotalVacancies - 1
     }`;
     fetch("/add-to-black-list/", {
