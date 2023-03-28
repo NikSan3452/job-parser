@@ -133,9 +133,7 @@ class VacancyHelpersMixin:
 
         return filtered_vacancies
 
-    async def get_favourite_vacancy(
-        self, request: HttpRequest
-    ) -> QuerySet | list | None:
+    async def get_favourite_vacancy(self, request: HttpRequest) -> QuerySet | list:
         """Получает список вакансий добавленных в избранное.
 
         Args:
@@ -309,7 +307,7 @@ class VacancyScraperMixin:
         if form_params.get("experience", 0) > 0:
             # Конвертируем опыт
             converted_experience = await utils.convert_experience(
-                form_params.get("experience"), True
+                form_params.get("experience", None), True
             )
             params.update({"experience": converted_experience})
         if form_params.get("remote"):

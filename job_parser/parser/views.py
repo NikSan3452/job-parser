@@ -1,4 +1,9 @@
 import json
+from parser.api import main
+from parser.api.utils import Utils
+from parser.forms import SearchingForm
+from parser.mixins import RedisCacheMixin, VacancyHelpersMixin, VacancyScraperMixin
+from parser.models import FavouriteVacancy, HiddenCompanies, VacancyBlackList
 
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
@@ -7,11 +12,6 @@ from django.shortcuts import render
 from django.views import View
 from django.views.generic.edit import FormView
 from logger import logger, setup_logging
-from parser.api import main
-from parser.api.utils import Utils
-from parser.forms import SearchingForm
-from parser.mixins import RedisCacheMixin, VacancyHelpersMixin, VacancyScraperMixin
-from parser.models import FavouriteVacancy, VacancyBlackList, HiddenCompanies
 
 # Логирование
 setup_logging()
@@ -24,12 +24,14 @@ class HomePageView(FormView):
 
     template_name = "parser/home.html"
     form_class = SearchingForm
+    success_url = "/list/"
 
     def get(self, request):
         super().get(request)
         if not request.session or not request.session.session_key:
             request.session.save()
-        return self.render_to_response(self.get_context_data())
+        context = self.get_context_data()
+        return self.render_to_response(context)
 
     def form_valid(self, form):
         """Валидирует форму домашней страницы.

@@ -184,7 +184,7 @@ class Utils:
         )
         for job in job_list:
             if job.get("job_board") in ("HeadHunter", "Zarplata", "SuperJob"):
-                    sorted_list.append(job)
+                sorted_list.append(job)
             else:
                 for string in remote_list:
                     if job.get("type_of_work") is not None:
