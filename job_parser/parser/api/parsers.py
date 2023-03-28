@@ -204,7 +204,9 @@ class SuperJob(Parser):
 
             if job["town"]:
                 job_dict["city"] = job["town"]["title"]
-            job_dict["company"] = job["firm_name"]
+
+            if job["firm_name"]:
+                job_dict["company"] = job["firm_name"]
 
             if job["type_of_work"]:
                 job_dict["type_of_work"] = job["type_of_work"]["title"]
