@@ -8,6 +8,7 @@ from parser.models import FavouriteVacancy, HiddenCompanies, VacancyBlackList
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.template.response import TemplateResponse
 from django.shortcuts import render
 from django.views import View
 from django.views.generic.edit import FormView
@@ -83,7 +84,6 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
 
             # Отображаем вакансии, которые в избранном
             list_favourite = await self.get_favourite_vacancy(request)
-
             job_list_from_cache = filtered_job_list
 
         # Сортируем вакансии по дате
@@ -107,7 +107,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
         # Пагинация
         await self.get_pagination(request, sorted_job_list, context)
 
-        return render(request, self.template_name, context)
+        return TemplateResponse(request, self.template_name, context)
 
     async def post(self, request, *args, **kwargs):
         """Отвечает за обработку POST запросов к странице со списком вакансий.
@@ -196,7 +196,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
         # Пагинация
         await self.get_pagination(request, sorted_shared_job_list, context)
 
-        return render(request, self.template_name, context)
+        return TemplateResponse(request, self.template_name, context)
 
 
 @login_required
