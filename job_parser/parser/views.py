@@ -9,7 +9,6 @@ from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.template.response import TemplateResponse
-from django.shortcuts import render
 from django.views import View
 from django.views.generic.edit import FormView
 from logger import logger, setup_logging
