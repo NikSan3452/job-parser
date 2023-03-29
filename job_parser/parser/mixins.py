@@ -108,7 +108,7 @@ class VacancyHelpersMixin:
         """
         mixin_logger = logger.bind(request=request)
         try:
-            user = user = request.user
+            user = request.user
             # Если пользователь анонимный, то просто возвращаем изначальный список
             if user.is_anonymous:
                 return vacancies
@@ -118,7 +118,7 @@ class VacancyHelpersMixin:
                 company.name
                 async for company in HiddenCompanies.objects.filter(user=user)
             }
-
+            
             # Проверяем наличие компании в списке скрытых
             # и получаем отфильтрованный список
             filtered_vacancies = [
