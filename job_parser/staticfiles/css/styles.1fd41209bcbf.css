@@ -1,0 +1,203 @@
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: rgb(15, 23, 36);
+    color: #C6D3E7;
+    /* font-family: 'Kanit', sans-serif;
+    font-family: 'Roboto Mono', monospace; */
+    font-family: 'Ubuntu', sans-serif;
+}
+
+.header {
+    background-color: rgb(15, 23, 36);
+}
+
+
+.navbar {
+    padding: 0;
+    margin: 0;
+}
+
+.container {
+    background-color: #1D2531;
+    padding: 10px 10px 10px 10px;
+    box-shadow: 0px 0px 10px 2px #323c4b;
+}
+
+.navbar-brand {
+    margin: 0;
+    padding: 0;
+}
+
+.brand-text-wrap {
+    height: 50px;
+    display: flex;
+    align-items: flex-start;
+    vertical-align: text-top;
+}
+
+.navbar-brand-text {
+    text-decoration: none;
+    font-size: 80%;
+    font-style: italic;
+    font-weight: 600;
+    color: #C6D3E7; 
+}
+
+.navbar-brand-text:hover, .navbar-brand-text::before {
+    text-decoration: none;
+    color: #C6D3E7;
+}
+
+.navbar-toggler-icon {
+    color: white;
+}
+
+.content {
+    height: 100%;
+    margin-top: auto;
+    background-color: #1D2531;
+}
+
+.card, .pagination>li>a {
+    background-color: #1D2531;
+    border-color: #C6D3E7;
+}
+
+.card-header > a:visited {
+    color: blueviolet;
+}
+
+.card-param {
+    color: rgba(145, 247, 145, 0.76);
+}
+
+.card-value {
+    color: #647ff7;
+}
+
+.profile-messages, .city-not-exists-messages {
+    text-align: center;
+}
+
+.danger-message {
+    color: rgb(236, 88, 88);
+}
+
+.success-message {
+    color: rgb(72, 165, 72);
+}
+
+.total-vacancies-count {
+    color: rgb(72, 165, 72);
+}
+
+.add-to-favourite, .add-to-black-list {
+    border: #323c4b;
+}
+
+.add-to-favourite:active, .add-to-black-list:active, .favourite-list:checked+.btn, .btn.active, .btn.show, .btn:first-child:active, :not(.favourite-list)+.btn:active {
+    background-color: #1D2531;
+    ;
+}
+
+.add-to-black-list:active, .black-list:checked+.btn, .btn.active, .btn.show, .btn:first-child:active, :not(.black-list)+.btn:active {
+    background-color: #1D2531;
+    ;
+}
+
+.heart, .trash {
+    color: white;
+    font-size: 25px;
+}
+
+.heart:hover, .trash:hover {
+    color: red;
+}
+
+.favourite-list:checked ~ .add-to-favourite .fa-solid {
+    color: red;
+}
+
+.black-list:checked ~ .add-to-black-list .fa-solid {
+    color: red;
+}
+
+.hidden-companies-name {
+    padding: 0;
+    margin: 0;
+}
+
+.btn-wrap {
+    display: flex;
+    justify-content: center;
+}
+
+.scroll {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+}
+
+.fa-arrow-up, .fa-arrow-down {
+    font-size: 20px;
+}
+
+.company-menu {
+    display: inline;
+}
+
+.modal {
+    width: 150px;
+    height: 90px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    font-size: 10px;
+    transform: translate(-50%, -50%);
+    z-index: 999;
+    overflow: hidden;
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #323c4b;
+    margin: 5px auto;
+    width: 90%;
+    height: 90%;
+    text-align: center;
+    position: relative;
+}
+
+.modal-content > p {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    padding: 0;
+    margin: 0;
+    color: white;
+}
+
+.close {
+    flex: 1;
+    top: 0;
+    right: 0;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.hide-company-btn {
+    flex: 1;
+    width: 75%;
+    margin: 5px auto;
+    background-color: rgb(226, 58, 58);
+    border: 1px solid #323c4b;
+    border-radius: 5px;
+    color: white;
+    font-size: 10px;
+}
