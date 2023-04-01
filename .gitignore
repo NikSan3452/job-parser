@@ -56,7 +56,17 @@ db.sqlite3
 .env.prod
 .env.prod.db
 test.py
+test_app.py
 firebase-debug.log
 parser_views.log
 job_parser.code-workspace
 .ruff_cache
+postgres
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir
+huey.db-shm
+huey.db-wal
+huey.db
+logs
+nohup.out

@@ -1,7 +1,7 @@
 {
-    "sqltools.connections": [],
-    "python.analysis.extraPaths": [
-        "./job_parser"
+    "python.testing.pytestArgs": [
+        "job_parser"
     ],
-    "python.analysis.typeCheckingMode": "off"
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }
