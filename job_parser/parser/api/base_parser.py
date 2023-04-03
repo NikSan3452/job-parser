@@ -31,8 +31,7 @@ class CreateConnection:
         """
         async with httpx.AsyncClient() as client:
             response = await client.get(url=url, headers=headers, params=params)
-            data = response.content.decode()
-        return data
+        return response
 
 
 class Parser:
@@ -72,7 +71,8 @@ class Parser:
         for page in range(pages):  # Постраничный вывод вакансий
             try:
                 # Получаем данные
-                data = await self.connection.create_session(url, headers, params)
+                response = await self.connection.create_session(url, headers, params)
+                data = response.content.decode()
                 json_data = json.loads(data)  # Упаковываем в json
             except Exception as exc:
                 logger.exception(exc)
