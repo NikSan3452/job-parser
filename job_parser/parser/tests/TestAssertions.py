@@ -44,6 +44,30 @@ class Assertions:
         ), f"Неожиданный код ответа, ожидалось {expected_status_code}, получили {response.status_code}"
 
     @staticmethod
+    def assert_headers(response: HttpResponse, expected_headers: str) -> None:
+        """Проверяет заголовки ответа.
+
+        Args:
+            response (HttpResponse): Тело ответа.
+            expected_headers (str): Ожидаемый заголовок.
+        """
+        assert (
+            response.request.headers["Content-Type"] == expected_headers
+        ), f"Ожидалось {expected_headers} получили {response.request.headers['Content-Type']}"
+
+    @staticmethod
+    def assert_params(response: HttpResponse, expected_params: str) -> None:
+        """Проверяет параметры ответа.
+
+        Args:
+            response (HttpResponse): Тело ответа.
+            expected_params (str): Ожидаемые параметры.
+        """
+        assert (
+            response.request.url.query.decode() == expected_params
+        ), f"Ожидалось {expected_params} получили {response.request.url.query.decode()}"
+
+    @staticmethod
     def assert_value_in_obj(value: Any, obj: Any) -> None:
         """Проверяет вхождение значения в объект.
 
