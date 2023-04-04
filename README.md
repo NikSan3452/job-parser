@@ -22,4 +22,3 @@
 **Манипуляции с поисковой выдачей**
 
 ![list.png](/screenshots/list.gif)
-
