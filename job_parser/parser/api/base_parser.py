@@ -68,6 +68,7 @@ class Parser:
         json_data: dict = {}
 
         start = time.time()
+
         for page in range(pages):  # Постраничный вывод вакансий
             try:
                 # Получаем данные
@@ -99,6 +100,8 @@ class Parser:
                 params["offset"] = page
             else:
                 params["page"] = page
+
         end = time.time() - start
+        
         logger.debug(f"Время затраченное на сбор: {round(end, 2)}")    
         return job_list
