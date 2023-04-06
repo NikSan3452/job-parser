@@ -31,6 +31,7 @@ class CreateConnection:
         """
         async with httpx.AsyncClient() as client:
             response = await client.get(url=url, headers=headers, params=params)
+            print(response)
         return response
 
 
@@ -80,17 +81,17 @@ class Parser:
 
             if items == "results":  # Если запрос к сайту Trudvsem
                 vacancies: dict = {}
-                if json_data.get(items):
+                if json_data.get(items) is None or len(json_data.get(items)) == 0:
+                    break
+                else:
                     # На каждой итерации получаем новый список вакансий
                     vacancies = json_data[items]["vacancies"]
                     if vacancies:  # Если в списке есть данные-добавим их в общий список
                         job_list.extend(vacancies)
-                    if vacancies is None:  # Если список пуст, запросы останавливаются
-                        break
             else:  # Если запрос к другим сайтам получим список вакансий и
-                job_list.extend(json_data.get(items, ""))  # добавим их в общий список
+                job_list.extend(json_data.get(items, None))  # добавим их в общий список
                 # Если список пуст запросы останавливаются
-                if len(json_data.get(items, "")) == 0:
+                if len(json_data.get(items, None)) == 0:
                     break
 
             page += 1
@@ -102,6 +103,6 @@ class Parser:
                 params["page"] = page
 
         end = time.time() - start
-        
-        logger.debug(f"Время затраченное на сбор: {round(end, 2)}")    
+
+        logger.debug(f"Время затраченное на сбор: {round(end, 2)}")
         return job_list
