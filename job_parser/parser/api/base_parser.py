@@ -81,6 +81,7 @@ class Parser:
 
             if items == "results":  # Если запрос к сайту Trudvsem
                 vacancies: dict = {}
+                # Если данные отсуствуют то запросы прерываются
                 if json_data.get(items) is None or len(json_data.get(items)) == 0:
                     break
                 else:
