@@ -1,9 +1,9 @@
-import time
-import httpx
 import json
+import time
 from typing import Optional
 
-from logger import setup_logging, logger
+import httpx
+from logger import logger, setup_logging
 
 # Логирование
 setup_logging()
@@ -18,7 +18,7 @@ class CreateConnection:
         url: str,
         headers: Optional[dict] = None,
         params: Optional[dict] = None,
-    ) -> str:
+    ) -> httpx.Response:
         """Отвечает за создание запросов к API.
 
         Args:
@@ -27,7 +27,7 @@ class CreateConnection:
             params (Optional[dict], optional): Параметры запроса. По умолчанию None.
 
         Returns:
-            str: Контент в виде строки.
+            httpx.Response: Тело ответа.
         """
         async with httpx.AsyncClient() as client:
             response = await client.get(url=url, headers=headers, params=params)
