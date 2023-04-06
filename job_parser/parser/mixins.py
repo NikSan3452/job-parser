@@ -53,7 +53,7 @@ class VacancyHelpersMixin:
         self, vacancies: list[dict], request: HttpRequest
     ) -> list[dict]:
         """Проверяет добавлена ли вакансия в черный список
-        и есла да, то удаляет ее из выдачи и избранного.
+        и если да, то удаляет ее из выдачи и избранного.
 
         Args:
             vacancies (list[dict]): Список вакансий.
