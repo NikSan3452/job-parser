@@ -1,6 +1,5 @@
 import json
 import time
-from typing import Optional
 
 import httpx
 from logger import logger, setup_logging
@@ -16,8 +15,8 @@ class CreateConnection:
     async def create_session(
         self,
         url: str,
-        headers: Optional[dict] = None,
-        params: Optional[dict] = None,
+        headers: dict | None = None,
+        params: dict | None = None,
     ) -> httpx.Response:
         """Отвечает за создание запросов к API.
 
@@ -31,7 +30,6 @@ class CreateConnection:
         """
         async with httpx.AsyncClient() as client:
             response = await client.get(url=url, headers=headers, params=params)
-            print(response)
         return response
 
 
@@ -46,8 +44,8 @@ class Parser:
         url: str,
         params: dict,
         pages: int,
-        headers: Optional[dict] = None,
-        items: Optional[str] = None,
+        headers: dict | None = None,
+        items: str | None = None,
     ) -> list[dict]:
         """Отвечает за постраничное получение вакансий.
 
