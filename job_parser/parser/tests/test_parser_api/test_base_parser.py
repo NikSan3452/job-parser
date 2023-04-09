@@ -232,7 +232,7 @@ class TestParser:
         with pytest.raises(Exception):
             await parser.get_vacancies(
                 params[1],
-                params[2],  # Неверный тип объекта параметров.
+                params[2],
                 params[3],
                 "fail",  # Неверный тип объекта заголовков.
                 "items",
