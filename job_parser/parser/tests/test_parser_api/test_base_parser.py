@@ -208,5 +208,32 @@ class TestParser:
                 params[2],
                 params[3],
                 params[4],
-                params[0],
+                params[0],  # items is None
+            )
+
+        with pytest.raises(Exception):
+            await parser.get_vacancies(
+                "http://example.com/invalid",  # Неверный адрес
+                params[2],
+                params[3],
+                params[4],
+                "items",
+            )
+
+        with pytest.raises(Exception):
+            await parser.get_vacancies(
+                params[1],
+                "fail",  # Неверный тип объекта параметров.
+                params[3],
+                params[4],
+                "items",
+            )
+
+        with pytest.raises(Exception):
+            await parser.get_vacancies(
+                params[1],
+                params[2],  # Неверный тип объекта параметров.
+                params[3],
+                "fail",  # Неверный тип объекта заголовков.
+                "items",
             )
