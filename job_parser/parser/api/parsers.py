@@ -48,7 +48,7 @@ class Headhunter(Parser):
         if remote:
             hh_params["schedule"] = "remote"
 
-        if self.params.experience > 0:
+        if self.params.experience > 0 and self.params.experience <= 4:
             experience = await utils.convert_experience(self.params.experience)
             hh_params["experience"] = experience
 
@@ -68,7 +68,6 @@ class Headhunter(Parser):
         job_list: list[dict] = await self.get_vacancies(
             url=url, params=hh_params, pages=20, items="items"
         )
-
         job_dict: dict = {}
         # Формируем словарь с вакансиями
         for job in job_list:
@@ -148,7 +147,7 @@ class SuperJob(Parser):
         if remote:
             sj_params["place_of_work"] = 2
 
-        if self.params.experience > 0:
+        if self.params.experience > 0 and self.params.experience <= 4:
             sj_params["experience"] = self.params.experience
 
         return sj_params
@@ -281,7 +280,7 @@ class Trudvsem(Parser):
             "modifiedTo": await utils.convert_date_for_trudvsem(date_to),
         }
 
-        if self.params.experience > 0:
+        if self.params.experience > 0 and self.params.experience <= 4:
             (
                 tv_params["experienceFrom"],
                 tv_params["experienceTo"],
