@@ -117,7 +117,6 @@ async def mock_create_session(
     return response
 
 
-@pytest.mark.django_db
 class TestCreateConnection:
     @pytest.mark.asyncio
     async def test_create_session_success(self, monkeypatch, params: tuple) -> None:
@@ -143,7 +142,6 @@ class TestCreateConnection:
         assert response.request.url.query.decode() == "text=python&limit=100&offset=0"
 
 
-@pytest.mark.django_db(transaction=True)
 class TestParser:
     """Класс описывает тестовые случаи для класса Parser."""
 
