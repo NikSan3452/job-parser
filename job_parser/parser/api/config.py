@@ -36,10 +36,10 @@ class ParserConfig:
 class RequestConfig:
     """Этот класс хранит параметры запроса парсеров."""
 
-    city: Optional[str]
-    city_from_db: Optional[int]
-    job: Optional[str]
-    date_to: Optional[str | datetime.date]
-    date_from: Optional[str | datetime.date]
+    city: str | None
+    city_from_db: int | None
+    job: str | None
+    date_to: str | datetime.date | None
+    date_from: str | datetime.date | None
     remote: bool
     experience: int
