@@ -168,7 +168,6 @@ class SuperJob(Parser):
             headers=config.superjob_headers,
             items="objects",
         )
-
         job_dict: dict = {}
         # Формируем словарь с вакансиями
         for job in job_list:
@@ -203,9 +202,13 @@ class SuperJob(Parser):
 
             if job["town"]:
                 job_dict["city"] = job["town"]["title"]
+            else:
+                job_dict["city"] = "Не указано"
 
             if job["firm_name"]:
                 job_dict["company"] = job["firm_name"]
+            else:
+                job_dict["company"] = "Не указано"
 
             if job["type_of_work"]:
                 job_dict["type_of_work"] = job["type_of_work"]["title"]
