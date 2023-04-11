@@ -31,13 +31,18 @@ class Utils:
         """Проверяет формат даты и при необходимости конвертирует его.
 
         Args:
-            date (datetime.date): Дата.
+            date (datetime.date | str): Дата.
 
         Returns:
             str: Конвертированная дата.
         """
+        converted_date = None
         if isinstance(date, datetime.date):
             datetime_obj = datetime.datetime.combine(date, datetime.time())
+            converted_date = datetime_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
+        elif isinstance(date, str):
+            date_obj = datetime.datetime.strptime(date, "%Y-%m-%d")
+            datetime_obj = datetime.datetime.combine(date_obj, datetime.time())
             converted_date = datetime_obj.strftime("%Y-%m-%dT%H:%M:%SZ")
         return converted_date
 
