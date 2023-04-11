@@ -38,7 +38,7 @@ class TestSuperJob:
         # Создаем экземпляр парсера с параметрами запроса
         superjob = SuperJob(params)
 
-        # Вызываем метод, который фформирует параметры запроса в понятный для superjob вид
+        # Вызываем метод, который формирует параметры запроса в понятный для superjob вид
         sj_params = await superjob.get_request_params()
 
         assert sj_params["keyword"] == "Программист"
@@ -69,7 +69,7 @@ class TestSuperJob:
         # Создаем экземпляр парсера с параметрами запроса
         superjob = SuperJob(params)
 
-        # Вызываем метод, который фформирует параметры запроса в понятный для hh вид
+        # Вызываем метод, который формирует параметры запроса в понятный для hh вид
         sj_params = await superjob.get_request_params()
 
         date_from = datetime.date.today() - datetime.timedelta(1)

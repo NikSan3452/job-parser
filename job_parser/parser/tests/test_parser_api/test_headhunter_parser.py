@@ -37,7 +37,7 @@ class TestHeadHunter:
         # Создаем экземпляр парсера с параметрами запроса
         headhunter = Headhunter(params)
 
-        # Вызываем метод, который фформирует параметры запроса в понятный для hh вид
+        # Вызываем метод, который формирует параметры запроса в понятный для hh вид
         hh_params = await headhunter.get_request_params()
 
         assert hh_params["text"] == "Программист"
@@ -66,7 +66,7 @@ class TestHeadHunter:
         # Создаем экземпляр парсера с параметрами запроса
         headhunter = Headhunter(params)
 
-        # Вызываем метод, который фформирует параметры запроса в понятный для hh вид
+        # Вызываем метод, который формирует параметры запроса в понятный для hh вид
         hh_params = await headhunter.get_request_params()
 
         assert hh_params["text"] is None
