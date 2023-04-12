@@ -302,7 +302,7 @@ class Trudvsem(Parser):
         job_list: list[dict] = await self.get_vacancies(
             url=config.trudvsem_url, params=tv_params, pages=20, items="results"
         )
-
+        
         job_dict: dict = {}
         # Формируем словарь с вакансиями
         for job in job_list:
@@ -343,9 +343,15 @@ class Trudvsem(Parser):
                 else:
                     job_dict["requirement"] = "Нет описания"
 
-                job_dict["city"] = vacancy["addresses"]["address"][0]["location"]
+                if vacancy.get("addresses"):
+                    job_dict["city"] = vacancy["addresses"]["address"][0]["location"]
+                else:
+                    job_dict["city"] = "Не указано"
 
-                job_dict["company"] = vacancy["company"]["name"]
+                if vacancy.get("company"):
+                    job_dict["company"] = vacancy["company"]["name"]
+                else:
+                    job_dict["company"] = "Не указано"
 
                 if vacancy.get("schedule"):
                     job_dict["type_of_work"] = vacancy.get("schedule")
@@ -359,7 +365,7 @@ class Trudvsem(Parser):
                 job_dict["published_at"] = published_date
 
                 if self.params.city:  # Если при поиске указан город ищем его в адресе
-                    if self.params.city in job_dict.get("city", "").lower():
+                    if self.params.city.lower() in job_dict.get("city", "").lower():
                         # Добавляем словарь с вакансией в общий список всех вакансий
                         Parser.general_job_list.append(job_dict.copy())
                 else:
