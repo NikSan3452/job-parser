@@ -132,6 +132,8 @@ class TestHeadHunter:
         assert job_dict["published_at"] == datetime.date(2023, 1, 1)
         assert len(Parser.general_job_list) == 1
 
+        Parser.general_job_list.clear()
+
     @pytest.mark.asyncio
     async def test_get_vacancy_from_headhunter_with_none(
         self, mocker, params: RequestConfig
@@ -171,3 +173,5 @@ class TestHeadHunter:
         assert job_dict["requirement"] == "Нет описания"
         assert job_dict["responsibility"] == "Нет описания"
         assert job_dict["type_of_work"] == "Не указано"
+
+        Parser.general_job_list.clear()

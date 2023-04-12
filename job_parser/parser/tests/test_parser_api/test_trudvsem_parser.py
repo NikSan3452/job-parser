@@ -148,6 +148,8 @@ class TestTrudvsem:
         assert job_dict["published_at"] == datetime.date(2023, 1, 1)
         assert len(Parser.general_job_list) == 1
 
+        Parser.general_job_list.clear()
+
     @pytest.mark.asyncio
     async def test_get_vacancy_from_trudvsem_with_none(
         self, mocker, params: RequestConfig
@@ -196,4 +198,6 @@ class TestTrudvsem:
         assert job_dict["type_of_work"] == "Не указано"
         assert job_dict["city"] == "Не указано"
         assert job_dict["published_at"] == datetime.date(2023, 1, 1)
-        assert len(Parser.general_job_list) == 1
+        assert len(Parser.general_job_list) == 0
+
+        Parser.general_job_list.clear()

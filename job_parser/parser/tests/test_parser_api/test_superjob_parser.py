@@ -82,6 +82,8 @@ class TestSuperJob:
         assert "place_of_work" not in sj_params
         assert "experience" not in sj_params
 
+        Parser.general_job_list.clear()
+
     @pytest.mark.asyncio
     async def test_get_vacancy_from_superjob(
         self, mocker, params: RequestConfig
@@ -134,6 +136,8 @@ class TestSuperJob:
         assert job_dict["published_at"] == datetime.date(2023, 3, 1)
         assert len(Parser.general_job_list) == 1
 
+        Parser.general_job_list.clear()
+
     @pytest.mark.asyncio
     async def test_get_vacancy_from_superjob_with_none(
         self, mocker, params: RequestConfig
@@ -185,3 +189,5 @@ class TestSuperJob:
         assert job_dict["experience"] == "Не указано"
         assert job_dict["published_at"] == datetime.date(2023, 3, 1)
         assert len(Parser.general_job_list) == 1
+
+        Parser.general_job_list.clear()
