@@ -184,3 +184,4 @@ class TestSuperJob:
         assert job_dict["place_of_work"] == "Нет описания"
         assert job_dict["experience"] == "Не указано"
         assert job_dict["published_at"] == datetime.date(2023, 3, 1)
+        assert len(Parser.general_job_list) == 1
