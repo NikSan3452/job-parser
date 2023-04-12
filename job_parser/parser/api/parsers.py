@@ -372,5 +372,4 @@ class Trudvsem(Parser):
                     Parser.general_job_list.append(job_dict.copy())
 
         logger.debug("Сбор вакансий с Trudvsem завершен")
-
         return job_dict
