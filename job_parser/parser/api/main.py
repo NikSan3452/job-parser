@@ -69,7 +69,7 @@ async def run(
         # Запускаем задачи
         await asyncio.gather(task1, task2, task3, task4)
 
-    # Сортируем получемнный список вакансий
+    # Сортируем полученный список вакансий
     sorted_job_list = await utils.sort_by_date(Parser.general_job_list)
     if title_search:
         sorted_job_list = await utils.sort_by_title(sorted_job_list, job)
