@@ -6,7 +6,7 @@ from parser.mixins import RedisCacheMixin, VacancyHelpersMixin, VacancyScraperMi
 from parser.models import FavouriteVacancy, HiddenCompanies, VacancyBlackList
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpRequest, JsonResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.template.response import TemplateResponse
 from django.views import View
 from django.views.generic.edit import FormView
@@ -19,32 +19,63 @@ utils = Utils()
 
 
 class HomePageView(FormView):
-    """Представление домашней страницы."""
+    """Класс представления домашней страницы.
 
-    template_name = "parser/home.html"
-    form_class = SearchingForm
-    success_url = "/list/"
+    Этот класс наследуется от `FormView` и используется для отображения домашней
+    страницы приложения.
 
-    def get(self, request):
+    Args:
+        FormView (FormView): Представление для отображения формы и рендеринга ответа шаблона.
+
+    Attributes:
+        template_name (str): Имя шаблона для отображения страницы.
+        form_class (type): Класс формы для обработки данных.
+        success_url (str): URL-адрес для перенаправления после успешной отправки формы.
+
+    Returns:
+        _type_: _description_
+    """
+
+    template_name: str = "parser/home.html"
+    form_class: SearchingForm = SearchingForm
+    success_url: str = "/list/"
+
+    def get(self, request: HttpRequest) -> HttpResponse:
+        """Метод обработки GET-запроса.
+
+        Этот метод принимает объект запроса `request` и обрабатывает его. 
+        Если в сессии пользователя нет ключа сессии, то он сохраняется. 
+        Затем получается контекст и отображается страница с использованием этого контекста.
+
+        Args:
+            request (HttpRequest): Объект запроса
+
+        Returns:
+            HttpResponse: Ответ с отображением страницы
+        """
         super().get(request)
         if not request.session or not request.session.session_key:
             request.session.save()
         context = self.get_context_data()
         return self.render_to_response(context)
 
-    def form_valid(self, form):
-        """Валидирует форму домашней страницы.
+    def form_valid(self, form) -> HttpResponseRedirect:
+        """Метод обработки валидной формы.
+
+        Этот метод вызывается, когда форма прошла валидацию. 
+        Он перенаправляет пользователя на URL-адрес, указанный в атрибуте `success_url`.
 
         Args:
-            form: Форма.
+            form (Form): Объект формы
 
-        Returns: HTTPResponse
+        Returns:
+            HttpResponseRedirect: Ответ с перенаправлением на другую страницу
         """
         return super().form_valid(form)
 
 
 class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraperMixin):
-    """Представление страницы со списком ванкасий."""
+    """Представление страницы со списком вакансий."""
 
     form_class = SearchingForm
     template_name = "parser/list.html"
