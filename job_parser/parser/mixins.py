@@ -223,7 +223,7 @@ class VacancyHelpersMixin:
             else:  # А иначе выводим сообщение
                 messages.error(
                     request,
-                    """Город с таким названием отсуствует в базе""",
+                    """Город с таким названием отсутствует в базе""",
                 )
         return city_id
 

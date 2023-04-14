@@ -119,7 +119,7 @@ class TestVacancyHelpersMixin:
         # Создаем запись в списке скрытых компаний для test_company_2
         await HiddenCompanies.objects.acreate(user=test_user, name="test_company2")
 
-        # Проверяем, что комания 2 была удалена из списка
+        # Проверяем, что компания 2 была удалена из списка
         result = await helpers_mixin.check_company_in_hidden_list(vacancies, request_)
         expected = [
             {"title": "vacancy1", "company": "test_company1"},
@@ -140,7 +140,7 @@ class TestVacancyHelpersMixin:
         request_: HttpRequest,
         test_user: User,
     ) -> None:
-        """Тестирует метод добавления вакансии в избраное.
+        """Тестирует метод добавления вакансии в избранное.
 
         Args:
             helpers_mixin (VacancyHelpersMixin): Экземпляр VacancyHelpersMixin.
@@ -298,6 +298,6 @@ class TestVacancyHelpersMixin:
         messages = list(get_messages(request_))
 
         # Проверяем что сообщение для несуществующего города есть и выводится
-        expected_message = "Город с таким названием отсуствует в базе"
+        expected_message = "Город с таким названием отсутствует в базе"
         Assertions.assert_type(messages, list)
         Assertions.assert_compare_values(str(messages[0]), expected_message)
