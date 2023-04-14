@@ -7,7 +7,8 @@ from parser.models import FavouriteVacancy, HiddenCompanies, VacancyBlackList
 
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpRequest, JsonResponse
 from django.template.response import TemplateResponse
 from django.views import View
 from django.views.generic.edit import FormView
@@ -197,45 +198,57 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
 
         return TemplateResponse(request, self.template_name, context)
 
-
-@login_required
-def add_to_favourite_view(request):
-    """Добавляет вакансию в избранное.
-
-    Args:
-        request (_type_): Запрос.
-
-    Returns:
-        _type_: JsonResponse.
+class AddVacancyToFavouritesView(LoginRequiredMixin, View):
     """
-    view_logger = logger.bind(request=request.POST)
-    if request.method == "POST":
+    Класс представления для добавления вакансии в избранное.
+
+    Этот класс наследуется от LoginRequiredMixin и View.
+    LoginRequiredMixin обеспечивает, что пользователь должен быть аутентифицирован,
+    чтобы получить доступ к этому представлению.
+    """
+
+    async def post(self, request: HttpRequest) -> JsonResponse:
+        """Метод обработки POST-запроса на добавление вакансии в избранное.
+        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
+        Внутри метода создается логгер с привязкой к данным запроса.
+        Данные из запроса загружаются в переменную `data`, из которой извлекается URL
+        и название вакансии.
+        Затем пытается получить текущего пользователя и создать
+        или получить объект `FavouriteVacancy` с указанными данными пользователя,
+        URL и названием вакансии.
+        Если все прошло успешно, в лог записывается информация об успешном добавлении
+        вакансии в избранное.
+        В случае возникновения исключения, оно записывается в лог.
+        В конце метода возвращается JSON-ответ с информацией об успешном добавлении
+        вакансии в избранное.
+
+        Args:
+            request (HttpRequest): Объект запроса
+
+        Returns:
+            JsonResponse: JSON-ответ с информацией об
+            успешном добавлении вакансии в избранное
+        """
+        view_logger = logger.bind(request=request.POST)
 
         data = json.load(request)
         vacancy_url = data.get("url")
         vacancy_title = data.get("title")
 
         try:
-            user = auth.get_user(request)
-            FavouriteVacancy.objects.get_or_create(
-                user=user, url=vacancy_url, title=vacancy_title
+            await FavouriteVacancy.objects.aget_or_create(
+                user=request.user, url=vacancy_url, title=vacancy_title
             )
             view_logger.info(f"Вакансия {vacancy_title} добавлена в избранное")
         except Exception as exc:
             view_logger.exception(exc)
-    return JsonResponse({"status": f"Вакансия {vacancy_title} добавлена в избранное"})
+        return JsonResponse(
+            {"status": f"Вакансия {vacancy_title} добавлена в избранное"}
+        )
 
 
 @login_required
 def delete_from_favourite_view(request):
-    """Удаляет вакансию из избранного.
-
-    Args:
-        request (_type_): Запрос.
-
-    Returns:
-        _type_: JsonResponse.
-    """
     view_logger = logger.bind(request=request.POST)
     if request.method == "POST":
 
