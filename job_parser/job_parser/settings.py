@@ -208,4 +208,3 @@ HUEY = {
     "filename": "./huey.db",
     "immediate": False,
 }
-}
