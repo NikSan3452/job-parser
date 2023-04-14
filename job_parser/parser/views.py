@@ -5,8 +5,6 @@ from parser.forms import SearchingForm
 from parser.mixins import RedisCacheMixin, VacancyHelpersMixin, VacancyScraperMixin
 from parser.models import FavouriteVacancy, HiddenCompanies, VacancyBlackList
 
-from django.contrib import auth
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpRequest, JsonResponse
 from django.template.response import TemplateResponse
@@ -344,26 +342,45 @@ class AddVacancyToBlackListView(LoginRequiredMixin, View):
         )
 
 
-@login_required
-def hide_company_view(request):
-    """Скрывает вакансии компании из выдачи.
-
-    Args:
-        request (_type_): Запрос.
-
-    Returns:
-        _type_: JsonResponse.
+class HideCompanyView(LoginRequiredMixin, View):
     """
-    view_logger = logger.bind(request=request.POST)
-    if request.method == "POST":
+    Класс представления для скрытия всех вакансий выбранной компании.
+
+    Этот класс наследуется от LoginRequiredMixin и View.
+    Требует аутентификации пользователя перед использованием.
+    """
+
+    async def post(self, request: HttpRequest) -> JsonResponse:
+        """
+        Метод обработки POST-запроса на скрытие вакансий выбранной компании.
+
+        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
+        Внутри метода создается логгер с привязкой к данным запроса.
+        Данные из запроса загружаются в переменную `data`, из которой извлекается
+        имя компании.
+        Затем пытается получить текущего пользователя и создать или получить
+        объект `HiddenCompanies` с указанными данными пользователя и именем компании.
+        Если все прошло успешно, в лог записывается информация о том, что компания
+        была успешно скрыта.
+        В случае возникновения исключения, оно записывается в лог.
+        В конце метода возвращается JSON-ответ с информацией о том, что компания
+        была успешно скрыта.
+
+        Args:
+            request (HttpRequest): Объект запроса
+
+        Returns:
+            JsonResponse: JSON-ответ с информацией о том, что компания была успешно скрыта
+        """
+        view_logger = logger.bind(request=request.POST)
 
         data = json.load(request)
         company = data.get("company")
-
         try:
-            user = auth.get_user(request)
-            HiddenCompanies.objects.get_or_create(user=user, name=company)
+            await HiddenCompanies.objects.aget_or_create(
+                user=request.user, name=company
+            )
             view_logger.info(f"Компания {company} скрыта")
         except Exception as exc:
             view_logger.exception(exc)
-    return JsonResponse({"status": f"Компания {company} скрыта"})
+        return JsonResponse({"status": f"Компания {company} скрыта"})

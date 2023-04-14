@@ -16,5 +16,5 @@ urlpatterns = [
         views.AddVacancyToBlackListView.as_view(),
         name="add_to_black_list",
     ),
-    path("hide-company/", views.hide_company_view, name="hide_company"),
+    path("hide-company/", views.HideCompanyView.as_view(), name="hide_company"),
 ]
