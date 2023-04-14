@@ -42,7 +42,7 @@ class VacancyHelpersMixin:
         values: tuple = ("None", "False")
 
         # Т.к во время итерации и удаления ключей размер словаря меняется,
-        # чтобы исбежать ошибки RuntimeError, оборачиваем список ключей в list,
+        # чтобы избежать ошибки RuntimeError, оборачиваем список ключей в list,
         # тем самым делаем его копию.
         for key in list(request_data.keys()):
             if request_data.get(key) in values:
@@ -233,7 +233,7 @@ class RedisCacheMixin:
 
     @logger.catch(message="Ошибка в методе RedisCacheMixin.create_cache_key()")
     async def create_cache_key(self, request: HttpRequest) -> str:
-        """Создает кэш - ключ в виде идетификатора сессии.
+        """Создает кэш - ключ в виде идентификатора сессии.
 
         Args:
             request (HttpRequest): Запрос.
