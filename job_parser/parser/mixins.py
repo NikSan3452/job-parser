@@ -202,7 +202,7 @@ class VacancyHelpersMixin:
         return params
 
     async def get_city_id(self, city: str, request: HttpRequest) -> str | None:
-        """Получет id города из базы данных.
+        """Получает id города из базы данных.
         Данный id необходим для API Headhunter и Zarplata,
         т.к поиск по городам осуществляется по их id.
         Args:
