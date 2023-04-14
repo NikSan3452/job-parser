@@ -11,6 +11,10 @@ urlpatterns = [
         views.DeleteVacancyFromFavouritesView.as_view(),
         name="delete_favourite",
     ),
-    path("add-to-black-list/", views.add_to_black_list_view, name="add_to_black_list"),
+    path(
+        "add-to-black-list/",
+        views.AddVacancyToBlackListView.as_view(),
+        name="add_to_black_list",
+    ),
     path("hide-company/", views.hide_company_view, name="hide_company"),
 ]

@@ -291,33 +291,57 @@ class DeleteVacancyFromFavouritesView(LoginRequiredMixin, View):
         return JsonResponse({"status": f"Вакансия {vacancy_url} удалена из избранного"})
 
 
-@login_required
-def add_to_black_list_view(request):
-    """Удаляет вакансию из избранного.
-
-    Args:
-        request (_type_): Запрос.
-
-    Returns:
-        _type_: JsonResponse.
+class AddVacancyToBlackListView(LoginRequiredMixin, View):
     """
-    view_logger = logger.bind(request=request.POST)
-    if request.method == "POST":
+    Класс представления для добавления вакансии в черный список.
+
+    Этот класс наследуется от LoginRequiredMixin и View.
+    Требует аутентификации пользователя перед использованием.
+    """
+
+    async def post(self, request: HttpRequest) -> JsonResponse:
+        """
+        Метод обработки POST-запроса на добавление вакансии в черный список.
+
+        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
+        Внутри метода создается логгер с привязкой к данным запроса.
+        Данные из запроса загружаются в переменную `data`, из которой
+        извлекается URL и название вакансии.
+        Затем пытается получить текущего пользователя и создать объект
+        `VacancyBlackList` с указанными данными пользователя, URL и названием вакансии.
+        Также удаляется объект `FavouriteVacancy` с указанными данными пользователя
+        и URL вакансии.
+        Если все прошло успешно, в лог записывается информация о том, что
+        вакансия была добавлена в черный список.
+        В случае возникновения исключения, оно записывается в лог.
+        В конце метода возвращается JSON-ответ с информацией о том, что
+        вакансия была добавлена в черный список.
+
+        Args:
+            request (HttpRequest): Объект запроса
+
+        Returns:
+            JsonResponse: JSON-ответ с информацией о том, что
+            вакансия была добавлена в черный список
+        """
+        view_logger = logger.bind(request=request.POST)
 
         data = json.load(request)
         vacancy_url = data.get("url")
         vacancy_title = data.get("title")
-
         try:
-            user = auth.get_user(request)
-            VacancyBlackList.objects.get_or_create(
-                user=user, url=vacancy_url, title=vacancy_title
+            await VacancyBlackList.objects.aget_or_create(
+                user=request.user, url=vacancy_url, title=vacancy_title
             )
-            FavouriteVacancy.objects.filter(user=user, url=vacancy_url).delete()
+            await FavouriteVacancy.objects.filter(
+                user=request.user, url=vacancy_url
+            ).adelete()
             view_logger.info(f"Вакансия {vacancy_url} добавлена в черный список")
         except Exception as exc:
             view_logger.exception(exc)
-    return JsonResponse({"status": f"Вакансия {vacancy_url} добавлена в черный список"})
+        return JsonResponse(
+            {"status": f"Вакансия {vacancy_url} добавлена в черный список"}
+        )
 
 
 @login_required
