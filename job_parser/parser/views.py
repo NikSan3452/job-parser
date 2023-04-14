@@ -31,9 +31,6 @@ class HomePageView(FormView):
         template_name (str): Имя шаблона для отображения страницы.
         form_class (type): Класс формы для обработки данных.
         success_url (str): URL-адрес для перенаправления после успешной отправки формы.
-
-    Returns:
-        _type_: _description_
     """
 
     template_name: str = "parser/home.html"
