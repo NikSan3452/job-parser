@@ -198,13 +198,13 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
 
         return TemplateResponse(request, self.template_name, context)
 
+
 class AddVacancyToFavouritesView(LoginRequiredMixin, View):
     """
     Класс представления для добавления вакансии в избранное.
 
     Этот класс наследуется от LoginRequiredMixin и View.
-    LoginRequiredMixin обеспечивает, что пользователь должен быть аутентифицирован,
-    чтобы получить доступ к этому представлению.
+    Требует аутентификации пользователя перед использованием.
     """
 
     async def post(self, request: HttpRequest) -> JsonResponse:
@@ -247,21 +247,48 @@ class AddVacancyToFavouritesView(LoginRequiredMixin, View):
         )
 
 
-@login_required
-def delete_from_favourite_view(request):
-    view_logger = logger.bind(request=request.POST)
-    if request.method == "POST":
+class DeleteVacancyFromFavouritesView(LoginRequiredMixin, View):
+    """
+    Класс представления для удаления вакансии из списка избранных.
+
+    Этот класс наследуется от LoginRequiredMixin и View.
+    Требует аутентификации пользователя перед использованием.
+    """
+
+    async def post(self, request: HttpRequest) -> JsonResponse:
+        """
+        Метод обработки POST-запроса на удаление вакансии из избранного.
+        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
+        Внутри метода создается логгер с привязкой к данным запроса.
+        Данные из запроса загружаются в переменную `data`, из которой
+        извлекается URL вакансии.
+        Затем пытается получить текущего пользователя и удалить объект
+        `FavouriteVacancy` с указанными данными пользователя и URL вакансии.
+        Если все прошло успешно, в лог записывается информация об успешном
+        удалении вакансии из избранного.
+        В случае возникновения исключения, оно записывается в лог.
+        В конце метода возвращается JSON-ответ с информацией об успешном
+        удалении вакансии из избранного.
+
+        Args:
+            request (HttpRequest): Объект запроса
+
+        Returns:
+            JsonResponse: JSON-ответ с информацией об успешном
+            удалении вакансии из избранного
+        """
+        view_logger = logger.bind(request=request.POST)
 
         data = json.load(request)
         vacancy_url = data.get("url")
-
         try:
-            user = auth.get_user(request)
-            FavouriteVacancy.objects.filter(user=user, url=vacancy_url).delete()
+            await FavouriteVacancy.objects.filter(
+                user=request.user, url=vacancy_url
+            ).adelete()
             view_logger.info(f"Вакансия {vacancy_url} удалена из избранного")
         except Exception as exc:
             view_logger.exception(exc)
-    return JsonResponse({"status": f"Вакансия {vacancy_url} удалена из избранного"})
+        return JsonResponse({"status": f"Вакансия {vacancy_url} удалена из избранного"})
 
 
 @login_required
