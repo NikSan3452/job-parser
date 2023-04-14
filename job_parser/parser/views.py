@@ -40,8 +40,8 @@ class HomePageView(FormView):
     def get(self, request: HttpRequest) -> HttpResponse:
         """Метод обработки GET-запроса.
 
-        Этот метод принимает объект запроса `request` и обрабатывает его. 
-        Если в сессии пользователя нет ключа сессии, то он сохраняется. 
+        Этот метод принимает объект запроса `request` и обрабатывает его.
+        Если в сессии пользователя нет ключа сессии, то он сохраняется.
         Затем получается контекст и отображается страница с использованием этого контекста.
 
         Args:
@@ -59,7 +59,7 @@ class HomePageView(FormView):
     def form_valid(self, form) -> HttpResponseRedirect:
         """Метод обработки валидной формы.
 
-        Этот метод вызывается, когда форма прошла валидацию. 
+        Этот метод вызывается, когда форма прошла валидацию.
         Он перенаправляет пользователя на URL-адрес, указанный в атрибуте `success_url`.
 
         Args:
@@ -72,20 +72,51 @@ class HomePageView(FormView):
 
 
 class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraperMixin):
-    """Представление страницы со списком вакансий."""
+    """
+    Класс представления для отображения списка вакансий.
 
-    form_class = SearchingForm
-    template_name = "parser/list.html"
+    Этот класс наследуется от классов `View`, `RedisCacheMixin`, `VacancyHelpersMixin`
+    и `VacancyScraperMixin`.
+    Он использует форму `SearchingForm` и шаблон "parser/list.html" для отображения
+    списка вакансий.
+    Список вакансий получается из API и сохраняется в атрибуте `job_list_from_api`.
+
+    Attributes:
+        form_class (Form): Форма для поиска вакансий.
+        template_name (str): Имя шаблона для отображения списка вакансий.
+        job_list_from_api (list[dict]): Список вакансий из API.
+    """
+
+    form_class: SearchingForm = SearchingForm
+    template_name: str = "parser/list.html"
     job_list_from_api: list[dict] = []
 
     @logger.catch(level="CRITICAL", message="Ошибка в методе <VacancyListView.get()>")
-    async def get(self, request, *args, **kwargs):
-        """Отвечает за обработку GET запросов к странице со списком вакансий.
+    async def get(self, request: HttpRequest) -> TemplateResponse:
+        """
+        Метод обработки GET-запроса для отображения списка вакансий.
+
+        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
+        Внутри метода проверяются данные запроса с помощью метода `check_request_data`.
+        Затем создается форма с начальными данными из запроса, а также ключ кэша
+        с помощью метода `create_cache_key`.
+        Далее получается список вакансий из кэша с помощью метода `get_data_from_cache`.
+        Если пользователь аутентифицирован, то список вакансий фильтруется с помощью
+        методов `check_company_in_hidden_list` и `check_vacancy_in_black_list`.
+        Также получается список избранных вакансий с помощью метода `get_favourite_vacancy`.
+        Список вакансий сортируется по дате с помощью функции `sort_by_date`
+        из модуля `utils`.
+        В контекст добавляются данные формы, отфильтрованный список вакансий
+        и список избранных вакансий.
+        Также добавляются данные из запроса и выполняется пагинация с помощью
+        метода `get_pagination`.
+        В конце метода возвращается ответ с использованием шаблона.
 
         Args:
-            request: Запрос.
+            request (HttpRequest): Объект запроса
 
-        Returns: HttpResponse
+        Returns:
+            TemplateResponse: Ответ с использованием шаблона
         """
         # Проверяем параметры запроса перед тем, как передать в форму
         request_data = await self.check_request_data(request)
@@ -119,29 +150,59 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
             "form": form,
             "object_list": sorted_job_list,
             "list_favourite": list_favourite,
+            **request_data,
         }
-
-        context["city"] = request_data.get("city")
-        context["job"] = request_data.get("job")
-        context["date_from"] = request_data.get("date_from")
-        context["date_to"] = request_data.get("date_to")
-        context["title_search"] = request_data.get("title_search")
-        context["experience"] = request_data.get("experience")
-        context["remote"] = request_data.get("remote")
-        context["job_board"] = request_data.get("job_board")
 
         # Пагинация
         await self.get_pagination(request, sorted_job_list, context)
 
         return TemplateResponse(request, self.template_name, context)
 
-    async def post(self, request, *args, **kwargs):
-        """Отвечает за обработку POST запросов к странице со списком вакансий.
+    async def post(self, request: HttpRequest) -> TemplateResponse:
+        """
+        Метод обработки POST-запроса для отображения списка вакансий.
+
+        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
+        Внутри метода создается форма `form` с данными из запроса и проверяется
+        ее валидность.
+        Если форма валидна, то из нее извлекаются данные с помощью метода `get_form_data`
+        и сохраняются в переменной `params`.
+        Затем из переменной `params` извлекается город и выполняется поиск
+        его идентификатора с помощью метода `get_city_id`.
+        Полученный идентификатор города добавляется в переменную `params`.
+        Далее создается пустой список `job_list_from_scraper` для хранения
+        вакансий из скрапера.
+        В блоке try выполняется поиск вакансий с помощью скрапера или API в зависимости
+        от выбранной площадки.
+        Если выбраны площадки из скрапера, то список вакансий из API очищается
+        и выполняется поиск вакансий с помощью скрапера.
+        Иначе список вакансий из API очищается и заполняется данными из API,
+        а затем выполняется поиск вакансий с помощью скрапера.
+        В случае возникновения исключения оно записывается в лог.
+
+        После выполнения поиска списки вакансий из API и скрапера объединяются
+        с помощью метода `add_vacancy_to_job_list_from_api` и сохраняются
+        в переменной `shared_job_list`.
+        Если пользователь аутентифицирован, то список вакансий фильтруется с помощью
+        методов `check_company_in_hidden_list` и `check_vacancy_in_black_list`.
+        Также получается список избранных вакансий с помощью метода
+        `get_favourite_vacancy` и сохраняется в переменной `list_favourite`.
+        Отфильтрованный список вакансий сортируется по дате с помощью функции
+        `sort_by_date` из модуля `utils`.
+        Затем создается ключ кэша с помощью метода `create_cache_key` и отфильтрованный
+        список вакансий сохраняется в кэше с помощью метода `set_data_to_cache`.
+        В контекст добавляются данные формы, отфильтрованный список вакансий
+        и список избранных вакансий.
+        Также выполняется пагинация с помощью метода `get_pagination`.
+        В конце метода возвращается ответ с использованием шаблона.
 
         Args:
-            request: Запрос.
+            request (HttpRequest): Объект запроса
+            *args: Позиционные аргументы
+            **kwargs: Именованные аргументы
 
-        Returns: HttpResponse
+        Returns:
+            TemplateResponse: Ответ с использованием шаблона
         """
         form = self.form_class(request.POST)
         view_logger = logger.bind(request=request.POST)
@@ -206,17 +267,10 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
             await self.set_data_to_cache(sorted_shared_job_list)
 
         context = {
-            "city": params.get("city"),
-            "job": params.get("job"),
-            "date_from": params.get("date_from"),
-            "date_to": params.get("date_to"),
-            "title_search": params.get("title_search"),
-            "experience": params.get("experience"),
-            "remote": params.get("remote"),
-            "job_board": params.get("job_board"),
             "form": form,
             "object_list": sorted_shared_job_list,
             "list_favourite": list_favourite,
+            **params,
         }
 
         # Пагинация
