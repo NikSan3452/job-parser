@@ -15,6 +15,7 @@ crispy-bootstrap5==0.7
 python-dotenv==0.21.1
 
 beautifulsoup4==4.11.1
+lxml==4.9.2
 
 Pillow==9.4.0
 
