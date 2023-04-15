@@ -15,7 +15,7 @@ class TestHomePageView:
         return self.view
 
     def test_home_page_view_get_request(self, request_: HttpRequest) -> None:
-        """Тестирует возвращаймый staus code представления домашней страницы.
+        """Тестирует возвращаемый status code представления домашней страницы.
 
         Args:
             request_ (HttpRequest): Запрос.
@@ -25,7 +25,7 @@ class TestHomePageView:
         Assertions.assert_status_code(response, 200)
 
     def test_home_page_view_redirect(self, request_: HttpRequest) -> None:
-        """Тестирует редирект после отправки формы с пердставления
+        """Тестирует редирект после отправки формы с представления
         домашней страницы
 
         Args:

@@ -184,7 +184,7 @@ class TestParser:
             assert isinstance(job_list, list)
             # Проверяем, что список не пуст.
             assert len(job_list) > 0
-            # Проверяем, что содержимое соотвествует ожиданиям
+            # Проверяем, что содержимое соответствует ожиданиям
             assert job_list[0]["job_board"] == expected_job_board
         else:
             assert isinstance(job_list, list)
