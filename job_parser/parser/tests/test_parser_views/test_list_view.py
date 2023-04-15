@@ -201,7 +201,7 @@ class TestVacancyListView:
         # Проверяем, что тело ответа не содержит вакансии добавленной в черный список
         Assertions.assert_value_not_in_obj(data[2]["url"], object_list[0]["url"])
 
-        # Проверяем, что форма присуствует в контексте
+        # Проверяем, что форма присутствует в контексте
         Assertions.assert_value_in_obj("form", response.context_data)
 
     @pytest.mark.asyncio
@@ -362,5 +362,5 @@ class TestVacancyListView:
         # Проверяем, что тело ответа не содержит вакансии добавленной в черный список
         Assertions.assert_value_not_in_obj(data[3]["url"], object_list[0]["url"])
 
-        # Проверяем, что форма присуствует в контексте
+        # Проверяем, что форма присутствует в контексте
         Assertions.assert_value_in_obj("form", response.context_data)
