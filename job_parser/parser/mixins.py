@@ -8,20 +8,51 @@ from parser.models import (
     VacancyBlackList,
     VacancyScraper,
 )
-from typing import Any
+from typing import Any, Awaitable
 
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.mixins import AccessMixin
 from django.contrib.auth.models import AnonymousUser
 from django.core.paginator import Paginator
 from django.db.models import Q, QuerySet
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from logger import logger, setup_logging
 
 # Логирование
 setup_logging()
 
 utils = Utils()
+
+
+class AsyncLoginRequiredMixin(AccessMixin):
+    """
+    Асинхронная версия миксина LoginRequiredMixin Django.
+
+    Этот миксин предназначен для использования в представлениях, доступ к которым
+    должен быть разрешен только для аутентифицированных пользователей.
+    Если пользователь не аутентифицирован, он будет перенаправлен на страницу входа.
+
+    Наследуется от класса AccessMixin.
+    """
+
+    async def dispatch(self, request, *args, **kwargs) -> Awaitable[HttpResponse]:
+        """Асинхронный метод dispatch для обработки запросов.
+
+        В этом методе выполняется проверка аутентификации пользователя.
+        Если пользователь не аутентифицирован, вызывается метод handle_no_permission,
+        который возвращает объект HttpResponseRedirect для перенаправления пользователя
+        на страницу входа.
+
+        Args:
+            request (_type_): Объект запроса.
+
+        Returns:
+            Awaitable: Объект ответа.
+        """
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        return await super().dispatch(request, *args, **kwargs)
 
 
 class VacancyHelpersMixin:
@@ -118,7 +149,7 @@ class VacancyHelpersMixin:
                 company.name
                 async for company in HiddenCompanies.objects.filter(user=user)
             }
-            
+
             # Проверяем наличие компании в списке скрытых
             # и получаем отфильтрованный список
             filtered_vacancies = [
