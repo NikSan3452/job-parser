@@ -2,10 +2,16 @@ import json
 from parser.api import main
 from parser.api.utils import Utils
 from parser.forms import SearchingForm
-from parser.mixins import RedisCacheMixin, VacancyHelpersMixin, VacancyScraperMixin
+from parser.mixins import (
+    AsyncLoginRequiredMixin,
+    RedisCacheMixin,
+    VacancyHelpersMixin,
+    VacancyScraperMixin,
+)
 from parser.models import FavouriteVacancy, HiddenCompanies, VacancyBlackList
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import IntegrityError
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.template.response import TemplateResponse
 from django.views import View
@@ -279,49 +285,73 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
         return TemplateResponse(request, self.template_name, context)
 
 
-class AddVacancyToFavouritesView(LoginRequiredMixin, View):
+class AddVacancyToFavouritesView(AsyncLoginRequiredMixin, View):
     """
     Класс представления для добавления вакансии в избранное.
 
-    Этот класс наследуется от LoginRequiredMixin и View.
+    Этот класс наследуется от AsyncLoginRequiredMixin и View.
     Требует аутентификации пользователя перед использованием.
     """
 
     async def post(self, request: HttpRequest) -> JsonResponse:
         """Метод обработки POST-запроса на добавление вакансии в избранное.
         Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
+
         Внутри метода создается логгер с привязкой к данным запроса.
-        Данные из запроса загружаются в переменную `data`, из которой извлекается URL
-        и название вакансии.
-        Затем пытается получить текущего пользователя и создать
-        или получить объект `FavouriteVacancy` с указанными данными пользователя,
-        URL и названием вакансии.
+        Данные из запроса  десериализуются в блоке try/except и случае успеха
+        загружаются в переменную `data`, из которой извлекается URL
+        и название вакансии. В противном случае будет вызвано исключение JSONDecodeError
+        с последующей отправкой соответствующего ответа JsonResponse со статусом 400.
+        Если URL и название вакансии вакансии отсутствуют будет возвращен 
+        соответствующий JsonResponse со статусом 400.
+        Затем метод пытается создать или получить объект `FavouriteVacancy`
+        с указанными данными пользователя, URL и названием вакансии.
         Если все прошло успешно, в лог записывается информация об успешном добавлении
         вакансии в избранное.
-        В случае возникновения исключения, оно записывается в лог.
+        В случае возникновения исключения IntegrityError или Exception они записываются 
+        в лог и будет возвращен соответствующий JsonResponse со статусом 400.
         В конце метода возвращается JSON-ответ с информацией об успешном добавлении
         вакансии в избранное.
 
         Args:
-            request (HttpRequest): Объект запроса
+            request (HttpRequest): Объект запроса.
 
         Returns:
             JsonResponse: JSON-ответ с информацией об
-            успешном добавлении вакансии в избранное
+            успешном добавлении вакансии в избранное.
         """
         view_logger = logger.bind(request=request.POST)
 
-        data = json.load(request)
+        try:
+            data = json.load(request)
+        except json.JSONDecodeError as exc:
+            view_logger.exception(exc)
+            return JsonResponse({"Ошибка": "Невалидный JSON"}, status=400)
+
         vacancy_url = data.get("url")
         vacancy_title = data.get("title")
+        if not vacancy_url or not vacancy_title:
+            return JsonResponse({"Ошибка": "Отсутствуют обязательные поля"}, status=400)
 
         try:
             await FavouriteVacancy.objects.aget_or_create(
                 user=request.user, url=vacancy_url, title=vacancy_title
             )
             view_logger.info(f"Вакансия {vacancy_title} добавлена в избранное")
+        except IntegrityError as exc:
+            view_logger.exception(exc)
+            return JsonResponse(
+                {"Ошибка": "Такая вакансия уже есть в избранном"}, status=400
+            )
         except Exception as exc:
             view_logger.exception(exc)
+            return JsonResponse(
+                {
+                    "Ошибка": "При добавлении вакансии в избранное произошла непредвиденная ошибка"
+                },
+                status=400,
+            )
+
         return JsonResponse(
             {"status": f"Вакансия {vacancy_title} добавлена в избранное"}
         )
@@ -371,11 +401,11 @@ class DeleteVacancyFromFavouritesView(LoginRequiredMixin, View):
         return JsonResponse({"status": f"Вакансия {vacancy_url} удалена из избранного"})
 
 
-class AddVacancyToBlackListView(LoginRequiredMixin, View):
+class AddVacancyToBlackListView(AsyncLoginRequiredMixin, View):
     """
     Класс представления для добавления вакансии в черный список.
 
-    Этот класс наследуется от LoginRequiredMixin и View.
+    Этот класс наследуется от AsyncLoginRequiredMixin и View.
     Требует аутентификации пользователя перед использованием.
     """
 
@@ -465,4 +495,3 @@ class HideCompanyView(LoginRequiredMixin, View):
             view_logger.info(f"Компания {company} скрыта")
         except Exception as exc:
             view_logger.exception(exc)
-        return JsonResponse({"status": f"Компания {company} скрыта"})
