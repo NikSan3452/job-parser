@@ -36,7 +36,9 @@ class AsyncLoginRequiredMixin(AccessMixin):
     Наследуется от класса AccessMixin.
     """
 
-    async def dispatch(self, request, *args, **kwargs) -> Awaitable[HttpResponse]:
+    async def dispatch(
+        self, request: HttpRequest, *args: Any, **kwargs: Any
+    ) -> Awaitable[HttpResponse]:
         """Асинхронный метод dispatch для обработки запросов.
 
         В этом методе выполняется проверка аутентификации пользователя.
@@ -45,10 +47,10 @@ class AsyncLoginRequiredMixin(AccessMixin):
         на страницу входа.
 
         Args:
-            request (_type_): Объект запроса.
+            request (HttpRequest): Объект запроса.
 
         Returns:
-            Awaitable: Объект ответа.
+            Awaitable[HttpResponse]: Объект ответа.
         """
         if not request.user.is_authenticated:
             return self.handle_no_permission()
