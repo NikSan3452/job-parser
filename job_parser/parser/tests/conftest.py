@@ -1,5 +1,6 @@
 import asyncio
-from parser.mixins import RedisCacheMixin, VacancyHelpersMixin, VacancyScraperMixin
+from parser.mixins import (RedisCacheMixin, VacancyHelpersMixin,
+                           VacancyScraperMixin)
 from typing import Any, Generator
 
 import pytest
@@ -102,7 +103,7 @@ def test_user(db: Any) -> User:
     Returns:
         User: Тестовый пользователь.
     """
-    test_user = User.objects.create(username="testuser")
+    test_user = User.objects.create(username="testuser", password="testpass")
     return test_user
 
 
