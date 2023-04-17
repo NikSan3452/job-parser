@@ -1,6 +1,5 @@
 import asyncio
-from parser.mixins import (RedisCacheMixin, VacancyHelpersMixin,
-                           VacancyScraperMixin)
+from parser.mixins import RedisCacheMixin, VacancyHelpersMixin, VacancyScraperMixin
 from typing import Any, Generator
 
 import pytest
@@ -9,7 +8,7 @@ from django.contrib.messages.middleware import MessageMiddleware
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpRequest, HttpResponse
-from django.test import RequestFactory
+from django.test import Client, RequestFactory
 
 
 def add_middleware_to_request(request: HttpRequest) -> HttpRequest:
@@ -43,7 +42,6 @@ def request_() -> HttpRequest:
 
     request = add_middleware_to_request(request)
     return request
-
 
 
 @pytest.fixture
@@ -137,3 +135,31 @@ def django_db_setup(django_db_setup, django_db_blocker) -> Generator:
         )
         print("Terminate SQL: ", terminate_sql)
         cursor.execute(terminate_sql)
+
+
+@pytest.fixture
+def data() -> dict:
+    """Фикстура для предоставления данных для отправки в запросе.
+
+    Returns:
+        dict: Словарь с данными для отправки в запросе.
+    """
+    vacancy_url = "https://example.com/vacancy/1"
+    vacancy_title = "Test Vacancy"
+    data = {"url": vacancy_url, "title": vacancy_title}
+    return data
+
+
+@pytest.fixture
+def logged_in_client(client: Client, test_user: User) -> Client:
+    """Фикстура для предоставления экземпляра пользователя для тестирования.
+
+    Args:
+        client (Client): Экземпляр клиента для тестирования.
+        test_user (User): Экземпляр пользователя для тестирования.
+
+    Returns:
+        Client: Экземпляр клиента с авторизованным пользователем.
+    """
+    client.force_login(test_user)
+    return client
