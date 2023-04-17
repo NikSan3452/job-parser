@@ -10,7 +10,6 @@ from parser.mixins import (
 )
 from parser.models import FavouriteVacancy, HiddenCompanies, VacancyBlackList
 
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import DatabaseError, IntegrityError
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.template.response import TemplateResponse
@@ -419,43 +418,44 @@ class DeleteVacancyFromFavouritesView(AsyncLoginRequiredMixin, View):
 
 
 class AddVacancyToBlackListView(AsyncLoginRequiredMixin, View):
-    """
-    Класс представления для добавления вакансии в черный список.
-
-    Этот класс наследуется от AsyncLoginRequiredMixin и View.
-    Требует аутентификации пользователя перед использованием.
-    """
-
     async def post(self, request: HttpRequest) -> JsonResponse:
-        """
-        Метод обработки POST-запроса на добавление вакансии в черный список.
-
+        """Метод обработки POST-запроса на добавление вакансии в черный список.
         Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
+
         Внутри метода создается логгер с привязкой к данным запроса.
-        Данные из запроса загружаются в переменную `data`, из которой
-        извлекается URL и название вакансии.
-        Затем пытается получить текущего пользователя и создать объект
-        `VacancyBlackList` с указанными данными пользователя, URL и названием вакансии.
-        Также удаляется объект `FavouriteVacancy` с указанными данными пользователя
-        и URL вакансии.
-        Если все прошло успешно, в лог записывается информация о том, что
-        вакансия была добавлена в черный список.
-        В случае возникновения исключения, оно записывается в лог.
-        В конце метода возвращается JSON-ответ с информацией о том, что
-        вакансия была добавлена в черный список.
+        Данные из запроса десериализуются и загружаются в переменную `data`,
+        из которой извлекается URL и название вакансии.
+        Затем метод пытается создать или получить объект `VacancyBlackList`
+        с указанными данными пользователя, URL и названием вакансии.
+        Если все прошло успешно, в лог записывается информация об успешном добавлении
+        вакансии в черный список. Также удаляется объект `FavouriteVacancy`, если он
+        существует.
+        В случае возникновения исключения DatabaseError или IntegrityError они
+        записываются в лог и будет возвращен соответствующий JsonResponse со статусом 500.
+        В конце метода возвращается JSON-ответ с информацией об успешном добавлении
+        вакансии в черный список.
 
         Args:
-            request (HttpRequest): Объект запроса
+            request (HttpRequest): Объект запроса.
 
         Returns:
-            JsonResponse: JSON-ответ с информацией о том, что
-            вакансия была добавлена в черный список
+            JsonResponse: JSON-ответ с информацией об успешном добавлении
+            вакансии в черный список.
         """
+
         view_logger = logger.bind(request=request.POST)
 
-        data = json.load(request)
+        try:
+            data = json.load(request)
+        except json.JSONDecodeError as exc:
+            view_logger.exception(exc)
+            return JsonResponse({"Ошибка": "Невалидный JSON"}, status=400)
+
         vacancy_url = data.get("url")
         vacancy_title = data.get("title")
+        if not vacancy_url or not vacancy_title:
+            return JsonResponse({"Ошибка": "Отсутствуют обязательные поля"}, status=400)
+
         try:
             await VacancyBlackList.objects.aget_or_create(
                 user=request.user, url=vacancy_url, title=vacancy_title
@@ -464,14 +464,16 @@ class AddVacancyToBlackListView(AsyncLoginRequiredMixin, View):
                 user=request.user, url=vacancy_url
             ).adelete()
             view_logger.info(f"Вакансия {vacancy_url} добавлена в черный список")
-        except Exception as exc:
+        except (DatabaseError, IntegrityError) as exc:
             view_logger.exception(exc)
+            return JsonResponse({"Ошибка": "Произошла ошибка базы данных"}, status=500)
+
         return JsonResponse(
             {"status": f"Вакансия {vacancy_url} добавлена в черный список"}
         )
 
 
-class HideCompanyView(LoginRequiredMixin, View):
+class HideCompanyView(AsyncLoginRequiredMixin, View):
     """
     Класс представления для скрытия всех вакансий выбранной компании.
 
