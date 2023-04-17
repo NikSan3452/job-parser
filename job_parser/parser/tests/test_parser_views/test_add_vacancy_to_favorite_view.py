@@ -3,7 +3,7 @@ from parser.models import FavouriteVacancy
 
 import pytest
 from django.contrib.auth.models import User
-from django.db import IntegrityError
+from django.db import DatabaseError, IntegrityError
 from django.test import Client
 
 
@@ -205,14 +205,14 @@ class TestAddVacancyToFavouritesView:
         # Проверка вызова исключения Exception
         mocker.patch(
             "parser.models.FavouriteVacancy.objects.aget_or_create",
-            side_effect=Exception,
+            side_effect=DatabaseError,
         )
         response = logged_in_client.post(
             "/favourite/",
             data=data,
             content_type="application/json",
         )
-        assert response.status_code == 400
+        assert response.status_code == 500
         assert response.json() == {
-            "Ошибка": "При добавлении вакансии в избранное произошла непредвиденная ошибка"
+            "Ошибка": "Произошла ошибка базы данных"
         }
