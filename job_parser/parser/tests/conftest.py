@@ -108,7 +108,7 @@ def test_user(db: Any) -> User:
 @pytest.fixture(scope="session")
 def django_db_setup(django_db_setup, django_db_blocker) -> Generator:
     """
-    Фиксатор, чистит оставшиеся соединения, которые могут зависать
+    Фикстура, чистит оставшиеся соединения, которые могут зависать
     из потоков или внешних процессов. Расширение pytest_django.django_db_setup
     """
 
