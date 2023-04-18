@@ -65,7 +65,7 @@ function removeVacancyFromBlackList(index, vacancyUrl) {
     );
     console.log(vacancy);
     vacancy.remove();
-    fetch("delete-from-blacklist/", {
+    fetch("/delete-from-blacklist/", {
         method: "POST",
         credentials: "same-origin",
         headers: {
@@ -84,7 +84,7 @@ function removeCompanyFromHiddenList(index, company) {
     );
     console.log(vacancy);
     vacancy.remove();
-    fetch("delete-from-hidden-companies/", {
+    fetch("/delete-from-hidden-companies/", {
         method: "POST",
         credentials: "same-origin",
         headers: {

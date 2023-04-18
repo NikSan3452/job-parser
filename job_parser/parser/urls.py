@@ -17,4 +17,14 @@ urlpatterns = [
         name="add_to_black_list",
     ),
     path("hide-company/", views.HideCompanyView.as_view(), name="hide_company"),
+    path(
+        "delete-from-blacklist/",
+        views.DeleteFromBlacklistView.as_view(),
+        name="delete_from_blacklist",
+    ),
+    path(
+        "delete-from-hidden-companies/",
+        views.DeleteFromHiddenCompaniesView.as_view(),
+        name="delete_from_hidden_companies",
+    ),
 ]
