@@ -1,10 +1,13 @@
 import json
-from django.contrib import messages, auth
+from parser.models import FavouriteVacancy, HiddenCompanies, VacancyBlackList
+
+from django.contrib import auth, messages
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.shortcuts import redirect, render
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseRedirect, JsonResponse
+from django.shortcuts import redirect
+from django.views.generic import FormView
 from logger import logger, setup_logging
-from parser.models import FavouriteVacancy, VacancyBlackList, HiddenCompanies
 
 from .forms import ProfileForm
 from .models import Profile, User
@@ -13,56 +16,100 @@ from .models import Profile, User
 setup_logging()
 
 
-@login_required
-def profile(request, username):
-    try:
-        user = User.objects.get(username=username)
+class ProfileView(LoginRequiredMixin, FormView):
+    """
+    Класс представления для профиля пользователя.
+
+    Этот класс наследуется от LoginRequiredMixin и FormView.
+    Требует аутентификации пользователя перед использованием.
+    Использует форму ProfileForm и шаблон 'profiles/profile.html'.
+    """
+
+    form_class = ProfileForm
+    template_name = "profiles/profile.html"
+
+    def get_initial(self) -> dict[str, str]:
+        """
+        Метод для получения начальных данных формы.
+
+        Этот метод вызывается при создании формы и возвращает словарь с
+        начальными данными.
+        Начальные данные включают информацию о городе, работе и подписке
+        из профиля пользователя.
+
+        Returns:
+            dict[str, str]: Словарь с начальными данными формы.
+        """
+        initial = super().get_initial()
+        user = User.objects.get(username=self.kwargs["username"])
         profile = Profile.objects.get(user=user)
-    except Exception as exc:
-        logger.exception(exc)
+        initial.update(
+            {
+                "city": profile.city,
+                "job": profile.job,
+                "subscribe": profile.subscribe,
+            }
+        )
+        return initial
 
-    if request.method == "POST":
-        form = ProfileForm(request.POST)
+    def get_context_data(self, **kwargs: str) -> dict[str, str]:
+        """
+        Метод для получения контекста данных для шаблона.
 
-        if form.is_valid():
-            profile.city = form.cleaned_data["city"].lower()
-            profile.job = form.cleaned_data["job"].lower()
-            profile.subscribe = form.cleaned_data["subscribe"]
-            profile.save()
-            logger.debug("Данные профиля сохранены")
+        Этот метод вызывается при отображении шаблона и возвращает словарь
+        с данными контекста.
+        Данные контекста включают информацию о пользователе, избранных вакансиях,
+        черном списке вакансий и скрытых компаниях.
 
-            if profile.subscribe:
-                messages.success(request, "Вы подписались на рассылку вакансий")
-            else:
-                messages.error(request, "Вы отписались от рассылки")
-            return redirect("profiles:profile", username=username)
-    else:
-        try:
-            favourite_vacancy = FavouriteVacancy.objects.filter(user=user).all()
-            black_list = VacancyBlackList.objects.filter(user=user).all()
-            hidden_companies = HiddenCompanies.objects.filter(user=user).all()
-        except Exception as exc:
-            logger.exception(exc)
+        Args:
+            **kwargs: Дополнительные аргументы.
 
-        default_data = {
-            "city": profile.city,
-            "job": profile.job,
-            "subscribe": profile.subscribe,
-        }
+        Returns:
+            dict[str, str]: Словарь с данными контекста.
+        """
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context.update(
+            {
+                "user": user,
+                "favourite_vacancy": FavouriteVacancy.objects.filter(user=user).all(),
+                "black_list": VacancyBlackList.objects.filter(user=user).all(),
+                "hidden_companies": HiddenCompanies.objects.filter(user=user).all(),
+            }
+        )
+        return context
 
-        form = ProfileForm(initial=default_data)
+    def form_valid(self, form: ProfileForm) -> HttpResponseRedirect:
+        """
+        Метод обработки действительной формы.
 
-    return render(
-        request,
-        "profiles/profile.html",
-        {
-            "form": form,
-            "user": user,
-            "favourite_vacancy": favourite_vacancy,
-            "black_list": black_list,
-            "hidden_companies": hidden_companies,
-        },
-    )
+        Этот метод вызывается при отправке действительной формы и
+        обрабатывает данные формы.
+        Данные формы включают информацию о городе, работе и подписке.
+        Эти данные сохраняются в профиле пользователя.
+        Затем отображается сообщение об успехе или ошибке в зависимости от
+        статуса подписки.
+        В конце метода происходит перенаправление на страницу профиля пользователя.
+
+        Args:
+            form (ProfileForm): Объект формы с данными.
+
+        Returns:
+            HttpResponseRedirect: Объект перенаправления на страницу профиля
+            пользователя.
+        """
+        profile = Profile.objects.get(user=self.request.user)
+        profile.city = form.cleaned_data["city"].lower()
+        profile.job = form.cleaned_data["job"].lower()
+        profile.subscribe = form.cleaned_data["subscribe"]
+        profile.save()
+        logger.debug("Данные профиля сохранены")
+
+        if profile.subscribe:
+            messages.success(self.request, "Вы подписались на рассылку вакансий")
+        else:
+            messages.error(self.request, "Вы отписались от рассылки")
+        return redirect("profiles:profile", username=self.request.user.username)
 
 
 @login_required

@@ -4,7 +4,7 @@ from profiles import views
 app_name = "profiles"
 
 urlpatterns = [
-    path("profile/<str:username>/", views.profile, name="profile"),
+    path("profile/<str:username>/", views.ProfileView.as_view(), name="profile"),
     path(
         "profile/<str:username>/delete-from-blacklist/",
         views.delete_from_blacklist_view,
