@@ -1,11 +1,13 @@
 import json
+from parser.mixins import AsyncLoginRequiredMixin
 from parser.models import FavouriteVacancy, HiddenCompanies, VacancyBlackList
 
-from django.contrib import auth, messages
-from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseRedirect, JsonResponse
+from django.db import DatabaseError, IntegrityError
+from django.http import HttpRequest, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
+from django.views import View
 from django.views.generic import FormView
 from logger import logger, setup_logging
 
@@ -112,51 +114,123 @@ class ProfileView(LoginRequiredMixin, FormView):
         return redirect("profiles:profile", username=self.request.user.username)
 
 
-@login_required
-def delete_from_blacklist_view(request, username):
-    """Удаляет вакансию из черного списка.
-
-    Args:
-        request (_type_): Запрос.
-
-    Returns:
-        _type_: JsonResponse.
+class DeleteFromBlacklistView(AsyncLoginRequiredMixin, View):
     """
-    view_logger = logger.bind(request=request.POST)
-    if request.method == "POST":
+    Класс представления для удаления вакансии из черного списка.
 
-        data = json.load(request)
-        vacancy_url = data.get("url")
+    Этот класс наследуется от AsyncLoginRequiredMixin и View.
+    Требует аутентификации пользователя перед использованием.
+    """
 
+    async def post(self, request: HttpRequest, username: User) -> JsonResponse:
+        """
+        Метод обработки POST-запроса на удаление вакансии из черного списка.
+
+        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
+        Внутри метода создается логгер с привязкой к данным запроса.
+        Данные из запроса десериализуются в блоке try/except и в случае успеха
+        загружаются в переменную `data`, из которой извлекается URL вакансии.
+        В противном случае будет вызвано исключение JSONDecodeError с последующей
+        отправкой соответствующего ответа JsonResponse со статусом 400.
+        Если URL вакансии отсутствует, будет возвращен соответствующий JsonResponse
+        со статусом 400.
+        Затем метод пытается удалить объект `VacancyBlackList`
+        с указанными данными пользователя и URL вакансии.
+        Если все прошло успешно, в лог записывается информация о том,
+        что вакансия была удалена из черного списка.
+        В случае возникновения исключений DatabaseError или IntegrityError они
+        записываются в лог и будет возвращен соответствующий JsonResponse со статусом 500.
+        В конце метода возвращается JSON-ответ с информацией о том,
+        что вакансия была удалена из черного списка.
+
+        Args:
+            request (HttpRequest): Объект запроса.
+            username (User): Пользователь.
+
+        Returns:
+            JsonResponse: JSON-ответ с информацией о том,
+            что вакансия была удалена из черного списка.
+        """
+        view_logger = logger.bind(request=request.POST)
         try:
-            user = auth.get_user(request)
-            VacancyBlackList.objects.filter(user=user, url=vacancy_url).delete()
+            data = json.load(request)
+            vacancy_url = data.get("url")
+            if not vacancy_url:
+                return JsonResponse(
+                    {"Ошибка": "Отсутствует обязательное поле 'url'"}, status=400
+                )
+
+            await VacancyBlackList.objects.filter(
+                user=request.user, url=vacancy_url
+            ).adelete()
             view_logger.info(f"Вакансия {vacancy_url} удалена из черного списка")
-        except Exception as exc:
+        except json.JSONDecodeError as exc:
             view_logger.exception(exc)
-    return JsonResponse({"status": f"Вакансия {vacancy_url} удалена из черного списка"})
+            return JsonResponse({"Ошибка": "Невалидный JSON"}, status=400)
+        except (DatabaseError, IntegrityError) as exc:
+            view_logger.exception(exc)
+            return JsonResponse({"Ошибка": "Произошла ошибка базы данных"}, status=500)
+
+        return JsonResponse(
+            {"status": f"Вакансия {vacancy_url} удалена из черного списка"}
+        )
 
 
-@login_required
-def delete_from_hidden_companies_view(request, username):
-    """Удаляет компанию из списка скрытых.
-
-    Args:
-        request (_type_): Запрос.
-
-    Returns:
-        _type_: JsonResponse.
+class DeleteFromHiddenCompaniesView(AsyncLoginRequiredMixin, View):
     """
-    view_logger = logger.bind(request=request.POST)
-    if request.method == "POST":
+    Класс представления для удаления компании из списка скрытых.
 
-        data = json.load(request)
-        company = data.get("name")
+    Этот класс наследуется от AsyncLoginRequiredMixin и View.
+    Требует аутентификации пользователя перед использованием.
+    """
 
+    async def post(self, request: HttpRequest, username: User) -> JsonResponse:
+        """
+        Метод обработки POST-запроса на удаление компании из списка скрытых.
+
+        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
+        Внутри метода создается логгер с привязкой к данным запроса.
+        Данные из запроса десериализуются в блоке try/except и в случае успеха
+        загружаются в переменную `data`, из которой извлекается URL вакансии.
+        В противном случае будет вызвано исключение JSONDecodeError с последующей
+        отправкой соответствующего ответа JsonResponse со статусом 400.
+        Если URL вакансии отсутствует, будет возвращен соответствующий JsonResponse
+        со статусом 400.
+        Затем метод пытается удалить объект `HiddenCompanies`
+        с указанными данными пользователя и названием компании.
+        Если все прошло успешно, в лог записывается информация о том,
+        что компания была удалена из списка скрытых.
+        В случае возникновения исключений DatabaseError или IntegrityError они
+        записываются в лог и будет возвращен соответствующий JsonResponse со статусом 500.
+        В конце метода возвращается JSON-ответ с информацией о том,
+        что компания была удалена из списка скрытых.
+
+        Args:
+            request (HttpRequest): Объект запроса.
+            username (User): Пользователь.
+
+        Returns:
+            JsonResponse: JSON-ответ с информацией о том,
+            что компания была удалена из списка скрытых.
+        """
+        view_logger = logger.bind(request=request.POST)
         try:
-            user = auth.get_user(request)
-            HiddenCompanies.objects.filter(user=user, name=company).delete()
+            data = json.load(request)
+            company = data.get("name")
+            if not company:
+                return JsonResponse(
+                    {"Ошибка": "Отсутствует обязательное поле 'name'"}, status=400
+                )
+
+            await HiddenCompanies.objects.filter(
+                user=request.user, name=company
+            ).adelete()
             view_logger.info(f"Компания {company} удалена из списка скрытых")
-        except Exception as exc:
+        except json.JSONDecodeError as exc:
             view_logger.exception(exc)
-    return JsonResponse({"status": f"Компания {company} удалена из списка скрытых"})
+            return JsonResponse({"Ошибка": "Невалидный JSON"}, status=400)
+        except (DatabaseError, IntegrityError) as exc:
+            view_logger.exception(exc)
+            return JsonResponse({"Ошибка": "Произошла ошибка базы данных"}, status=500)
+
+        return JsonResponse({"status": f"Компания {company} удалена из списка скрытых"})
