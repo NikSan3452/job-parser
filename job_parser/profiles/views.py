@@ -2,6 +2,7 @@ from parser.models import FavouriteVacancy, HiddenCompanies, VacancyBlackList
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.views.generic import FormView
@@ -31,23 +32,35 @@ class ProfileView(LoginRequiredMixin, FormView):
         Метод для получения начальных данных формы.
 
         Этот метод вызывается при создании формы и возвращает словарь с
-        начальными данными.
+        начальными данными. В блоке try/except метод пытается получить пользователя,
+        а также его профиль. В случае успеха инициирует форму начальными данными.
+        Если пользователь или профиль не существуют вызовет исключение
+        ObjectDoesNotExist с соответствующей записью в лог.
+        Иначе вызовет общее исключение Exception, с записью в лог.
         Начальные данные включают информацию о городе, работе и подписке
-        из профиля пользователя.
+        из профиля пользователя. При попытке пользователя просмотреть профиль
+        другого пользователя вызовет ошибку PermissionDenied.
 
         Returns:
             dict[str, str]: Словарь с начальными данными формы.
         """
         initial = super().get_initial()
-        user = User.objects.get(username=self.kwargs["username"])
-        profile = Profile.objects.get(user=user)
-        initial.update(
-            {
-                "city": profile.city,
-                "job": profile.job,
-                "subscribe": profile.subscribe,
-            }
-        )
+        if self.request.user.username != self.kwargs["username"]:
+            raise PermissionDenied
+        try:
+            user = User.objects.get(username=self.kwargs["username"])
+            profile = Profile.objects.get(user=user)
+            initial.update(
+                {
+                    "city": profile.city,
+                    "job": profile.job,
+                    "subscribe": profile.subscribe,
+                }
+            )
+        except ObjectDoesNotExist as exc:
+            logger.exception(f"Ошибка: {exc} Пользователь или профиль не существует")
+        except Exception as exc:
+            logger.exception(f"Ошибка: {exc}")
         return initial
 
     def get_context_data(self, **kwargs: str) -> dict[str, str]:
