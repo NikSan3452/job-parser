@@ -1,13 +1,9 @@
-import json
-from parser.mixins import AsyncLoginRequiredMixin
 from parser.models import FavouriteVacancy, HiddenCompanies, VacancyBlackList
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import DatabaseError, IntegrityError
-from django.http import HttpRequest, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
-from django.views import View
 from django.views.generic import FormView
 from logger import logger, setup_logging
 
