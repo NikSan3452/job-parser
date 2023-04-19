@@ -14,7 +14,7 @@ def company_data() -> dict:
     Returns:
         dict: Словарь с данными для отправки в запросе.
     """
-    vacancy_company = "Test Vacancy"
+    vacancy_company = "Test company"
     data = {"company": vacancy_company}
     return data
 
