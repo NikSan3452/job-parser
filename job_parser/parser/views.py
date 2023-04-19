@@ -543,7 +543,7 @@ class HideCompanyView(AsyncLoginRequiredMixin, View):
         return JsonResponse({"status": f"Компания {company} скрыта"})
 
 
-class DeleteFromBlacklistView(AsyncLoginRequiredMixin, View):
+class DeleteVacancyFromBlacklistView(AsyncLoginRequiredMixin, View):
     """
     Класс представления для удаления вакансии из черного списка.
 

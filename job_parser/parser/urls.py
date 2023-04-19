@@ -19,7 +19,7 @@ urlpatterns = [
     path("hide-company/", views.HideCompanyView.as_view(), name="hide_company"),
     path(
         "delete-from-blacklist/",
-        views.DeleteFromBlacklistView.as_view(),
+        views.DeleteVacancyFromBlacklistView.as_view(),
         name="delete_from_blacklist",
     ),
     path(
