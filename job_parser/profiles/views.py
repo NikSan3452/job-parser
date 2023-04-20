@@ -59,6 +59,7 @@ class ProfileView(LoginRequiredMixin, FormView):
             )
         except ObjectDoesNotExist as exc:
             logger.exception(f"Ошибка: {exc} Пользователь или профиль не существует")
+            raise ObjectDoesNotExist()
         except Exception as exc:
             logger.exception(f"Ошибка: {exc}")
         return initial
@@ -68,7 +69,10 @@ class ProfileView(LoginRequiredMixin, FormView):
         Метод для получения контекста данных для шаблона.
 
         Этот метод вызывается при отображении шаблона и возвращает словарь
-        с данными контекста.
+        с данными контекста. В блоке try/except пытается получить вакансии из избранного,
+        вакансии из черного списка и скрытые компании. В случае успеха данные передаются
+        в контекст, а иначе вызывается исключение ObjectDoesNotExist, либо Exception
+        с соответствующей записью в лог.
         Данные контекста включают информацию о пользователе, избранных вакансиях,
         черном списке вакансий и скрытых компаниях.
 
@@ -80,12 +84,25 @@ class ProfileView(LoginRequiredMixin, FormView):
         """
         context = super().get_context_data(**kwargs)
         user = self.request.user
+
+        favourite_vacancy = None
+        black_list = None
+        hidden_companies = None
+        try:
+            favourite_vacancy = FavouriteVacancy.objects.filter(user=user).all()
+            black_list = VacancyBlackList.objects.filter(user=user).all()
+            hidden_companies = HiddenCompanies.objects.filter(user=user).all()
+        except ObjectDoesNotExist as exc:
+            logger.exception(f"Ошибка: {exc} объект не существует")
+            raise ObjectDoesNotExist()
+        except Exception as exc:
+            logger.exception(f"Ошибка: {exc}")
         context.update(
             {
                 "user": user,
-                "favourite_vacancy": FavouriteVacancy.objects.filter(user=user).all(),
-                "black_list": VacancyBlackList.objects.filter(user=user).all(),
-                "hidden_companies": HiddenCompanies.objects.filter(user=user).all(),
+                "favourite_vacancy": favourite_vacancy,
+                "black_list": black_list,
+                "hidden_companies": hidden_companies,
             }
         )
         return context
@@ -95,7 +112,10 @@ class ProfileView(LoginRequiredMixin, FormView):
         Метод обработки действительной формы.
 
         Этот метод вызывается при отправке действительной формы и
-        обрабатывает данные формы.
+        обрабатывает данные формы. В блоке try/except пытается получить
+        профиль текущего пользователя и в случае успеха получает данные формы.
+        Иначе вызовет исключение ObjectDoesNotExist, либо Exception с соответствующей
+        записью в лог.
         Данные формы включают информацию о городе, работе и подписке.
         Эти данные сохраняются в профиле пользователя.
         Затем отображается сообщение об успехе или ошибке в зависимости от
@@ -109,7 +129,14 @@ class ProfileView(LoginRequiredMixin, FormView):
             HttpResponseRedirect: Объект перенаправления на страницу профиля
             пользователя.
         """
-        profile = Profile.objects.get(user=self.request.user)
+        try:
+            profile = Profile.objects.get(user=self.request.user)
+        except ObjectDoesNotExist as exc:
+            logger.exception(f"Ошибка: {exc} объект не существует")
+            raise ObjectDoesNotExist()
+        except Exception as exc:
+            logger.exception(f"Ошибка: {exc}")
+
         profile.city = form.cleaned_data["city"].lower()
         profile.job = form.cleaned_data["job"].lower()
         profile.subscribe = form.cleaned_data["subscribe"]
