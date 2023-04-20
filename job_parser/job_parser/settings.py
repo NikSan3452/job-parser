@@ -202,9 +202,11 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 LOGGING_CONFIG = None
 
+settings_dir = os.path.dirname(os.path.abspath(__file__))
+job_parser_dir = os.path.join(settings_dir, "..")
 
 HUEY = {
     "huey_class": "huey.SqliteHuey",
-    "filename": "./huey.db",
+    "filename": os.path.join(job_parser_dir, "huey.db"),
     "immediate": False,
 }
