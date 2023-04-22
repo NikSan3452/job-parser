@@ -4,7 +4,7 @@ import pytest
 from django.contrib.auth.models import User
 from django.forms import ValidationError
 
-TEST_COMPANY_NAME = "Тестовая компания"
+TEST_COMPANY_NAME = "Test company"
 
 
 @pytest.mark.django_db(transaction=True)
