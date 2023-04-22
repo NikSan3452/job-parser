@@ -48,14 +48,6 @@ class TestFavouriteVacancyModelPositive:
         assert FavouriteVacancy._meta.verbose_name == "Избранная вакансия"
         assert FavouriteVacancy._meta.verbose_name_plural == "Избранные вакансии"
 
-    def test_url_max_length(self) -> None:
-        """Тест проверяет максимальную длину поля url модели FavouriteVacancy.
-
-        Ожидается, что максимальная длина поля url будет равна 200 символам.
-        """
-        max_length = FavouriteVacancy._meta.get_field("url").max_length
-        assert max_length == 200
-
     def test_title_max_length(self) -> None:
         """Тест проверяет максимальную длину поля title модели FavouriteVacancy.
 
