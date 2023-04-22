@@ -3,6 +3,17 @@ from parser.models import VacancyScraper
 import pytest
 from django.forms import ValidationError
 
+TEST_URL = "https://example.com/vacancy/1"
+TEST_TITLE = "Test title"
+TEST_JOB_BOARD = "JobBoard"
+JOB_DESCRIPTION = "JobDescription"
+JOB_CITY = "JobCity"
+JOB_SALARY = "JobSalary"
+JOB_COMPANY = "JobCompany"
+JOB_EXPERIENCE = "JobExperience"
+JOB_TYPE_OF_WORK = "JobTypeOfWork"
+PUBLISHED_AT = "2023-01-01"
+
 
 @pytest.mark.django_db(transaction=True)
 class TestVacancyScraperModelPositive:
@@ -26,30 +37,30 @@ class TestVacancyScraperModelPositive:
         создании объекта.
         """
         vacancy = VacancyScraper.objects.create(
-            job_board="JobBoard",
-            url="https://www.example.com/vacancy=12345",
-            title="JobTitle",
-            description="JobDescription",
-            city="JobCity",
-            salary="JobSalary",
-            company="JobCompany",
-            experience="JobExperience",
-            type_of_work="JobTypeOfWork",
+            job_board=TEST_JOB_BOARD,
+            url=TEST_URL,
+            title=TEST_TITLE,
+            description=JOB_DESCRIPTION,
+            city=JOB_CITY,
+            salary=JOB_SALARY,
+            company=JOB_COMPANY,
+            experience=JOB_EXPERIENCE,
+            type_of_work=JOB_TYPE_OF_WORK,
             remote=True,
-            published_at="2023-01-01",
+            published_at=PUBLISHED_AT,
         )
-        assert vacancy.job_board == "JobBoard"
-        assert vacancy.url == "https://www.example.com/vacancy=12345"
-        assert vacancy.title == "JobTitle"
-        assert vacancy.description == "JobDescription"
-        assert vacancy.city == "JobCity"
-        assert vacancy.salary == "JobSalary"
-        assert vacancy.company == "JobCompany"
-        assert vacancy.experience == "JobExperience"
-        assert vacancy.type_of_work == "JobTypeOfWork"
+        assert vacancy.job_board == TEST_JOB_BOARD
+        assert vacancy.url == TEST_URL
+        assert vacancy.title == TEST_TITLE
+        assert vacancy.description == JOB_DESCRIPTION
+        assert vacancy.city == JOB_CITY
+        assert vacancy.salary == JOB_SALARY
+        assert vacancy.company == JOB_COMPANY
+        assert vacancy.experience == JOB_EXPERIENCE
+        assert vacancy.type_of_work == JOB_TYPE_OF_WORK
         assert vacancy.remote is True
-        assert str(vacancy.published_at) == "2023-01-01"
-        assert str(vacancy) == "JobTitle"
+        assert str(vacancy.published_at) == PUBLISHED_AT
+        assert str(vacancy) == TEST_TITLE
 
     def test_vacancyscraper_model_meta(self) -> None:
         """Тест проверяет verbose_name и verbose_name_plural модели VacancyScraper.
@@ -306,7 +317,7 @@ class TestVacancyScraperModelNegative:
         значения поля job_board будет вызвано исключение ValidationError.
         """
         with pytest.raises(ValidationError):
-            vacancy = VacancyScraper(url="https://www.example.com/vacancy=12345")
+            vacancy = VacancyScraper(url=TEST_URL)
             vacancy.full_clean()
 
     def test_create_vacancyscraper_without_url(self) -> None:
@@ -317,7 +328,7 @@ class TestVacancyScraperModelNegative:
         значения поля url будет вызвано исключение ValidationError.
         """
         with pytest.raises(ValidationError):
-            vacancy = VacancyScraper(job_board="JobBoard")
+            vacancy = VacancyScraper(job_board=TEST_JOB_BOARD)
             vacancy.full_clean()
 
     def test_create_vacancyscraper_with_too_long_job_board(self) -> None:
@@ -329,9 +340,7 @@ class TestVacancyScraperModelNegative:
         исключение ValidationError.
         """
         with pytest.raises(ValidationError):
-            vacancy = VacancyScraper(
-                job_board="a" * 256, url="https://www.example.com/vacancy=12345"
-            )
+            vacancy = VacancyScraper(job_board="a" * 256, url=TEST_URL)
             vacancy.full_clean()
 
     def test_create_vacancyscraper_with_too_long_title(self) -> None:
@@ -344,8 +353,8 @@ class TestVacancyScraperModelNegative:
         """
         with pytest.raises(ValidationError):
             vacancy = VacancyScraper(
-                job_board="JobBoard",
-                url="https://www.example.com/vacancy=12345",
+                job_board=TEST_JOB_BOARD,
+                url=TEST_URL,
                 title="a" * 256,
             )
             vacancy.full_clean()
@@ -360,8 +369,8 @@ class TestVacancyScraperModelNegative:
         """
         with pytest.raises(ValidationError):
             vacancy = VacancyScraper(
-                job_board="JobBoard",
-                url="https://www.example.com/vacancy=12345",
+                job_board=TEST_JOB_BOARD,
+                url=TEST_URL,
                 city="a" * 256,
             )
             vacancy.full_clean()
@@ -376,8 +385,8 @@ class TestVacancyScraperModelNegative:
         """
         with pytest.raises(ValidationError):
             vacancy = VacancyScraper(
-                job_board="JobBoard",
-                url="https://www.example.com/vacancy=12345",
+                job_board=TEST_JOB_BOARD,
+                url=TEST_URL,
                 salary="a" * 256,
             )
             vacancy.full_clean()
@@ -392,8 +401,8 @@ class TestVacancyScraperModelNegative:
         """
         with pytest.raises(ValidationError):
             vacancy = VacancyScraper(
-                job_board="JobBoard",
-                url="https://www.example.com/vacancy=12345",
+                job_board=TEST_JOB_BOARD,
+                url=TEST_URL,
                 company="a" * 256,
             )
             vacancy.full_clean()
@@ -408,8 +417,8 @@ class TestVacancyScraperModelNegative:
         """
         with pytest.raises(ValidationError):
             vacancy = VacancyScraper(
-                job_board="JobBoard",
-                url="https://www.example.com/vacancy=12345",
+                job_board=TEST_JOB_BOARD,
+                url=TEST_URL,
                 experience="a" * 101,
             )
             vacancy.full_clean()
@@ -424,8 +433,8 @@ class TestVacancyScraperModelNegative:
         """
         with pytest.raises(ValidationError):
             vacancy = VacancyScraper(
-                job_board="JobBoard",
-                url="https://www.example.com/vacancy=12345",
+                job_board=TEST_JOB_BOARD,
+                url=TEST_URL,
                 type_of_work="a" * 256,
             )
             vacancy.full_clean()
@@ -439,8 +448,8 @@ class TestVacancyScraperModelNegative:
         """
         with pytest.raises(ValidationError):
             vacancy = VacancyScraper(
-                job_board="JobBoard",
-                url="https://www.example.com/vacancy=12345",
+                job_board=TEST_JOB_BOARD,
+                url=TEST_URL,
                 remote="invalid",
             )
             vacancy.full_clean()
