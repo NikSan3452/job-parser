@@ -96,6 +96,7 @@ class TestVacancyBlackListModelPositive:
         verbose_name = VacancyBlackList._meta.get_field("user").verbose_name
         assert verbose_name == "Пользователь"
 
+
 @pytest.mark.django_db(transaction=True)
 class TestVacancyBlackListModelNegative:
     """Класс описывает негативные тестовые случаи для модели VacancyBlackList.
