@@ -14,7 +14,7 @@ class TestProfileModelPositive:
     и изоляции тестов.
     Этот класс содержит тесты для проверки различных позитивных сценариев при создании
     объектов модели ProfileModel:
-    возможность создания объекта модели, проверка возможности оставить поле пустым, 
+    возможность создания объекта модели, проверка возможности оставить поле пустым,
     проверка значений по умолчанию, проверка метода str, проверка поведения
     полей при удалении связанного объекта, проверка возможности создания объектов
     без указания значения поля
@@ -89,22 +89,6 @@ class TestProfileModelPositive:
 
         assert profile.subscribe is False
 
-    def test_profile_user_on_delete(self, fix_user: User) -> None:
-        """Тест проверяет поведение поля user модели Profile при удалении связанного
-        объекта User.
-
-        Создается объект модели Profile с указанным пользователем.
-        Удаляется связанный объект User.
-        Ожидается, что объект модели Profile также будет удален.
-
-        Args:
-            fix_user (User): Фикстура возвращающая экземпляр тестового пользователя.
-        """
-        profile = Profile.objects.create(user=fix_user)
-        fix_user.delete()
-        with pytest.raises(Profile.DoesNotExist):
-            profile.refresh_from_db()
-
     def test_profile_str(self, fix_user: User) -> None:
         """Тест проверяет метод __str__ модели Profile.
 
@@ -159,3 +143,19 @@ class TestProfileModelNegative:
         with pytest.raises(DataError):
             profile = Profile.objects.create(user=fix_user, job="x" * 256)
             profile.full_clean()
+
+    def test_profile_user_on_delete(self, fix_user: User) -> None:
+        """Тест проверяет поведение поля user модели Profile при удалении связанного
+        объекта User.
+
+        Создается объект модели Profile с указанным пользователем.
+        Удаляется связанный объект User.
+        Ожидается, что объект модели Profile также будет удален.
+
+        Args:
+            fix_user (User): Фикстура возвращающая экземпляр тестового пользователя.
+        """
+        profile = Profile.objects.create(user=fix_user)
+        fix_user.delete()
+        with pytest.raises(Profile.DoesNotExist):
+            profile.refresh_from_db()
