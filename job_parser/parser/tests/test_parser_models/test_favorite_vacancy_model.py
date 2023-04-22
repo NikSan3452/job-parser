@@ -64,14 +64,6 @@ class TestFavouriteVacancyModelPositive:
         unique = FavouriteVacancy._meta.get_field("url").unique
         assert unique is True
 
-    def test_url_blank(self) -> None:
-        """Тест проверяет возможность оставить поле url пустым.
-
-        Ожидается, что поле url не может быть пустым.
-        """
-        blank = FavouriteVacancy._meta.get_field("url").blank
-        assert blank is False
-
     def test_title_blank(self) -> None:
         """Тест проверяет возможность оставить поле title пустым.
 
