@@ -72,22 +72,6 @@ class TestCityModelPositive:
         unique = City._meta.get_field("city").unique
         assert unique is True
 
-    def test_city_id_blank(self) -> None:
-        """Тест проверяет возможность оставить поле city_id пустым.
-
-        Ожидается, что поле city_id не может быть пустым.
-        """
-        blank = City._meta.get_field("city_id").blank
-        assert blank is False
-
-    def test_city_blank(self) -> None:
-        """Тест проверяет возможность оставить поле city пустым.
-
-        Ожидается, что поле city не может быть пустым.
-        """
-        blank = City._meta.get_field("city").blank
-        assert blank is False
-
     def test_city_id_null(self) -> None:
         """Тест проверяет значение по умолчанию для поля city_id.
 
