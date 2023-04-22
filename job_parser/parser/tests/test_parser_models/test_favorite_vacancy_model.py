@@ -104,6 +104,30 @@ class TestFavouriteVacancyModelPositive:
         null = FavouriteVacancy._meta.get_field("title").null
         assert null is False
 
+    def test_url_verbose_name(self) -> None:
+        """Тест проверяет verbose_name поля url модели FavouriteVacancy.
+
+        Ожидается, что verbose_name поля url будет равен "url".
+        """
+        verbose_name = FavouriteVacancy._meta.get_field("url").verbose_name
+        assert verbose_name == "url"
+
+    def test_title_verbose_name(self) -> None:
+        """Тест проверяет verbose_name поля title модели FavouriteVacancy.
+
+        Ожидается, что verbose_name поля title будет равен "Вакансия".
+        """
+        verbose_name = FavouriteVacancy._meta.get_field("title").verbose_name
+        assert verbose_name == "Вакансия"
+
+    def test_user_verbose_name(self) -> None:
+        """Тест проверяет verbose_name поля user модели FavouriteVacancy.
+
+        Ожидается, что verbose_name поля user будет равен "Пользователь".
+        """
+        verbose_name = FavouriteVacancy._meta.get_field("user").verbose_name
+        assert verbose_name == "Пользователь"
+
 
 @pytest.mark.django_db(transaction=True)
 class TestFavouriteVacancyModelNegative:
