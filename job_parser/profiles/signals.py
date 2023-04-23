@@ -1,9 +1,9 @@
 from allauth.account.signals import user_signed_up
 from django.contrib.auth.models import User
 from django.dispatch import receiver
-from .models import Profile
+from logger import logger, setup_logging
 
-from logger import setup_logging, logger
+from .models import Profile
 
 # Логирование
 setup_logging()
@@ -11,14 +11,24 @@ setup_logging()
 
 @receiver(user_signed_up, sender=User)
 def create_profile(sender: User, **kwargs) -> Profile:
-    """Создает профиль после регистрации пользователя.
+    """
+    Функция-обработчик сигнала `user_signed_up`.
+
+    Эта функция вызывается после регистрации пользователя и используется для создания 
+    профиля пользователя.
+    Она принимает отправителя сигнала `sender` и дополнительные аргументы `kwargs`.
+    Внутри функции извлекается пользователь из аргументов и пытается создать профиль 
+    пользователя с помощью метода `get_or_create` модели `Profile`.
+    Если профиль был успешно создан, в лог записывается информация об этом.
+    В случае возникновения исключения оно записывается в лог.
+    В конце функции возвращается созданный профиль.
 
     Args:
-        sender (User): Модель, которая посылает сигнал,
-        о создании нового пользователя.
+        sender (User): Отправитель сигнала.
+        kwargs (dict): Дополнительные аргументы.
 
     Returns:
-        Profile: Профиль пользователя.
+        Profile: Созданный профиль пользователя.
     """
     user = kwargs["user"]
     try:
