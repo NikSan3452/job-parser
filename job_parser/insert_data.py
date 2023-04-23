@@ -13,7 +13,18 @@ django.setup()
 from parser.models import City
 
 
-def insert_data():
+def insert_data() -> None:
+    """
+    Функция для вставки данных о городах из файла `city.json` в базу данных.
+
+    Эта функция считывает данные из файла `city.json`, удаляет дубликаты и создает 
+    список объектов `City` с данными о городах.
+    Затем эти объекты добавляются в базу данных с помощью метода `bulk_create`.
+    В конце функции выводится сообщение об успешном добавлении данных в базу данных.
+
+    Returns:
+        None
+    """
     with open("city.json") as f:
         data = json.loads(f.read())
         seen = set()
