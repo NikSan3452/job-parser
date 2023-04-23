@@ -4,6 +4,15 @@ import pytest
 
 
 class TestSearchingForm:
+    """
+    Класс тестов для формы поиска.
+
+    Этот класс содержит тесты для формы поиска. Он содержит пять тестовых случаев,
+    каждый из которых представляет собой кортеж с параметрами для формы поиска.
+    Эти параметры включают в себя `job`, `city`, `date_from`, `date_to`,
+    `experience`, `title_search`, `remote`, `job_board` и `validity`.
+    """
+
     case_1 = (
         "Python",
         "Москва",
@@ -56,6 +65,15 @@ class TestSearchingForm:
         job_board: str | None,
         validity: bool | None,
     ) -> None:
+        """
+        Тест проверяет валидность формы поиска.
+
+        Этот метод использует декоратор `pytest.mark.parametrize` для запуска тестов
+        с различными параметрами. В этом методе создается экземпляр класса
+        `SearchingForm` с данными из параметров теста. Затем проверяется,
+        является ли форма действительной с помощью метода `is_valid()`.
+        Результат этой проверки сравнивается с ожидаемым значением `validity`.
+        """
         form = SearchingForm(
             data={
                 "job": job,
@@ -69,5 +87,4 @@ class TestSearchingForm:
             }
         )
 
-        assert form.is_valid() is validity
         assert form.is_valid() is validity
