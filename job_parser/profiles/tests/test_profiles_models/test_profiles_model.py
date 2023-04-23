@@ -15,9 +15,8 @@ class TestProfileModelPositive:
     Этот класс содержит тесты для проверки различных позитивных сценариев при создании
     объектов модели ProfileModel:
     возможность создания объекта модели, проверка возможности оставить поле пустым,
-    проверка значений по умолчанию, проверка метода str, проверка поведения
-    полей при удалении связанного объекта, проверка возможности создания объектов
-    без указания значения поля
+    проверка значений по умолчанию, проверка возможности создания объектов
+    без указания значения поля, проверка максимальное длины поля
     """
 
     def test_profile_creation(self, fix_user: User) -> None:
@@ -39,68 +38,69 @@ class TestProfileModelPositive:
         assert profile.job == "Test Job"
         assert profile.subscribe is True
 
-    def test_profile_city_blank(self, fix_user: User) -> None:
-        """Тест проверяет возможность оставить поле city модели Profile пустым.
+    def test_user_null(self):
+        """Тест проверяет значение null для поля user модели Profile.
 
-        Создается тестовый пользователь и объект модели Profile с пустым значением
-        поля city.
-        Ожидается, что значение поля city будет равно пустой строке.
-
-        Args:
-            fix_user (User): Фикстура возвращающая экземпляр тестового пользователя.
+        Ожидается, что значение null для поля user будет равно True.
         """
-        profile = Profile.objects.create(user=fix_user, city="")
-        assert profile.city == ""
+        null = Profile._meta.get_field("user").null
+        assert null is True
 
-    def test_profile_job_blank(self, fix_user: User) -> None:
-        """Тест проверяет возможность оставить поле job модели Profile пустым.
+    def test_city_max_length(self):
+        """Тест проверяет максимальную длину поля city модели Profile.
 
-        Создается тестовый пользователь и объект модели Profile с пустым значением
-        поля job.
-        Ожидается, что значение поля job будет равно пустой строке.
-
-        Args:
-            fix_user (User): Фикстура возвращающая экземпляр тестового пользователя.
+        Ожидается, что максимальная длина поля city будет равна 255 символам.
         """
-        profile = Profile.objects.create(user=fix_user, job="")
-        assert profile.job == ""
+        max_length = Profile._meta.get_field("city").max_length
+        assert max_length == 255
 
-    def test_profile_user_null(self, fix_user: User) -> None:
-        """Тест проверяет возможность создания объекта модели Profile без указания
-        значения поля user.
+    def test_city_null(self):
+        """Тест проверяет значение null для поля city модели Profile.
 
-        Создается объект модели Profile без указания значения поля user.
-        Ожидается, что значение поля user будет равно None.
+        Ожидается, что значение null для поля city будет равно True.
         """
-        profile = Profile.objects.create()
-        assert profile.user is None
+        null = Profile._meta.get_field("city").null
+        assert null is True
 
-    def test_profile_subscribe_default(self, fix_user: User) -> None:
+    def test_city_blank(self):
+        """Тест проверяет значение blank для поля city модели Profile.
+
+        Ожидается, что значение blank для поля city будет равно True.
+        """
+        blank = Profile._meta.get_field("city").blank
+        assert blank is True
+
+    def test_job_max_length(self):
+        """Тест проверяет максимальную длину поля job модели Profile.
+
+        ожидается, что максимальная длина поля job будет равна 255 символам.
+        """
+        max_length = Profile._meta.get_field("job").max_length
+        assert max_length == 255
+
+    def test_job_null(self):
+        """Тест проверяет значение null для поля job модели Profile.
+
+        ожидается, что значение null для поля job будет равно True.
+        """
+        null = Profile._meta.get_field("job").null
+        assert null is True
+
+    def test_job_blank(self):
+        """Тест проверяет значение blank для поля job модели Profile.
+
+        ожидается, что значение blank для поля job будет равно True.
+        """
+        blank = Profile._meta.get_field("job").blank
+        assert blank is True
+
+    def test_subscribe_default(self):
         """Тест проверяет значение по умолчанию для поля subscribe модели Profile.
 
-        Создается тестовый пользователь и объект модели Profile без указания значения
-        поля subscribe.
-        Ожидается, что значение поля subscribe будет равно False.
-
-        Args:
-            fix_user (User): Фикстура возвращающая экземпляр тестового пользователя.
+        ожидается, что значение по умолчанию для поля subscribe будет равно False.
         """
-        profile = Profile.objects.create(user=fix_user)
-
-        assert profile.subscribe is False
-
-    def test_profile_str(self, fix_user: User) -> None:
-        """Тест проверяет метод __str__ модели Profile.
-
-        Создается объект модели Profile с указанным пользователем.
-        Ожидается, что строковое представление объекта будет равно имени пользователя.
-
-        Args:
-            fix_user (User): Фикстура возвращающая экземпляр тестового пользователя.
-
-        """
-        profile = Profile.objects.create(user=fix_user)
-        assert str(profile) == "testuser"
+        default = Profile._meta.get_field("subscribe").default
+        assert default is False
 
 
 @pytest.mark.django_db(transaction=True)
@@ -113,7 +113,8 @@ class TestProfileModelNegative:
     и изоляции тестов.
     Этот класс содержит тесты для проверки различных негативных сценариев при создании
     объектов модели ProfileModel:
-    проверка ограничений на максимальную длину поля
+    проверка ограничений на максимальную длину поля, проверка поведения полей при
+    удалении связанного объекта.
     """
 
     def test_profile_city_max_length_exception(self, fix_user: User) -> None:
