@@ -310,6 +310,7 @@ class VacancyHelpersMixin:
         """
         mixin_logger = logger.bind(request=request)
         city_id = None
+        city_from_db = None
 
         if city:  # Если город передан в запросе получаем его id из базы
             try:
