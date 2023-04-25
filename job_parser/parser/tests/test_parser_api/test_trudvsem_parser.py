@@ -7,38 +7,49 @@ from parser.api.utils import Utils
 import pytest
 
 
-class TestTrudvsem:
-    """Класс описывает тестовые случаи для парсера Trudvsem."""
+@pytest.fixture
+def params() -> RequestConfig:
+    """Создает тестовые параметры запроса для API Trudvsem.
 
-    @pytest.fixture
-    def params(self) -> RequestConfig:
-        """Создает тестовые параметры запроса для API Trudvsem.
+    Returns:
+        dict: Экземпляр RequestConfig.
+    """
+    params = RequestConfig(
+        city="Москва",
+        city_from_db=1,
+        job="Программист",
+        remote=True,
+        date_from="2023-01-01",
+        date_to="2023-12-31",
+        experience=3,
+    )
+    return params
 
-        Returns:
-            dict: Экземпляр RequestConfig.
-        """
-        params = RequestConfig(
-            city="Москва",
-            city_from_db=1,
-            job="Программист",
-            remote=True,
-            date_from="2023-01-01",
-            date_to="2023-12-31",
-            experience=3,
-        )
-        return params
+
+class TestTrudvsemPositive:
+    """Класс описывает позитивные тестовые случаи для класса Trudvsem.
+
+    Этот класс содержит тесты для проверки различных позитивных сценариев при работе с
+    классом Trudvsem: проверка формирования параметров запроса и парсинга вакансий
+    из Trudvsem.
+    """
 
     @pytest.mark.asyncio
     async def test_get_request_params(self, params: RequestConfig) -> None:
-        """Тестирует метод формирования параметров для API Trudvsem.
+        """Тест проверяет формирование параметров запроса.
+
+        Создается экземпляр класса Trudvsem с указанными параметрами.
+        Вызывается метод get_request_params.
+        Ожидается, что метод вернет словарь с параметрами запроса, соответствующими
+        указанным при создании экземпляра класса.
 
         Args:
-            params (RequestConfig): Тестовые параметры.
+            params (RequestConfig): Параметры запроса.
         """
         # Создаем экземпляр парсера с параметрами запроса
         trudvsem = Trudvsem(params)
 
-        # Вызываем метод, который формирует параметры запроса в понятный для hh вид
+        # Вызываем метод, который формирует параметры запроса в понятный для Trudvsem вид
         tv_params = await trudvsem.get_request_params()
 
         assert tv_params["text"] == "Программист"
@@ -58,46 +69,20 @@ class TestTrudvsem:
         )
 
     @pytest.mark.asyncio
-    async def test_get_request_params_with_none(self) -> None:
-        """Тестирует метод формирования параметров для API Trudvsem со значениями None."""
-        # Создаем тестовые параметры запроса
-        data = dict(
-            city=None,
-            city_from_db=None,
-            job=None,
-            remote=False,
-            date_from=None,
-            date_to=None,
-            experience=0,
-        )
-        params = RequestConfig(**data)
-
-        # Создаем экземпляр парсера с параметрами запроса
-        trudvsem = Trudvsem(params)
-
-        # Вызываем метод, который формирует параметры запроса в понятный для hh вид
-        tv_params = await trudvsem.get_request_params()
-
-        date_from = datetime.date.today() - datetime.timedelta(1)
-        date_to = datetime.date.today()
-
-        assert tv_params["text"] is None
-        assert tv_params["modifiedFrom"] == await Utils.convert_date_for_trudvsem(
-            date_from
-        )
-        assert tv_params["modifiedTo"] == await Utils.convert_date_for_trudvsem(date_to)
-        assert "experienceFrom" not in tv_params
-        assert "experienceTo" not in tv_params
-
-    @pytest.mark.asyncio
     async def test_get_vacancy_from_trudvsem(
         self, mocker, params: RequestConfig
     ) -> None:
-        """Тестирует метод парсинга вакансий из API Trudvsem.
+        """Тест проверяет парсинг вакансий из API Trudvsem.
+
+        Создается экземпляр класса Trudvsem с указанными параметрами.
+        Метод get_vacancies мок-объекта возвращает список с одной вакансией.
+        Вызывается метод get_vacancy_from_trudvsem.
+        Ожидается, что метод вернет словарь с информацией о вакансии, соответствующей
+        информации в мок-объекте.
 
         Args:
-            mocker (_type_): Mock-фикстура.
-            params (RequestConfig): Тестовые параметры.
+            mocker: Фикстура для создания мок-объектов.
+            params (RequestConfig): Параметры запроса.
         """
         # Создаем экземпляр парсера с параметрами запроса
         trudvsem = Trudvsem(params)
@@ -150,15 +135,31 @@ class TestTrudvsem:
 
         Parser.general_job_list.clear()
 
+
+class TestTrudvsemNegative:
+    """Класс описывает негативные тестовые случаи для класса Trudvsem.
+
+    Этот класс содержит тесты для проверки различных негативных сценариев при работе с
+    классом Trudvsem: проверка парсинга вакансий из Trudvsem с отсутствующими
+    значениями и формирования параметров запроса с отсутствующими значениями.
+    """
+
     @pytest.mark.asyncio
     async def test_get_vacancy_from_trudvsem_with_none(
         self, mocker, params: RequestConfig
     ) -> None:
-        """Тестирует метод парсинга вакансий из API Trudvsem со значениями None.
+        """Тест проверяет парсинг вакансий из API Trudvsem с отсутствующими значениями.
+
+        Создается экземпляр класса Trudvsem с указанными параметрами.
+        Метод get_vacancies мок-объекта возвращает список с одной вакансией,
+        у которой отсутствуют значения для некоторых полей.
+        Вызывается метод get_vacancy_from_trudvsem.
+        Ожидается, что метод вернет словарь с информацией о вакансии, соответствующей
+        информации в мок-объекте.
 
         Args:
-            mocker (_type_): Mock-фикстура.
-            params (RequestConfig): Тестовые параметры.
+            mocker: Фикстура для создания мок-объектов.
+            params (RequestConfig): Параметры запроса.
         """
         # Создаем экземпляр парсера с параметрами запроса
         trudvsem = Trudvsem(params)
@@ -201,3 +202,43 @@ class TestTrudvsem:
         assert len(Parser.general_job_list) == 0
 
         Parser.general_job_list.clear()
+
+    @pytest.mark.asyncio
+    async def test_get_request_params_with_none(self) -> None:
+        """Тест проверяет формирование параметров запроса с отсутствующими значениями.
+
+        Создается экземпляр класса Trudvsem с отсутствующими значениями для некоторых
+        параметров.
+        Вызывается метод get_request_params.
+        Ожидается, что метод вернет словарь с параметрами запроса, соответствующими
+        указанным при создании экземпляра класса.
+
+        """
+        # Создаем тестовые параметры запроса
+        data = dict(
+            city=None,
+            city_from_db=None,
+            job=None,
+            remote=False,
+            date_from=None,
+            date_to=None,
+            experience=0,
+        )
+        params = RequestConfig(**data)
+
+        # Создаем экземпляр парсера с параметрами запроса
+        trudvsem = Trudvsem(params)
+
+        # Вызываем метод, который формирует параметры запроса в понятный для Trudvsem вид
+        tv_params = await trudvsem.get_request_params()
+
+        date_from = datetime.date.today() - datetime.timedelta(1)
+        date_to = datetime.date.today()
+
+        assert tv_params["text"] is None
+        assert tv_params["modifiedFrom"] == await Utils.convert_date_for_trudvsem(
+            date_from
+        )
+        assert tv_params["modifiedTo"] == await Utils.convert_date_for_trudvsem(date_to)
+        assert "experienceFrom" not in tv_params
+        assert "experienceTo" not in tv_params
