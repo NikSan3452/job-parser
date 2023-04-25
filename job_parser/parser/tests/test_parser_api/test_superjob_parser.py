@@ -7,33 +7,44 @@ from parser.api.utils import Utils
 import pytest
 
 
-class TestSuperJob:
-    """Класс описывает тестовые случаи для парсера SuperJob."""
+@pytest.fixture
+def params() -> RequestConfig:
+    """Создает тестовые параметры запроса для API SuperJob.
 
-    @pytest.fixture
-    def params(self) -> RequestConfig:
-        """Создает тестовые параметры запроса для API SuperJob.
+    Returns:
+        dict: Экземпляр RequestConfig.
+    """
+    params = RequestConfig(
+        city="Москва",
+        city_from_db=1,
+        job="Программист",
+        remote=True,
+        date_from="2023-01-01",
+        date_to="2023-12-31",
+        experience=3,
+    )
+    return params
 
-        Returns:
-            dict: Экземпляр RequestConfig.
-        """
-        params = RequestConfig(
-            city="Москва",
-            city_from_db=1,
-            job="Программист",
-            remote=True,
-            date_from="2023-01-01",
-            date_to="2023-12-31",
-            experience=3,
-        )
-        return params
+
+class TestSuperJobPositive:
+    """Класс описывает позитивные тестовые случаи для класса SuperJob.
+
+    Этот класс содержит тесты для проверки различных позитивных сценариев при работе с
+    классом SuperJob: проверка формирования параметров запроса и парсинга вакансий
+    из SuperJob.
+    """
 
     @pytest.mark.asyncio
     async def test_get_request_params(self, params: RequestConfig) -> None:
-        """Тестирует метод формирования параметров для API SuperJob.
+        """Тест проверяет формирование параметров запроса.
+
+        Создается экземпляр класса SuperJob с указанными параметрами.
+        Вызывается метод get_request_params.
+        Ожидается, что метод вернет словарь с параметрами запроса, соответствующими
+        указанным при создании экземпляра класса.
 
         Args:
-            params (RequestConfig): Тестовые параметры.
+            params (RequestConfig): Параметры запроса.
         """
         # Создаем экземпляр парсера с параметрами запроса
         superjob = SuperJob(params)
@@ -52,48 +63,22 @@ class TestSuperJob:
         assert sj_params["experience"] == 3
 
     @pytest.mark.asyncio
-    async def test_get_request_params_with_none(self) -> None:
-        """Тестирует метод формирования параметров для API SuperJob со значениями None."""
-        # Создаем тестовые параметры запроса
-        data = dict(
-            city=None,
-            city_from_db=None,
-            job=None,
-            remote=False,
-            date_from=None,
-            date_to=None,
-            experience=0,
-        )
-        params = RequestConfig(**data)
-
-        # Создаем экземпляр парсера с параметрами запроса
-        superjob = SuperJob(params)
-
-        # Вызываем метод, который формирует параметры запроса в понятный для hh вид
-        sj_params = await superjob.get_request_params()
-
-        date_from = datetime.date.today() - datetime.timedelta(1)
-        date_to = datetime.date.today()
-
-        assert sj_params["keyword"] is None
-        assert sj_params["date_published_from"] == await Utils.convert_date(date_from)
-        assert sj_params["date_published_to"] == await Utils.convert_date(date_to)
-        assert "town" not in sj_params
-        assert "place_of_work" not in sj_params
-        assert "experience" not in sj_params
-
-        Parser.general_job_list.clear()
-
-    @pytest.mark.asyncio
     async def test_get_vacancy_from_superjob(
         self, mocker, params: RequestConfig
     ) -> None:
-        """Тестирует метод парсинга вакансий из API SuperJob.
+        """Тест проверяет парсинг вакансий из API SuperJob.
+
+        Создается экземпляр класса SuperJob с указанными параметрами.
+        Метод get_vacancies мок-объекта возвращает список с одной вакансией.
+        Вызывается метод get_vacancy_from_superjob.
+        Ожидается, что метод вернет словарь с информацией о вакансии, соответствующей
+        информации в мок-объекте.
 
         Args:
-            mocker (_type_): Mock-фикстура.
-            params (RequestConfig): Тестовые параметры.
+            mocker: Фикстура для создания мок-объектов.
+            params (RequestConfig): Параметры запроса.
         """
+
         # Создаем экземпляр парсера с параметрами запроса
         superjob = SuperJob(params)
 
@@ -138,15 +123,30 @@ class TestSuperJob:
 
         Parser.general_job_list.clear()
 
+
+class TestSuperJobNegative:
+    """Класс описывает негативные тестовые случаи для класса SuperJob.
+
+    Этот класс содержит тесты для проверки различных негативных сценариев при работе с
+    классом SuperJob: проверка парсинга вакансий из SuperJob с отсутствующими значениями
+    и формирования параметров запроса с отсутствующими значениями.
+    """
     @pytest.mark.asyncio
     async def test_get_vacancy_from_superjob_with_none(
         self, mocker, params: RequestConfig
     ) -> None:
-        """Тестирует метод парсинга вакансий из API SuperJob со значениями None.
+        """Тест проверяет парсинг вакансий из API SuperJob с отсутствующими значениями.
+
+        Создается экземпляр класса SuperJob с указанными параметрами.
+        Метод get_vacancies мок-объекта возвращает список с одной вакансией,
+        у которой отсутствуют значения для некоторых полей.
+        Вызывается метод get_vacancy_from_superjob.
+        Ожидается, что метод вернет словарь с информацией о вакансии, соответствующей
+        информации в мок-объекте.
 
         Args:
-            mocker (_type_): Mock-фикстура.
-            params (RequestConfig): Тестовые параметры.
+            mocker: Фикстура для создания мок-объектов.
+            params (RequestConfig): Параметры запроса.
         """
         # Создаем экземпляр парсера с параметрами запроса
         superjob = SuperJob(params)
@@ -189,5 +189,46 @@ class TestSuperJob:
         assert job_dict["experience"] == "Не указано"
         assert job_dict["published_at"] == datetime.date(2023, 3, 1)
         assert len(Parser.general_job_list) == 1
+
+        Parser.general_job_list.clear()
+
+    @pytest.mark.asyncio
+    async def test_get_request_params_with_none(self) -> None:
+        """Тест проверяет формирование параметров запроса с отсутствующими значениями.
+
+        Создается экземпляр класса SuperJob с отсутствующими значениями для некоторых 
+        параметров.
+        Вызывается метод get_request_params.
+        Ожидается, что метод вернет словарь с параметрами запроса, соответствующими
+        указанным при создании экземпляра класса.
+
+        """
+        # Создаем тестовые параметры запроса
+        data = dict(
+            city=None,
+            city_from_db=None,
+            job=None,
+            remote=False,
+            date_from=None,
+            date_to=None,
+            experience=0,
+        )
+        params = RequestConfig(**data)
+
+        # Создаем экземпляр парсера с параметрами запроса
+        superjob = SuperJob(params)
+
+        # Вызываем метод, который формирует параметры запроса в понятный для Superjob вид
+        sj_params = await superjob.get_request_params()
+
+        date_from = datetime.date.today() - datetime.timedelta(1)
+        date_to = datetime.date.today()
+
+        assert sj_params["keyword"] is None
+        assert sj_params["date_published_from"] == await Utils.convert_date(date_from)
+        assert sj_params["date_published_to"] == await Utils.convert_date(date_to)
+        assert "town" not in sj_params
+        assert "place_of_work" not in sj_params
+        assert "experience" not in sj_params
 
         Parser.general_job_list.clear()
