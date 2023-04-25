@@ -6,33 +6,44 @@ from parser.api.parsers import Headhunter
 import pytest
 
 
-class TestHeadHunter:
-    """Класс описывает тестовые случаи для парсера HeadHunter."""
+@pytest.fixture
+def params() -> RequestConfig:
+    """Создает тестовые параметры запроса для API HeadHunter.
 
-    @pytest.fixture
-    def params(self) -> RequestConfig:
-        """Создает тестовые параметры запроса для API HeadHunter.
+    Returns:
+        dict: Экземпляр RequestConfig.
+    """
+    params = RequestConfig(
+        city="Москва",
+        city_from_db=1,
+        job="Программист",
+        remote=True,
+        date_from="2023-01-01",
+        date_to="2023-12-31",
+        experience=3,
+    )
+    return params
 
-        Returns:
-            dict: Экземпляр RequestConfig.
-        """
-        params = RequestConfig(
-            city="Москва",
-            city_from_db=1,
-            job="Программист",
-            remote=True,
-            date_from="2023-01-01",
-            date_to="2023-12-31",
-            experience=3,
-        )
-        return params
+
+class TestHeadHunterPositive:
+    """Класс описывает позитивные тестовые случаи для класса Headhunter.
+
+    Этот класс содержит тесты для проверки различных позитивных сценариев при работе с
+    классом Headhunter: проверка получения параметров запроса и получения вакансий
+    из Headhunter.
+    """
 
     @pytest.mark.asyncio
     async def test_get_request_params(self, params: RequestConfig) -> None:
-        """Тестирует метод формирования параметров для API Headhunter.
+        """Тест проверяет формирование параметров запроса.
+
+        Создается экземпляр класса Headhunter с указанными параметрами.
+        Вызывается метод get_request_params.
+        Ожидается, что метод вернет словарь с параметрами запроса, соответствующими
+        указанным при создании экземпляра класса.
 
         Args:
-            params (RequestConfig): Тестовые параметры.
+            params (RequestConfig): Параметры запроса.
         """
         # Создаем экземпляр парсера с параметрами запроса
         headhunter = Headhunter(params)
@@ -49,42 +60,20 @@ class TestHeadHunter:
         assert hh_params["experience"] == "between3And6"
 
     @pytest.mark.asyncio
-    async def test_get_request_params_with_none(self) -> None:
-        """Тестирует метод формирования параметров для API Headhunter со значениями None."""
-        # Создаем тестовые параметры запроса
-        data = dict(
-            city=None,
-            city_from_db=None,
-            job=None,
-            remote=False,
-            date_from=None,
-            date_to=None,
-            experience=0,
-        )
-        params = RequestConfig(**data)
-
-        # Создаем экземпляр парсера с параметрами запроса
-        headhunter = Headhunter(params)
-
-        # Вызываем метод, который формирует параметры запроса в понятный для hh вид
-        hh_params = await headhunter.get_request_params()
-
-        assert hh_params["text"] is None
-        assert hh_params["date_from"] == datetime.date.today() - datetime.timedelta(1)
-        assert hh_params["date_to"] == datetime.date.today()
-        assert "area" not in hh_params
-        assert "schedule" not in hh_params
-        assert "experience" not in hh_params
-
-    @pytest.mark.asyncio
     async def test_get_vacancy_from_headhunter(
         self, mocker, params: RequestConfig
     ) -> None:
-        """Тестирует метод парсинга вакансий из API HeadHunter.
+        """Тест проверяет парсинг вакансий из API Headhunter.
+
+        Создается экземпляр класса Headhunter с указанными параметрами.
+        Метод get_vacancies мок-объекта возвращает список с одной вакансией.
+        Вызывается метод get_vacancy_from_headhunter.
+        Ожидается, что метод вернет словарь с информацией о вакансии, соответствующей
+        информации в мок-объекте.
 
         Args:
-            mocker (_type_): Mock-фикстура.
-            params (RequestConfig): Тестовые параметры.
+            mocker: Фикстура для создания мок-объектов.
+            params (RequestConfig): Параметры запроса.
         """
         # Создаем экземпляр парсера с параметрами запроса
         headhunter = Headhunter(params)
@@ -134,15 +123,32 @@ class TestHeadHunter:
 
         Parser.general_job_list.clear()
 
+
+class TestHeadHunterNegative:
+    """Класс описывает негативные тестовые случаи для класса Headhunter.
+
+    Этот класс содержит тесты для проверки различных негативных сценариев при работе с
+    классом Headhunter: проверка получения вакансий из Headhunter с отсутствующими
+    значениями и получения параметров запроса с отсутствующими значениями.
+    """
+
     @pytest.mark.asyncio
     async def test_get_vacancy_from_headhunter_with_none(
         self, mocker, params: RequestConfig
     ) -> None:
-        """Тестирует метод парсинга вакансий из API HeadHunter со значениями None.
+        """Тест проверяет парсинг вакансий из API Headhunter с отсутствующими
+        значениями.
+
+        Создается экземпляр класса Headhunter с указанными параметрами.
+        Метод get_vacancies мок-объекта возвращает список с одной вакансией,
+        у которой отсутствуют значения для некоторых полей.
+        Вызывается метод get_vacancy_from_headhunter.
+        Ожидается, что метод вернет словарь с информацией о вакансии, соответствующей
+        информации в мок-объекте.
 
         Args:
-            mocker (_type_): Mock-фикстура.
-            params (RequestConfig): Тестовые параметры.
+            mocker: Фикстура для создания мок-объектов.
+            params (RequestConfig): Параметры запроса.
         """
         # Создаем экземпляр парсера с параметрами запроса
         headhunter = Headhunter(params)
@@ -175,3 +181,40 @@ class TestHeadHunter:
         assert job_dict["type_of_work"] == "Не указано"
 
         Parser.general_job_list.clear()
+
+    @pytest.mark.asyncio
+    async def test_get_request_params_with_none(self) -> None:
+        """Тест проверяет формирование параметров запроса с отсутствующими значениями.
+
+        Создается экземпляр класса Headhunter с отсутствующими значениями для некоторых 
+        параметров.
+        Вызывается метод get_request_params.
+        Ожидается, что метод вернет словарь с параметрами запроса, соответствующими
+        указанным при создании экземпляра класса.
+
+        """
+        # Создаем тестовые параметры запроса
+        data = dict(
+            city=None,
+            city_from_db=None,
+            job=None,
+            remote=False,
+            date_from=None,
+            date_to=None,
+            experience=0,
+        )
+        params = RequestConfig(**data)
+
+        # Создаем экземпляр парсера с параметрами запроса
+        headhunter = Headhunter(params)
+
+        # Вызываем метод, который формирует параметры запроса в понятный для hh вид
+        hh_params = await headhunter.get_request_params()
+
+        assert hh_params["text"] is None
+        assert hh_params["date_from"] == datetime.date.today() - datetime.timedelta(1)
+        assert hh_params["date_to"] == datetime.date.today()
+        assert "area" not in hh_params
+        assert "schedule" not in hh_params
+        assert "experience" not in hh_params
+        assert "experience" not in hh_params
