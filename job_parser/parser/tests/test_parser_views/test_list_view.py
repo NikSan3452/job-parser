@@ -138,11 +138,11 @@ class TestVacancyListView:
         object_list = list(response.context_data["object_list"])
 
         # Проверяем, что код ответа верный и тело ответа содержит установленные данные
-        Assertions.assert_status_code(response, 200)
-        Assertions.assert_value_in_obj("form", response.context_data)
-        Assertions.assert_value_in_obj(data[0]["title"], object_list[0]["title"])
-        Assertions.assert_value_in_obj(data[1]["title"], object_list[1]["title"])
-        Assertions.assert_value_in_obj(data[2]["title"], object_list[2]["title"])
+        assert response.status_code == 200
+        assert "form" in response.context_data
+        assert data[0]["title"] in object_list[0]["title"]
+        assert data[1]["title"] in object_list[1]["title"]
+        assert data[2]["title"] in object_list[2]["title"]
 
     @pytest.mark.asyncio
     async def test_get_authenticated(
@@ -191,19 +191,19 @@ class TestVacancyListView:
         # Получаем общий список с вакансиями
         object_list = list(response.context_data["object_list"])
 
-        # Проверяем, что код ответа верный и тело ответа содержит вакансии 
+        # Проверяем, что код ответа верный и тело ответа содержит вакансии
         # добавленные в избранное
-        Assertions.assert_status_code(response, 200)
-        Assertions.assert_value_in_obj(data[0]["url"], favourite)
+        assert response.status_code == 200
+        assert data[0]["url"] in favourite
 
         # Проверяем, что тело ответа не содержит вакансии скрытой компании
-        Assertions.assert_value_not_in_obj(data[1]["title"], object_list[0]["title"])
+        assert data[1]["title"] not in object_list[0]["title"]
 
         # Проверяем, что тело ответа не содержит вакансии добавленной в черный список
-        Assertions.assert_value_not_in_obj(data[2]["url"], object_list[0]["url"])
+        assert data[2]["url"] not in object_list[0]["url"]
 
         # Проверяем, что форма присутствует в контексте
-        Assertions.assert_value_in_obj("form", response.context_data)
+        assert "form" in response.context_data
 
     @pytest.mark.asyncio
     async def test_post_anonymous(
@@ -267,18 +267,13 @@ class TestVacancyListView:
         # Получаем общий список с вакансиями
         object_list = list(response.context_data["object_list"])
         # Проверяем, что код ответа верный и тело ответа содержит установленные данные
-        Assertions.assert_status_code(response, 200)
+        assert response.status_code == 200
 
         # Проверяем, что общий список содержит только вакансии из скрапера
-        Assertions.assert_value_not_in_obj(
-            data[1]["job_board"], object_list[0]["job_board"]
-        )
-        Assertions.assert_value_not_in_obj(
-            data[2]["job_board"], object_list[0]["job_board"]
-        )
+        assert data[1]["job_board"] not in object_list[0]["job_board"]
 
-        # Проверяем, что форма присуствует в контексте
-        Assertions.assert_value_in_obj("form", response.context_data)
+        # Проверяем, что форма присутствует в контексте
+        assert "form" in response.context_data
 
     @pytest.mark.asyncio
     async def test_post_authenticated(
@@ -353,15 +348,16 @@ class TestVacancyListView:
         # Получаем общий список с вакансиями
         object_list = list(response.context_data["object_list"])
 
-        # Проверяем, что код ответа верный и тело содержит вакансии добавленные в избранное
-        Assertions.assert_status_code(response, 200)
-        Assertions.assert_value_in_obj(data[1]["url"], favourite)
+        # Проверяем, что код ответа верный и тело содержит вакансии 
+        # добавленные в избранное
+        assert response.status_code == 200
+        assert data[1]["url"] in favourite
 
         # Проверяем, что тело ответа не содержит вакансии скрытой компании
-        Assertions.assert_value_not_in_obj(data[2]["title"], object_list[0]["title"])
+        assert data[2]["title"]not in object_list[0]["title"]
 
         # Проверяем, что тело ответа не содержит вакансии добавленной в черный список
-        Assertions.assert_value_not_in_obj(data[3]["url"], object_list[0]["url"])
+        assert data[3]["url"] not in object_list[0]["url"]
 
         # Проверяем, что форма присутствует в контексте
-        Assertions.assert_value_in_obj("form", response.context_data)
+        assert "form" in response.context_data
