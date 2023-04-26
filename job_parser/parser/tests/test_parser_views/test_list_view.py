@@ -94,14 +94,14 @@ class TestVacancyListView:
     @pytest.fixture
     async def set_cache(
         self, cache_key: RedisCacheMixin, redis_mixin: RedisCacheMixin
-    ) -> Awaitable:
+    ) -> None:
         """Фикстура добавляет данные в кэш.
 
         Args:
             cache_key (RedisCacheMixin): Кэш - ключ.
             redis_mixin (RedisCacheMixin): Экземпляр RedisCacheMixin.
         Returns:
-            Awaitable: Корутина добавляющая данные в кэш.
+            None
         """
         data = self.setup_method()
         return await redis_mixin.set_data_to_cache(data)
@@ -191,7 +191,8 @@ class TestVacancyListView:
         # Получаем общий список с вакансиями
         object_list = list(response.context_data["object_list"])
 
-        # Проверяем, что код ответа верный и тело ответа содержит вакансии добавленные в избранное
+        # Проверяем, что код ответа верный и тело ответа содержит вакансии 
+        # добавленные в избранное
         Assertions.assert_status_code(response, 200)
         Assertions.assert_value_in_obj(data[0]["url"], favourite)
 
@@ -275,7 +276,7 @@ class TestVacancyListView:
         Assertions.assert_value_not_in_obj(
             data[2]["job_board"], object_list[0]["job_board"]
         )
-        
+
         # Проверяем, что форма присуствует в контексте
         Assertions.assert_value_in_obj("form", response.context_data)
 
