@@ -1,13 +1,13 @@
 import asyncio
 import datetime
+from parser.scraping.run import run
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
-from huey import SqliteHuey, crontab
+from huey import crontab
 from huey.contrib.djhuey import periodic_task
 from logger import logger, setup_logging
 from memory_profiler import profile as memory
-from parser.scraping.run import run
 from profiles.models import Profile
 
 from .api import main
@@ -21,7 +21,7 @@ setup_logging()
 def sending_emails() -> None:
     """Отвечает за рассылку электронных писем с вакансиями"""
     try:
-        # Выбираем из БД тех пользователей, у которых покдлючена подписка
+        # Выбираем из БД тех пользователей, у которых подключена подписка
         profiles = Profile.objects.filter(subscribe=True)
         logger.debug("Профили получены")
         for profile in profiles:
@@ -53,7 +53,8 @@ def sending_emails() -> None:
                 html += f'<p>{vacancy.get("company")}</p>'
                 html += f'<p>Город: {vacancy.get("city")} | Дата публикации: {vacancy.get("published_at")}</p>'
 
-            # Если вакансий нет, придет сообщение о том, что вакансий на сегодня не нашлось
+            # Если вакансий нет, придет сообщение о том, что вакансий на сегодня не 
+            # нашлось
             _html = html if html else empty
 
             to = profile.user.email  # Получаем email из модели User
