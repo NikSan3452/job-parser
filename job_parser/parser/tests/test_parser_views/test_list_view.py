@@ -3,7 +3,6 @@ from parser.api import main
 from parser.forms import SearchingForm
 from parser.mixins import RedisCacheMixin
 from parser.models import FavouriteVacancy, HiddenCompanies, VacancyBlackList
-from parser.tests.TestAssertions import Assertions
 from parser.views import VacancyListView
 from typing import Awaitable
 
