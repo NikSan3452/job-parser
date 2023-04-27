@@ -347,13 +347,13 @@ class TestVacancyListView:
         # Получаем общий список с вакансиями
         object_list = list(response.context_data["object_list"])
 
-        # Проверяем, что код ответа верный и тело содержит вакансии 
+        # Проверяем, что код ответа верный и тело содержит вакансии
         # добавленные в избранное
         assert response.status_code == 200
         assert data[1]["url"] in favourite
 
         # Проверяем, что тело ответа не содержит вакансии скрытой компании
-        assert data[2]["title"]not in object_list[0]["title"]
+        assert data[2]["title"] not in object_list[0]["title"]
 
         # Проверяем, что тело ответа не содержит вакансии добавленной в черный список
         assert data[3]["url"] not in object_list[0]["url"]
