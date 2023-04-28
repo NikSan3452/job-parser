@@ -1,6 +1,7 @@
 import datetime
+from typing import Any, Coroutine
 
-from logger import logger, setup_logging
+from logger import setup_logging
 
 from .base_parser import Parser
 from .config import ParserConfig, RequestConfig
@@ -14,137 +15,331 @@ utils = Utils()
 
 
 class Headhunter(Parser):
-    """Парсер Headhunter."""
+    """
+    Класс для парсинга вакансий с сайта HeadHunter.
+
+    Наследуется от класса Parser.
+    Класс Headhunter предназначен для парсинга вакансий с сайта HeadHunter.
+    Он содержит методы для получения информации о вакансиях, такие как URL-адрес,
+    название, зарплата, город и другие. Эти методы реализованы с учетом особенностей
+    API сайта HeadHunter.
+
+    Attributes:
+        params (RequestConfig): Параметры запроса.
+        pages (int): Количество страниц для обработки.
+        items (str): Ключ для получения вакансий из json_data.
+        job_board (str): Название сайта для парсинга вакансий.
+    """
 
     def __init__(self, params: RequestConfig) -> None:
         self.params = params
+        self.pages: int = 20
+        self.items: str = "items"
+        self.job_board = "HeadHunter"
 
-    @logger.catch(message="Ошибка в методе Headhunter.get_request_params()")
     async def get_request_params(self) -> dict:
-        """Формирует параметры запросов к API.
+        """
+        Асинхронный метод для получения параметров запроса для сайта HeadHunter.
+
+        Метод формирует словарь с параметрами запроса и возвращает его.
 
         Returns:
-            dict: словарь с параметрами.
+            dict: Словарь с параметрами запроса.
         """
-        city_from_db = self.params.city_from_db
-        job = self.params.job
-        experience = "noExperience"
-        remote = self.params.remote
-        date_from, date_to = await utils.check_date(
-            self.params.date_from, self.params.date_to
-        )
-
-        # Формируем параметры запроса к API Headhunter
         hh_params = {
-            "text": job,
+            "text": self.params.job,
             "per_page": 100,
-            "date_from": date_from,
-            "date_to": date_to,
+            "date_from": await utils.check_date_from(self.params.date_from),
+            "date_to": await utils.check_date_to(self.params.date_to),
         }
 
-        if city_from_db:
-            hh_params["area"] = city_from_db
+        if self.params.city_from_db:
+            hh_params["area"] = self.params.city_from_db
 
-        if remote:
+        if self.params.remote:
             hh_params["schedule"] = "remote"
 
+        experience = "noExperience"
         if self.params.experience > 0 and self.params.experience <= 4:
             experience = await utils.convert_experience(self.params.experience)
             hh_params["experience"] = experience
 
         return hh_params
 
-    @logger.catch(message="Ошибка в методе Headhunter.get_vacancy_from_headhunter()")
-    async def get_vacancy_from_headhunter(
-        self, url: str = config.headhunter_url, job_board: str = "HeadHunter"
-    ) -> dict:
-        """Формирует словарь с основными полями вакансий с сайта HeadHunter
+    async def parsing_vacancy_headhunter(self) -> Coroutine[Any, Any, dict]:
+        """
+        Асинхронный метод для парсинга вакансий с сайта HeadHunter.
+
+        Метод получает параметры запроса с помощью метода get_request_params и вызывает
+        метод vacancy_parsing родительского класса Parser.
 
         Returns:
-            dict: Словарь с основными полями вакансий
+            Coroutine[Any, Any, dict]: Корутина с результатом выполнения метода
+            vacancy_parsing.
         """
         hh_params = await self.get_request_params()
-
-        job_list: list[dict] = await self.get_vacancies(
-            url=url, params=hh_params, pages=20, items="items"
+        return await super().vacancy_parsing(
+            config.headhunter_url, hh_params, self.job_board, self.pages, self.items
         )
-        job_dict: dict = {}
-        # Формируем словарь с вакансиями
-        for job in job_list:
-            job_dict["job_board"] = job_board
-            job_dict["url"] = job["alternate_url"]
-            job_dict["title"] = job["name"]
 
-            if job["salary"]:
-                job_dict["salary_from"] = job["salary"]["from"]
-                job_dict["salary_to"] = job["salary"]["to"]
-                job_dict["salary_currency"] = job["salary"]["currency"]
-            else:
-                job_dict["salary_from"] = None
-                job_dict["salary_to"] = None
+    async def get_url(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения URL-адреса вакансии.
 
-            if job["snippet"]:
-                job_dict["responsibility"] = job["snippet"]["responsibility"]
-                job_dict["requirement"] = job["snippet"]["requirement"]
-            else:
-                job_dict["responsibility"] = "Нет описания"
-                job_dict["requirement"] = "Нет описания"
+        Метод возвращает значение ключа "alternate_url" из словаря job.
 
-            job_dict["city"] = job["area"]["name"]
-            job_dict["company"] = job["employer"]["name"]
+        Args:
+            job (dict): Словарь с информацией о вакансии.
 
-            if job["schedule"]:
-                job_dict["type_of_work"] = job["schedule"]["name"]
-            else:
-                job_dict["type_of_work"] = "Не указано"
+        Returns:
+            str | None: URL-адрес вакансии или None, если URL-адрес отсутствует.
+        """
+        return job.get("alternate_url", None)
 
-            # Конвертируем дату в удобочитаемый вид
-            published_date = datetime.datetime.strptime(
-                job["published_at"], "%Y-%m-%dT%H:%M:%S%z"
-            ).date()
-            job_dict["published_at"] = published_date
+    async def get_title(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения названия вакансии.
 
-            # Добавляем словарь с вакансией в общий список всех вакансий
-            Parser.general_job_list.append(job_dict.copy())
+        Метод возвращает значение ключа "name" из словаря job.
 
-        if url == config.headhunter_url:
-            logger.debug("Сбор вакансий с Headhunter завершен")
+        Args:
+            job (dict): Словарь с информацией о вакансии.
 
-        return job_dict
+        Returns:
+            str | None: Название вакансии или None, если название отсутствует.
+        """
+        return job.get("name", None)
+
+    async def get_salary_from(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения минимальной зарплаты.
+
+        Метод получает значение ключа "salary" из словаря job и возвращает значение
+        ключа "from".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Минимальная зарплата по вакансии или None, если зарплата
+            отсутствует.
+        """
+        salary = job.get("salary", None)
+        return salary.get("from", None) if salary else None
+
+    async def get_salary_to(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения максимальной зарплаты.
+
+        Метод получает значение ключа "salary" из словаря job и возвращает значение
+        ключа "to".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Максимальная зарплата по вакансии или None, если зарплата
+            отсутствует.
+        """
+        salary = job.get("salary", None)
+        return salary.get("to", None) if salary else None
+
+    async def get_salary_currency(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения валюты зарплаты.
+
+        Метод получает значение ключа "salary" из словаря job и возвращает значение
+        ключа "currency".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Валюта зарплаты по вакансии или None, если зарплата отсутствует.
+        """
+        salary = job.get("salary", None)
+        return salary.get("currency", None) if salary else None
+
+    async def get_responsibility(self, job: dict) -> str:
+        """
+        Асинхронный метод для получения информации об обязанностях.
+
+        Метод получает значение ключа "snippet" из словаря job и возвращает значение
+        ключа "responsibility". Если значения нет, то возвращает строку "Нет описания".
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str: Обязанности по вакансии.
+        """
+        snippet = job.get("snippet", None)
+        return snippet.get("responsibility", None) if snippet else "Нет описания"
+
+    async def get_requirement(self, job: dict) -> str:
+        """
+        Асинхронный метод для получения информации о требованиях к кандидату.
+
+        Метод получает значение ключа "snippet" из словаря job и возвращает значение
+        ключа "requirement". Если значения нет, то возвращает строку "Нет описания".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str: Информация о требованиях к кандидату по вакансии.
+        """
+        snippet = job.get("snippet", None)
+        return snippet.get("requirement", None) if snippet else "Нет описания"
+
+    async def get_city(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения города.
+
+        Метод получает значение ключа "area" из словаря job и возвращает значение
+        ключа "name".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Город вакансии или None, если город отсутствует.
+        """
+        area = job.get("area", None)
+        return area.get("name", None) if area else None
+
+    async def get_company(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения названия компании.
+
+        Метод получает значение ключа "employer" из словаря job и возвращает значение
+        ключа "name".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Название компании по вакансии или None, если название
+            отсутствует.
+        """
+        employer = job.get("employer", None)
+        return employer.get("name", None) if employer else None
+
+    async def get_type_of_work(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения типа работы.
+
+        Метод получает значение ключа "schedule" из словаря job и возвращает значение
+        ключа "name".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Тип работы по вакансии или None, если тип работы отсутствует.
+        """
+        schedule = job.get("schedule", None)
+        return schedule.get("name", None) if schedule else None
+
+    async def get_published_at(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения даты публикации вакансии.
+
+        Метод получает значение ключа "published_at" из словаря job и преобразует его в
+        формат даты. Возвращает эту дату.
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Дата публикации вакансии или None, если дата отсутствует.
+        """
+        date = job.get("published_at", None)
+        return (
+            datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z").date()
+            if date
+            else None
+        )
+
+
+class Zarplata(Headhunter):
+    """Класс для парсинга вакансий с сайта Zarplata.
+
+    Наследуется от класса Headhunter.
+    Класс Zarplata предназначен для парсинга вакансий с сайта Zarplata.
+    Он содержит метод parsing_vacancy_zarplata для выполнения парсинга вакансий с
+    этого сайта.
+    Остальные методы наследуются от родительского класса Headhunter.
+    Attributes:
+        job_board (str): Название сайта для парсинга вакансий.
+    """
+
+    def __init__(self, params: RequestConfig) -> None:
+        super().__init__(params)
+        self.job_board = "Zarplata"
+
+    async def parsing_vacancy_zarplata(self) -> Coroutine[Any, Any, dict]:
+        """
+        Асинхронный метод для парсинга вакансий с сайта Zarplata.
+
+        Метод получает параметры запроса с помощью метода get_request_params и вызывает
+        метод vacancy_parsing родительского класса Parser.
+
+        Returns:
+            Coroutine[Any, Any, dict]: Корутина с результатом выполнения метода
+            vacancy_parsing.
+        """
+        zp_params = await self.get_request_params()
+        return await super().vacancy_parsing(
+            config.zarplata_url, zp_params, self.job_board, self.pages, self.items
+        )
 
 
 class SuperJob(Parser):
-    """Парсер SuperJob."""
+    """
+    Класс для парсинга вакансий с сайта SuperJob.
+
+    Наследуется от класса Parser.
+    Класс SuperJob предназначен для парсинга вакансий с сайта SuperJob.
+    Он содержит методы для получения информации о вакансиях, такие как URL-адрес,
+    название, зарплата, город и другие. Эти методы реализованы с учетом особенностей
+    API сайта SuperJob.
+
+    Attributes:
+        params (RequestConfig): Параметры запроса.
+        pages (int): Количество страниц для обработки.
+        items (str): Ключ для получения вакансий из json_data.
+        job_board (str): Название сайта для парсинга вакансий.
+    """
 
     def __init__(self, params: RequestConfig) -> None:
         self.params = params
+        self.job_board = "SuperJob"
+        self.pages = 5
+        self.items = "objects"
 
-    @logger.catch(message="Ошибка в методе SuperJob.get_request_params()")
     async def get_request_params(self) -> dict:
-        """Формирует параметры запросов к API.
+        """
+        Асинхронный метод для получения параметров запроса для сайта SuperJob.
+
+        Метод формирует словарь с параметрами запроса и возвращает его.
 
         Returns:
-            dict: словарь с параметрами.
+            dict: Словарь с параметрами запроса.
         """
-        city = self.params.city
-        job = self.params.job
-        date_from, date_to = await utils.check_date(
-            self.params.date_from, self.params.date_to
-        )
-        remote = self.params.remote
+        date_from = await utils.check_date_from(self.params.date_from)
+        date_to = await utils.check_date_to(self.params.date_to)
 
-        # Формируем параметры запроса к API SuperJob
         sj_params = {
-            "keyword": job,
+            "keyword": self.params.job,
             "count": 100,
             "date_published_from": await utils.convert_date(date_from),
             "date_published_to": await utils.convert_date(date_to),
         }
 
-        if city:
-            sj_params["town"] = city
+        if self.params.city:
+            sj_params["town"] = self.params.city
 
-        if remote:
+        if self.params.remote:
             sj_params["place_of_work"] = 2
 
         if self.params.experience > 0 and self.params.experience <= 4:
@@ -152,131 +347,226 @@ class SuperJob(Parser):
 
         return sj_params
 
-    @logger.catch(message="Ошибка в методе SuperJob.get_vacancy_from_superjob()")
-    async def get_vacancy_from_superjob(self) -> dict:
-        """Формирует словарь с основными полями вакансий с сайта SuperJob
+    async def parsing_vacancy_superjob(self) -> Coroutine[Any, Any, dict]:
+        """
+        Асинхронный метод для парсинга вакансий с сайта SuperJob.
+
+        Метод получает параметры запроса с помощью метода get_request_params и вызывает
+        метод vacancy_parsing родительского класса Parser.
 
         Returns:
-            dict: Словарь с основными полями вакансий
+            Coroutine[Any, Any, dict]: Корутина с результатом выполнения метода
+            vacancy_parsing.
         """
         sj_params = await self.get_request_params()
-
-        job_list = await self.get_vacancies(
-            url=config.superjob_url,
-            params=sj_params,
-            pages=5,
-            headers=config.superjob_headers,
-            items="objects",
+        return await super().vacancy_parsing(
+            config.superjob_url, sj_params, self.job_board, self.pages, self.items
         )
-        job_dict: dict = {}
-        # Формируем словарь с вакансиями
-        for job in job_list:
-            job_dict["job_board"] = "SuperJob"
-            job_dict["url"] = job["link"]
-            job_dict["title"] = job["profession"]
 
-            if job["payment_from"]:
-                job_dict["salary_from"] = job["payment_from"]
-            else:
-                job_dict["salary_from"] = None
+    async def get_url(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения URL-адреса вакансии.
 
-            if job["payment_to"]:
-                job_dict["salary_to"] = job["payment_to"]
-            else:
-                job_dict["salary_to"] = None
+        Метод возвращает значение ключа "link" из словаря job.
 
-            if job["currency"]:
-                job_dict["salary_currency"] = job["currency"]
-            else:
-                job_dict["salary_currency"] = "Валюта не указана"
-
-            if job["work"]:
-                job_dict["responsibility"] = job["work"]
-            else:
-                job_dict["responsibility"] = "Нет описания"
-
-            if job["candidat"]:
-                job_dict["requirement"] = job["candidat"]
-            else:
-                job_dict["requirement"] = "Нет описания"
-
-            if job["town"]:
-                job_dict["city"] = job["town"]["title"]
-            else:
-                job_dict["city"] = "Не указано"
-
-            if job["firm_name"]:
-                job_dict["company"] = job["firm_name"]
-            else:
-                job_dict["company"] = "Не указано"
-
-            if job["type_of_work"]:
-                job_dict["type_of_work"] = job["type_of_work"]["title"]
-            else:
-                job_dict["type_of_work"] = "Не указано"
-
-            if job["place_of_work"]:
-                job_dict["place_of_work"] = job["place_of_work"]["title"]
-            else:
-                job_dict["place_of_work"] = "Нет описания"
-
-            if job["experience"]:
-                job_dict["experience"] = job["experience"]["title"]
-            else:
-                job_dict["experience"] = "Не указано"
-
-            # Конвертируем дату в удобочитаемый вид
-            published_date = datetime.date.fromtimestamp(job["date_published"])
-            job_dict["published_at"] = published_date
-
-            # Добавляем словарь с вакансией в общий список всех вакансий
-            Parser.general_job_list.append(job_dict.copy())
-
-        logger.debug("Сбор вакансий с SuperJob завершен")
-        return job_dict
-
-
-class Zarplata(Headhunter):
-    """Парсер Zarplata."""
-
-    def __init__(self, params: RequestConfig) -> None:
-        super().__init__(params)
-
-    @logger.catch(message="Ошибка в методе Zarplata.get_vacancy_from_zarplata()")
-    async def get_vacancy_from_zarplata(self) -> dict:
-        """Отвечает за получение вакансий с сайта Zarplata.
+        Args:
+            job (dict): Словарь с информацией о вакансии.
 
         Returns:
-            dict: Словарь с вакансиями.
+            str | None: URL-адрес вакансии или None, если URL-адрес отсутствует.
         """
-        job_dict = await super().get_vacancy_from_headhunter(
-            config.zarplata_url, "Zarplata"
-        )
-        logger.debug("Сбор вакансий с Zarplata завершен")
-        return job_dict
+        return job.get("link", None)
+
+    async def get_title(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения названия вакансии.
+
+        Метод возвращает значение ключа "profession" из словаря job.
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Название вакансии или None, если название отсутствует.
+        """
+        return job.get("profession", None)
+
+    async def get_salary_from(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения минимальной зарплаты.
+
+        Метод возвращает значение ключа "payment_from" из словаря job.
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Минимальная зарплата по вакансии или None, если зарплата
+            отсутствует.
+        """
+        return job.get("payment_from", None)
+
+    async def get_salary_to(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения максимальной зарплаты.
+
+        Метод возвращает значение ключа "payment_to" из словаря job.
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Максимальная зарплата по вакансии или None, если зарплата
+            отсутствует.
+        """
+        return job.get("payment_to", None)
+
+    async def get_salary_currency(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения валюты зарплаты.
+
+        Метод возвращает значение ключа "currency" из словаря job.
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Валюта зарплаты по вакансии или None, если зарплата отсутствует.
+        """
+        return job.get("currency", None)
+
+    async def get_responsibility(self, job: dict) -> str:
+        """
+        Асинхронный метод для получения информации об обязанностях.
+
+        Метод возвращает значение ключа "work" из словаря job. Если значения нет,
+        то возвращает строку "Нет описания".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str: Обязанности по вакансии.
+        """
+        return job.get("work", "Нет описания")
+
+    async def get_requirement(self, job: dict) -> str:
+        """
+        Асинхронный метод для получения информации о требованиях к кандидату.
+
+        Метод возвращает значение ключа "candidat" из словаря job. Если значения нет,
+        то возвращает строку "Нет описания".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str: Информация о требованиях к кандидату по вакансии.
+        """
+        return job.get("candidat", "Нет описания")
+
+    async def get_city(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения города.
+
+        Метод получает значение ключа "town" из словаря job и возвращает значение
+        ключа "title".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Город вакансии или None, если город отсутствует.
+        """
+        town = job.get("town", None)
+        return town.get("title", None) if town else None
+
+    async def get_company(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения названия компании.
+
+        Метод возвращает значение ключа "firm_name" из словаря job.
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Название компании по вакансии или None, если название
+            отсутствует.
+        """
+        return job.get("firm_name", None)
+
+    async def get_type_of_work(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения типа работы.
+
+        Метод получает значение ключа "type_of_work" из словаря job и возвращает
+        значение ключа "title".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Тип работы по вакансии или None, если тип работы отсутствует.
+        """
+        type_of_work = job.get("type_of_work", None)
+        return type_of_work.get("title", None) if type_of_work else None
+
+    async def get_published_at(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения даты публикации вакансии.
+
+        Метод получает значение ключа "date_published" из словаря job и преобразует его
+        в формат даты. Возвращает эту дату.
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Дата публикации вакансии или None, если дата отсутствует.
+        """
+        date = job.get("date_published", None)
+        return datetime.date.fromtimestamp(date) if date else None
 
 
 class Trudvsem(Parser):
-    """Парсер Trudvsem."""
+    """
+    Класс для парсинга вакансий с сайта Trudvsem.
+
+    Наследуется от класса Parser.
+    Класс Trudvsem предназначен для парсинга вакансий с сайта Trudvsem.
+    Он содержит методы для получения информации о вакансиях, такие как URL-адрес,
+    название, зарплата, город и другие. Эти методы реализованы с учетом особенностей
+    API сайта Trudvsem.
+
+    Attributes:
+        params (RequestConfig): Параметры запроса.
+        pages (int): Количество страниц для обработки.
+        items (str): Ключ для получения вакансий из json_data.
+        job_board (str): Название сайта для парсинга вакансий.
+    """
 
     def __init__(self, params: RequestConfig) -> None:
         self.params = params
+        self.job_board = "Trudvsem"
+        self.pages = 20
+        self.items = "results"
 
-    @logger.catch(message="Ошибка в методе Trudvsem.get_request_params()")
     async def get_request_params(self) -> dict:
-        """Формирует параметры запросов к API.
+        """
+        Асинхронный метод для получения параметров запроса для сайта Trudvsem.
+
+        Метод формирует словарь с параметрами запроса и возвращает его.
 
         Returns:
-            dict: словарь с параметрами.
+            dict: Словарь с параметрами запроса.
         """
-        job = self.params.job
-        date_from, date_to = await utils.check_date(
-            self.params.date_from, self.params.date_to
-        )
+        date_from = await utils.check_date_from(self.params.date_from)
+        date_to = await utils.check_date_to(self.params.date_to)
 
         # Формируем параметры запроса к API Trudvsem
         tv_params = {
-            "text": job,
+            "text": self.params.job,
             "limit": 100,
             "offset": 0,
             "modifiedFrom": await utils.convert_date_for_trudvsem(date_from),
@@ -291,85 +581,221 @@ class Trudvsem(Parser):
 
         return tv_params
 
-    @logger.catch(message="Ошибка в методе Trudvsem.get_vacancy_from_trudvsem()")
-    async def get_vacancy_from_trudvsem(self) -> dict:
-        """Формирует словарь с основными полями вакансий с сайта Trudvsem
+    async def parsing_vacancy_trudvsem(self) -> Coroutine[Any, Any, dict]:
+        """
+        Асинхронный метод для парсинга вакансий с сайта Trudvsem.
+
+        Метод получает параметры запроса с помощью метода get_request_params и вызывает
+        метод vacancy_parsing родительского класса Parser.
 
         Returns:
-            dict: Словарь с основными полями вакансий
+            Coroutine[Any, Any, dict]: Корутина с результатом выполнения метода
+            vacancy_parsing.
         """
         tv_params = await self.get_request_params()
-        job_list: list[dict] = await self.get_vacancies(
-            url=config.trudvsem_url, params=tv_params, pages=20, items="results"
+        return await super().vacancy_parsing(
+            config.trudvsem_url, tv_params, self.job_board, self.pages, self.items
         )
-        
-        job_dict: dict = {}
-        # Формируем словарь с вакансиями
-        for job in job_list:
-            job_dict["job_board"] = "Trudvsem"
 
-            vacancy: dict = job.get("vacancy", None)
+    async def get_url(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения URL-адреса вакансии.
 
-            if vacancy is not None:
-                job_dict["url"] = vacancy.get("vac_url")
+        Метод получает значение ключа "vacancy" из словаря job и возвращает значение
+        ключа "vac_url".
 
-                job_dict["title"] = vacancy.get("job-name")
+        Args:
+            job (dict): Словарь с информацией о вакансии.
 
-                if vacancy.get("salary_min"):
-                    job_dict["salary_from"] = vacancy.get("salary_min")
-                else:
-                    job_dict["salary_from"] = None
+        Returns:
+            str | None: URL-адрес вакансии или None, если URL-адрес отсутствует.
+        """
+        vacancy = job.get("vacancy", None)
+        return vacancy.get("vac_url", None) if vacancy else None
 
-                job_dict["salary_currency"] = "RUR"
+    async def get_title(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения названия вакансии.
 
-                if vacancy.get("salary_max"):
-                    job_dict["salary_to"] = vacancy.get("salary_max")
-                else:
-                    job_dict["salary_to"] = None
+        Метод получает значение ключа "vacancy" из словаря job и возвращает значение
+        ключа "job-name".
 
-                if vacancy.get("duty"):
-                    job_dict["responsibility"] = vacancy.get("duty")
-                else:
-                    job_dict["responsibility"] = "Нет описания"
+        Args:
+            job (dict): Словарь с информацией о вакансии.
 
-                if vacancy.get("requirement"):
-                    if vacancy["requirement"]["education"]:
-                        education = vacancy["requirement"]["education"]
-                    if vacancy["requirement"]["experience"]:
-                        experience = vacancy["requirement"]["experience"]
-                        job_dict[
-                            "requirement"
-                        ] = f"{education} образование, опыт работы (лет): {experience}"
-                else:
-                    job_dict["requirement"] = "Нет описания"
+        Returns:
+            str | None: Название вакансии или None, если название отсутствует.
+        """
+        vacancy = job.get("vacancy", None)
+        return vacancy.get("job-name", None) if vacancy else None
 
-                if vacancy.get("addresses"):
-                    job_dict["city"] = vacancy["addresses"]["address"][0]["location"]
-                else:
-                    job_dict["city"] = "Не указано"
+    async def get_salary_from(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения минимальной зарплаты.
 
-                if vacancy.get("company"):
-                    job_dict["company"] = vacancy["company"]["name"]
-                else:
-                    job_dict["company"] = "Не указано"
+        Метод получает значение ключа "vacancy" из словаря job и возвращает значение
+        ключа "salary_min".
 
-                if vacancy.get("schedule"):
-                    job_dict["type_of_work"] = vacancy.get("schedule")
-                else:
-                    job_dict["type_of_work"] = "Не указано"
+        Args:
+            job (dict): Словарь с информацией о вакансии.
 
-                # Конвертируем дату в удобочитаемый вид
-                published_date = datetime.datetime.strptime(
-                    vacancy.get("creation-date", ""), "%Y-%m-%d"
-                ).date()
-                job_dict["published_at"] = published_date
+        Returns:
+            str | None: Минимальная зарплата по вакансии или None, если зарплата
+            отсутствует.
+        """
+        vacancy = job.get("vacancy", None)
+        return vacancy.get("salary_min", None) if vacancy else None
 
-                if self.params.city:  # Если при поиске указан город ищем его в адресе
-                    if self.params.city.lower() in job_dict.get("city", "").lower():
-                        # Добавляем словарь с вакансией в общий список всех вакансий
-                        Parser.general_job_list.append(job_dict.copy())
-                else:
-                    Parser.general_job_list.append(job_dict.copy())
+    async def get_salary_to(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения максимальной зарплаты.
 
-        logger.debug("Сбор вакансий с Trudvsem завершен")
-        return job_dict
+        Метод получает значение ключа "vacancy" из словаря job и возвращает значение
+        ключа "salary_max".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Максимальная зарплата по вакансии или None, если зарплата
+            отсутствует.
+        """
+        vacancy = job.get("vacancy", None)
+        return vacancy.get("salary_max", None) if vacancy else None
+
+    async def get_salary_currency(self, job: dict) -> str:
+        """
+        Асинхронный метод для получения валюты зарплаты.
+
+        Метод возвращает строку "RUR".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str: Валюта зарплаты по вакансии.
+        """
+        salary_currency = "RUR"
+        return salary_currency
+
+    async def get_responsibility(self, job: dict) -> str:
+        """
+        Асинхронный метод для получения информации об обязанностях.
+
+        Метод получает значение ключа "vacancy" из словаря job и возвращает значение
+        ключа "duty". Если значения нет, то возвращает строку
+        "Нет описания".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str: Обязанности по вакансии.
+        """
+        vacancy = job.get("vacancy", None)
+        return vacancy.get("duty", None) if vacancy else "Нет описания"
+
+    async def get_requirement(self, job: dict) -> str:
+        """
+        Асинхронный метод для получения информации о требованиях к кандидату.
+
+        Метод получает значение ключа "vacancy" из словаря job и формирует строку с
+        требованиями к кандидату. Если значения нет, то возвращает строку
+        "Нет описания".
+
+        Метод проверяет наличие значения ключа "requirement" в словаре vacancy. Если
+        значение присутствует, то метод проверяет наличие значений ключей "education" и
+        "experience" в словаре vacancy["requirement"]. Если значения присутствуют,
+        то метод формирует строку requirement с требованиями к кандидату.
+        Иначе устанавливает значение переменной requirement равным "Нет описания".
+        Возвращает значение переменной requirement.
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str: Информация о требованиях к кандидату по вакансии.
+        """
+        vacancy = job.get("vacancy", None)
+        requirement = None
+        if vacancy.get("requirement"):
+            if vacancy["requirement"]["education"]:
+                education = vacancy["requirement"]["education"]
+            if vacancy["requirement"]["experience"]:
+                experience = vacancy["requirement"]["experience"]
+                requirement = (
+                    f"{education} образование, опыт работы (лет): {experience}"
+                )
+        else:
+            requirement = "Нет описания"
+        return requirement
+
+    async def get_city(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения города.
+
+        Метод получает значение ключа "vacancy" из словаря job и возвращает значение
+        ключа "location".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Город вакансии или None, если город отсутствует.
+        """
+        vacancy = job.get("vacancy", None)
+        addresses = vacancy.get("addresses") if vacancy else None
+        return vacancy["addresses"]["address"][0]["location"] if addresses else None
+
+    async def get_company(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения названия компании.
+
+        Метод получает значение ключа "vacancy" из словаря job и возвращает значение
+        ключа "name".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Название компании по вакансии или None, если название
+            отсутствует.
+        """
+        vacancy = job.get("vacancy", None)
+        company = vacancy.get("company") if vacancy else None
+        return company.get("name", None) if company else None
+
+    async def get_type_of_work(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения типа занятости.
+
+        Метод получает значение ключа "vacancy" из словаря job и возвращает значение
+        ключа "schedule".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Тип занятости по вакансии или None, если тип занятости
+            отсутствует.
+        """
+        vacancy = job.get("vacancy", None)
+        return vacancy.get("schedule", None) if vacancy else None
+
+    async def get_published_at(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения даты публикации вакансии.
+
+        Метод получает значение ключа "vacancy" из словаря job и возвращает значение
+        ключа "creation-date". Преобразует его в формат даты и
+        возвращает эту дату.
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Дата публикации вакансии или None, если дата отсутствует.
+        """
+        vacancy = job.get("vacancy", None)
+        date = vacancy.get("creation-date", None)
+        return datetime.datetime.strptime(date, "%Y-%m-%d").date() if date else None
