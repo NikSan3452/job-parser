@@ -441,9 +441,8 @@ class VacancyScraperMixin:
         params: dict = {}  # Словарь параметров запроса
 
         # Проверяем дату и если нужно устанавливаем дефолтную
-        date_from, date_to = await utils.check_date(
-            form_params.get("date_from"), form_params.get("date_to")
-        )
+        date_from = await utils.check_date_from(form_params.get("date_from"))
+        date_to = await utils.check_date_to(form_params.get("date_to"))
 
         # Формируем словарь с параметрами запроса
         if form_params.get("city") is not None:
