@@ -23,15 +23,21 @@ class Headhunter(Parser):
     Он содержит методы для получения информации о вакансиях, такие как URL-адрес,
     название, зарплата, город и другие. Эти методы реализованы с учетом особенностей
     API сайта HeadHunter.
-
-    Attributes:
-        params (RequestConfig): Параметры запроса.
-        pages (int): Количество страниц для обработки.
-        items (str): Ключ для получения вакансий из json_data.
-        job_board (str): Название сайта для парсинга вакансий.
     """
 
     def __init__(self, params: RequestConfig) -> None:
+        """
+        Инициализация экземпляра класса Headhunter.
+
+        Attributes:
+            params (RequestConfig): Параметры запроса.
+            pages (int): Количество страниц для обработки.
+            items (str): Ключ для получения вакансий из json_data.
+            job_board (str): Название сайта для парсинга вакансий.
+
+        Args:
+            params (RequestConfig): Параметры запроса.
+        """
         self.params = params
         self.pages: int = 20
         self.items: str = "items"
@@ -269,11 +275,18 @@ class Zarplata(Headhunter):
     Он содержит метод parsing_vacancy_zarplata для выполнения парсинга вакансий с
     этого сайта.
     Остальные методы наследуются от родительского класса Headhunter.
-    Attributes:
-        job_board (str): Название сайта для парсинга вакансий.
     """
 
     def __init__(self, params: RequestConfig) -> None:
+        """
+        Инициализация экземпляра класса Zarplata.
+
+        Attributes:
+            job_board (str): Название сайта для парсинга вакансий.
+
+        Args:
+            params (RequestConfig): Параметры запроса.
+        """
         super().__init__(params)
         self.job_board = "Zarplata"
 
@@ -303,15 +316,21 @@ class SuperJob(Parser):
     Он содержит методы для получения информации о вакансиях, такие как URL-адрес,
     название, зарплата, город и другие. Эти методы реализованы с учетом особенностей
     API сайта SuperJob.
-
-    Attributes:
-        params (RequestConfig): Параметры запроса.
-        pages (int): Количество страниц для обработки.
-        items (str): Ключ для получения вакансий из json_data.
-        job_board (str): Название сайта для парсинга вакансий.
     """
 
     def __init__(self, params: RequestConfig) -> None:
+        """
+        Инициализация экземпляра класса SuperJob.
+
+        Attributes:
+            params (RequestConfig): Параметры запроса.
+            pages (int): Количество страниц для обработки.
+            items (str): Ключ для получения вакансий из json_data.
+            job_board (str): Название сайта для парсинга вакансий.
+
+        Args:
+            params (RequestConfig): _description_
+        """
         self.params = params
         self.job_board = "SuperJob"
         self.pages = 5
@@ -538,15 +557,21 @@ class Trudvsem(Parser):
     Он содержит методы для получения информации о вакансиях, такие как URL-адрес,
     название, зарплата, город и другие. Эти методы реализованы с учетом особенностей
     API сайта Trudvsem.
-
-    Attributes:
-        params (RequestConfig): Параметры запроса.
-        pages (int): Количество страниц для обработки.
-        items (str): Ключ для получения вакансий из json_data.
-        job_board (str): Название сайта для парсинга вакансий.
     """
 
     def __init__(self, params: RequestConfig) -> None:
+        """
+        Инициализация экземпляра класса Trudvsem.
+
+        Attributes:
+            params (RequestConfig): Параметры запроса.
+            pages (int): Количество страниц для обработки.
+            items (str): Ключ для получения вакансий из json_data.
+            job_board (str): Название сайта для парсинга вакансий.
+
+        Args:
+            params (RequestConfig): Параметры запроса.
+        """
         self.params = params
         self.job_board = "Trudvsem"
         self.pages = 20
@@ -564,7 +589,6 @@ class Trudvsem(Parser):
         date_from = await utils.check_date_from(self.params.date_from)
         date_to = await utils.check_date_to(self.params.date_to)
 
-        # Формируем параметры запроса к API Trudvsem
         tv_params = {
             "text": self.params.job,
             "limit": 100,
