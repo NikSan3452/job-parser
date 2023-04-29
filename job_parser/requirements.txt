@@ -31,7 +31,7 @@ django-shortcuts==1.6
 
 black==22.12.0
 
-ruff==0.0.229
+ruff==0.0.263
 
 mypy==0.991
 mypy-extensions==0.4.3
