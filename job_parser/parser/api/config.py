@@ -1,7 +1,6 @@
 import datetime
 import os
 from dataclasses import dataclass
-import random
 
 from dotenv import load_dotenv
 
