@@ -96,7 +96,7 @@ class Utils:
 
         Args:
             job_list (list[dict]): Список вакансий.
-            key (str): Ключь, по которому сортируем.
+            key (str): Ключ, по которому сортируем.
 
         Returns:
             list[dict]: Сортированный список вакансий.
