@@ -47,19 +47,18 @@ class Utils:
         return converted_date
 
     @staticmethod
-    async def check_date(
+    async def check_date_from(
         date_from: str | None | datetime.date,
-        date_to: str | None | datetime.date,
     ) -> tuple[datetime.date | str, datetime.date | str]:
         """Проверяет дату на пустое значение, если истина, то
         будет установлено значение по умолчанию.
 
         Args:
             date_from (str | None | datetime.date): Дата от.
-            date_to (str | None | datetime.date): Дата до.
 
         Returns:
-            tuple[datetime.date | str, datetime.date | str]: Время задаваемое по умолчанию.
+            tuple[datetime.date | str, datetime.date | str]: Время задаваемое по 
+            умолчанию.
         """
         if not date_from or date_from == "":
             new_date_from = datetime.date.today() - datetime.timedelta(days=1)
@@ -67,14 +66,29 @@ class Utils:
             new_date_from = datetime.datetime.strptime(date_from, "%Y-%m-%d").date()
         else:
             new_date_from = date_from
+        return new_date_from
 
+    @staticmethod
+    async def check_date_to(
+        date_to: str | None | datetime.date,
+    ) -> tuple[datetime.date | str, datetime.date | str]:
+        """Проверяет дату на пустое значение, если истина, то
+        будет установлено значение по умолчанию.
+
+        Args:
+            date_to (str | None | datetime.date): Дата до.
+
+        Returns:
+            tuple[datetime.date | str, datetime.date | str]: Время задаваемое по 
+            умолчанию.
+        """
         if not date_to or date_to == "":
             new_date_to = datetime.date.today()
         elif isinstance(date_to, str):
             new_date_to = datetime.datetime.strptime(date_to, "%Y-%m-%d").date()
         else:
             new_date_to = date_to
-        return new_date_from, new_date_to
+        return new_date_to
 
     @staticmethod
     async def sort_by_date(job_list: list[dict]) -> list[dict]:
