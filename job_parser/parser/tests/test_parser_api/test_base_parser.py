@@ -382,6 +382,8 @@ class TestParserPositive:
             fix_param["pages"],
             fix_param["items"],
         )
+
+        assert isinstance(result, dict)
         assert result == {
             "job_board": fix_param["trudvsem"],
             "url": mock_get_vacancies.return_value[0]["url"],
@@ -613,6 +615,7 @@ class TestParserNegative:
             fix_param["items"],
         )
 
+        assert isinstance(result, dict)
         assert result == {
             "job_board": fix_param["trudvsem"],
             "url": mock_get_vacancies.return_value[0]["url"],
