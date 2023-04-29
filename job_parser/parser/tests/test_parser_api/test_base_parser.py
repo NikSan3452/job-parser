@@ -1,13 +1,14 @@
 import json
 import types
-from parser.api.base_parser import CreateConnection, Parser
-from parser.api.config import ParserConfig
 from typing import Any, Callable
 
 import httpx
 import pytest
 from loguru import logger
 from pytest_mock import MockerFixture
+
+from parser.api.base_parser import CreateConnection, Parser
+from parser.api.config import ParserConfig
 
 
 @pytest.fixture
@@ -198,10 +199,12 @@ def fix_param() -> dict:
     """
     fix_param = dict(
         url="https://example.com",
-        params={"param1": "value1"},
+        params={"city": "Москва"},
         pages=2,
         items="items",
         results="results",
+        trudvsem="Trudvsem",
+        headhunter="HeadHunter",
     )
     return fix_param
 
@@ -289,6 +292,110 @@ class TestParserPositive:
         )
         assert isinstance(result, list)
         assert len(result) == 4
+
+    async def test_vacancy_parsing(
+        self, parser: MyParser, mocker: MockerFixture, fix_param: dict
+    ) -> None:
+        """Тест проверяет работу парсера вакансий.
+
+        Создается фиктивный объект парсера и фиктивные методы для извлечения
+        информации о вакансиях с веб-страницы. Далее происходит вызов метода
+        vacancy_parsing с переданными параметрами.
+        Ожидается, что парсер правильно извлекает информацию о вакансиях и
+        возвращает ее в ожидаемом формате.
+
+        Args:
+            parser (MyParser): Экземпляр парсера вакансий.
+            mocker (MockerFixture): Фикстура для создания фиктивных объектов и методов.
+            fix_param (dict): Словарь с параметрами для теста.
+        """
+
+        mock_get_vacancies = mocker.patch.object(parser, "get_vacancies")
+
+        mock_get_vacancies.return_value = [
+            {
+                "url": "https://example.com/vacancy/1",
+                "title": "Python",
+                "salary_from": 100000,
+                "salary_to": 200000,
+                "salary_currency": "RUR",
+                "responsibility": "test responsibility",
+                "requirement": "test requirement",
+                "city": "Москва",
+                "company": "Example Inc.",
+                "type_of_work": "Full-time",
+                "published_at": "2023-01-01",
+            }
+        ]
+
+        mock_get_url = mocker.patch.object(parser, "get_url")
+        mock_get_url.return_value = mock_get_vacancies.return_value[0]["url"]
+
+        mock_get_title = mocker.patch.object(parser, "get_title")
+        mock_get_title.return_value = mock_get_vacancies.return_value[0]["title"]
+
+        mock_get_salary_from = mocker.patch.object(parser, "get_salary_from")
+        mock_get_salary_from.return_value = mock_get_vacancies.return_value[0][
+            "salary_from"
+        ]
+
+        mock_get_salary_to = mocker.patch.object(parser, "get_salary_to")
+        mock_get_salary_to.return_value = mock_get_vacancies.return_value[0][
+            "salary_to"
+        ]
+
+        mock_get_salary_currency = mocker.patch.object(parser, "get_salary_currency")
+        mock_get_salary_currency.return_value = mock_get_vacancies.return_value[0][
+            "salary_currency"
+        ]
+
+        mock_get_responsibility = mocker.patch.object(parser, "get_responsibility")
+        mock_get_responsibility.return_value = mock_get_vacancies.return_value[0][
+            "responsibility"
+        ]
+
+        mock_get_requirement = mocker.patch.object(parser, "get_requirement")
+        mock_get_requirement.return_value = mock_get_vacancies.return_value[0][
+            "requirement"
+        ]
+
+        mock_get_city = mocker.patch.object(parser, "get_city")
+        mock_get_city.return_value = mock_get_vacancies.return_value[0]["city"]
+
+        mock_get_company = mocker.patch.object(parser, "get_company")
+        mock_get_company.return_value = mock_get_vacancies.return_value[0]["company"]
+
+        mock_get_type_of_work = mocker.patch.object(parser, "get_type_of_work")
+        mock_get_type_of_work.return_value = mock_get_vacancies.return_value[0][
+            "type_of_work"
+        ]
+
+        mock_get_published_at = mocker.patch.object(parser, "get_published_at")
+        mock_get_published_at.return_value = mock_get_vacancies.return_value[0][
+            "published_at"
+        ]
+
+        result = await parser.vacancy_parsing(
+            fix_param["url"],
+            fix_param["params"],
+            fix_param["trudvsem"],
+            fix_param["pages"],
+            fix_param["items"],
+        )
+        assert result == {
+            "job_board": fix_param["trudvsem"],
+            "url": mock_get_vacancies.return_value[0]["url"],
+            "title": mock_get_vacancies.return_value[0]["title"],
+            "salary_from": mock_get_vacancies.return_value[0]["salary_from"],
+            "salary_to": mock_get_vacancies.return_value[0]["salary_to"],
+            "salary_currency": mock_get_vacancies.return_value[0]["salary_currency"],
+            "responsibility": mock_get_vacancies.return_value[0]["responsibility"],
+            "requirement": mock_get_vacancies.return_value[0]["requirement"],
+            "city": mock_get_vacancies.return_value[0]["city"],
+            "company": mock_get_vacancies.return_value[0]["company"],
+            "type_of_work": mock_get_vacancies.return_value[0]["type_of_work"],
+            "published_at": mock_get_vacancies.return_value[0]["published_at"],
+        }
 
 
 @pytest.mark.asyncio
@@ -416,3 +523,107 @@ class TestParserNegative:
         )
         assert isinstance(result, list)
         assert len(result) == 0
+
+    async def test_vacancy_parsing_with_none(
+        self, parser: MyParser, mocker: MockerFixture, fix_param: dict
+    ) -> None:
+        """Тест проверяет работу парсера вакансий.
+
+        Создается фиктивный объект парсера и фиктивные методы для извлечения
+        информации о вакансиях с веб-страницы, которые возвращают None.
+        Далее происходит вызов метода vacancy_parsing с переданными параметрами.
+        Ожидается, что парсер правильно извлекает информацию о вакансиях и
+        возвращает ее в ожидаемом формате.
+
+        Args:
+            parser (MyParser): Экземпляр парсера вакансий.
+            mocker (MockerFixture): Фикстура для создания фиктивных объектов и методов.
+            fix_param (dict): Словарь с параметрами для теста.
+        """
+        mock_get_vacancies = mocker.patch.object(parser, "get_vacancies")
+
+        mock_get_vacancies.return_value = [
+            {
+                "url": None,
+                "title": None,
+                "salary_from": None,
+                "salary_to": None,
+                "salary_currency": None,
+                "responsibility": None,
+                "requirement": None,
+                "city": None,
+                "company": None,
+                "type_of_work": None,
+                "published_at": None,
+            }
+        ]
+
+        mock_get_url = mocker.patch.object(parser, "get_url")
+        mock_get_url.return_value = mock_get_vacancies.return_value[0]["url"]
+
+        mock_get_title = mocker.patch.object(parser, "get_title")
+        mock_get_title.return_value = mock_get_vacancies.return_value[0]["title"]
+
+        mock_get_salary_from = mocker.patch.object(parser, "get_salary_from")
+        mock_get_salary_from.return_value = mock_get_vacancies.return_value[0][
+            "salary_from"
+        ]
+
+        mock_get_salary_to = mocker.patch.object(parser, "get_salary_to")
+        mock_get_salary_to.return_value = mock_get_vacancies.return_value[0][
+            "salary_to"
+        ]
+
+        mock_get_salary_currency = mocker.patch.object(parser, "get_salary_currency")
+        mock_get_salary_currency.return_value = mock_get_vacancies.return_value[0][
+            "salary_currency"
+        ]
+
+        mock_get_responsibility = mocker.patch.object(parser, "get_responsibility")
+        mock_get_responsibility.return_value = mock_get_vacancies.return_value[0][
+            "responsibility"
+        ]
+
+        mock_get_requirement = mocker.patch.object(parser, "get_requirement")
+        mock_get_requirement.return_value = mock_get_vacancies.return_value[0][
+            "requirement"
+        ]
+
+        mock_get_city = mocker.patch.object(parser, "get_city")
+        mock_get_city.return_value = mock_get_vacancies.return_value[0]["city"]
+
+        mock_get_company = mocker.patch.object(parser, "get_company")
+        mock_get_company.return_value = mock_get_vacancies.return_value[0]["company"]
+
+        mock_get_type_of_work = mocker.patch.object(parser, "get_type_of_work")
+        mock_get_type_of_work.return_value = mock_get_vacancies.return_value[0][
+            "type_of_work"
+        ]
+
+        mock_get_published_at = mocker.patch.object(parser, "get_published_at")
+        mock_get_published_at.return_value = mock_get_vacancies.return_value[0][
+            "published_at"
+        ]
+
+        result = await parser.vacancy_parsing(
+            fix_param["url"],
+            fix_param["params"],
+            fix_param["trudvsem"],
+            fix_param["pages"],
+            fix_param["items"],
+        )
+
+        assert result == {
+            "job_board": fix_param["trudvsem"],
+            "url": mock_get_vacancies.return_value[0]["url"],
+            "title": mock_get_vacancies.return_value[0]["title"],
+            "salary_from": mock_get_vacancies.return_value[0]["salary_from"],
+            "salary_to": mock_get_vacancies.return_value[0]["salary_to"],
+            "salary_currency": mock_get_vacancies.return_value[0]["salary_currency"],
+            "responsibility": mock_get_vacancies.return_value[0]["responsibility"],
+            "requirement": mock_get_vacancies.return_value[0]["requirement"],
+            "city": mock_get_vacancies.return_value[0]["city"],
+            "company": mock_get_vacancies.return_value[0]["company"],
+            "type_of_work": mock_get_vacancies.return_value[0]["type_of_work"],
+            "published_at": mock_get_vacancies.return_value[0]["published_at"],
+        }
