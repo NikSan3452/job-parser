@@ -1,6 +1,7 @@
 import datetime
 import os
 from dataclasses import dataclass
+import random
 
 from dotenv import load_dotenv
 
@@ -13,8 +14,11 @@ class ParserConfig:
     superjob_domain: str = "https://api.superjob.ru"
     superjob_api_version: str = "2.0"
     superjob_api_path: str = "vacancies"
-    superjob_secret_key: str | None = os.getenv("SUPERJOB_SECRET_KEY")
-    superjob_headers: dict = {"x-api-app-id": superjob_secret_key}
+    superjob_secret_keys_list: list[str] = [
+        os.getenv("SUPERJOB_SECRET_KEY1"),
+        os.getenv("SUPERJOB_SECRET_KEY2"),
+        os.getenv("SUPERJOB_SECRET_KEY3"),
+    ]
     superjob_url: str = f"{superjob_domain}/{superjob_api_version}/{superjob_api_path}/"
 
     headhunter_domain: str = "https://api.hh.ru"
