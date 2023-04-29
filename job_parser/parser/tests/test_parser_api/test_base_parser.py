@@ -1,267 +1,418 @@
-import datetime
 import json
+import types
 from parser.api.base_parser import CreateConnection, Parser
+from parser.api.config import ParserConfig
+from typing import Any, Callable
 
 import httpx
 import pytest
+from loguru import logger
+from pytest_mock import MockerFixture
 
 
 @pytest.fixture
-def parser() -> Parser:
+def mock_response(monkeypatch: Any) -> Callable:
+    """Фикстура для мокирования ответа на запрос.
+
+    Фикстура заменяет метод get у объекта httpx.AsyncClient на функцию mock_get,
+    которая возвращает различные ответы в зависимости от url запроса.
+
+    Args:
+        monkeypatch (Any): Фикстура для замены атрибутов и методов.
+
+    Returns:
+        Callable: Функция mock_get для мокирования ответа на запрос.
+    """
+
+    async def mock_get(*args, **kwargs):
+        if "badurl" in kwargs["url"]:
+            return httpx.Response(404)
+        elif "invalidurl" in kwargs["url"]:
+            raise httpx.InvalidURL("Invalid URL")
+        return httpx.Response(200, json={"key": "value"})
+
+    monkeypatch.setattr(httpx.AsyncClient, "get", mock_get)
+
+
+class TestCreateClientPositive:
+    """
+    Класс описывает позитивные тестовые случаи для метода create_client.
+
+    Этот класс содержит тесты для проверки различных позитивных сценариев
+    при вызове метода create_client: успешное выполнение запроса и установка заголовка.
+    """
+
+    @pytest.mark.asyncio
+    async def test_success(self, mock_response: Callable) -> None:
+        """Тест проверяет успешное выполнение запроса.
+
+        Создается объект CreateConnection и вызывается метод create_client с
+        указанными значениями url и params.
+        Ожидается, что статус код ответа будет равен 200 и содержимое ответа будет
+        соответствовать ожидаемому.
+
+        Args:
+            mock_response (Callable): Фикстура для мокирования ответа на запрос.
+        """
+        connection = CreateConnection()
+        url = "https://example.com"
+        params = {"key1": "value1", "key2": "value2"}
+        response = await connection.create_client(url, params)
+        assert response.status_code == 200
+        assert response.json() == {"key": "value"}
+
+    @pytest.mark.asyncio
+    async def test_set_header(self, monkeypatch: Any) -> None:
+        """Тест проверяет установку заголовка x-api-app-id.
+
+        Создается объект CreateConnection и вызывается метод create_client
+        с указанным значением url.
+        Ожидается, что заголовок x-api-app-id будет установлен в значение test_key.
+
+        Args:
+            monkeypatch (Any): Фикстура для мокирования выбора ключа из списка ключей.
+        """
+        config = ParserConfig()
+        connection = CreateConnection()
+        url = config.superjob_url
+        monkeypatch.setattr("random.choice", lambda x: "test_key")
+        response = await connection.create_client(url)
+        request_headers = response.request.headers
+        assert request_headers["x-api-app-id"] == "test_key"
+
+
+class TestCreateClientNegative:
+    """Класс описывает негативные тестовые случаи для метода create_client.
+
+    Этот класс содержит тесты для проверки различных негативных сценариев при
+    вызове метода create_client: неудачное выполнение запроса из-за неправильного url
+    и неустановленного заголовка x-api-app-id.
+    """
+
+    @pytest.mark.asyncio
+    async def test_failure(self, mock_response: Callable) -> None:
+        """Тест проверяет неудачное выполнение запроса из-за неправильного url.
+
+        Создается объект CreateConnection и вызывается метод create_client
+        с указанными значениями url и params.
+        Ожидается, что статус код ответа будет равен 404.
+
+        Args:
+            mock_response (Callable): Фикстура для мокирования ответа на запрос.
+        """
+        connection = CreateConnection()
+        url = "https://badurl.com"
+        params = {"key1": "value1", "key2": "value2"}
+        response = await connection.create_client(url, params)
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_failure_invalid_url(self, mock_response: Callable) -> None:
+        """Тест проверяет неудачное выполнение запроса из-за неправильного формата url.
+
+        Создается объект CreateConnection и вызывается метод create_client
+        с указанными значениями url и params.
+        Ожидается возникновение ошибки InvalidURL.
+
+        Args:
+            mock_response (Callable): Фикстура для мокирования ответа на запрос.
+        """
+        connection = CreateConnection()
+        url = "invalidurl"
+        params = {"key1": "value1", "key2": "value2"}
+        with pytest.raises(httpx.InvalidURL):
+            await connection.create_client(url, params)
+
+    @pytest.mark.asyncio
+    async def test_not_set_header(self) -> None:
+        """Тест проверяет отсутствие заголовка x-api-app-id при вызове
+        метода create_client с другим url.
+
+        Создается объект CreateConnection и вызывается метод create_client
+        с указанным значением url.
+        Ожидается отсутствие заголовка x-api-app-id в запросе.
+
+        """
+        connection = CreateConnection()
+        url = "https://someotherurl.com"
+        with pytest.raises(httpx.HTTPError):
+            response = await connection.create_client(url)
+            request_headers = response.request.headers
+            assert "x-api-app-id" not in request_headers
+
+
+class MyParser(Parser):
+    async def get_request_params(self) -> dict:
+        pass
+
+    async def get_url(self, job: dict) -> str | None:
+        pass
+
+    async def get_title(self, job: dict) -> str | None:
+        pass
+
+    async def get_salary_from(self, job: dict) -> str | None:
+        pass
+
+    async def get_salary_to(self, job: dict) -> str | None:
+        pass
+
+    async def get_salary_currency(self, job: dict) -> str | None:
+        pass
+
+    async def get_responsibility(self, job: dict) -> str:
+        pass
+
+    async def get_requirement(self, job: dict) -> str:
+        pass
+
+    async def get_city(self, job: dict) -> str | None:
+        pass
+
+    async def get_company(self, job: dict) -> str | None:
+        pass
+
+    async def get_type_of_work(self, job: dict) -> str | None:
+        pass
+
+    async def get_published_at(self, job: dict) -> str | None:
+        pass
+
+
+@pytest.fixture
+def parser() -> MyParser:
     """Фикстура возвращает экземпляр парсера.
 
     Returns:
-        Parser: Экземпляр парсера.
+        MyParser: Экземпляр парсера.
     """
-    return Parser()
+    return MyParser()
 
 
 @pytest.fixture
-def params() -> tuple:
-    """Фикстура возвращает кортеж параметров для тестов.
+def fix_param() -> dict:
+    """Фикстура возвращает параметры для тестирования.
 
     Returns:
-        tuple: Кортеж параметров для тестов.
+        dict: Словарь с параметрами для тестирования.
     """
-    items = None
-    url = "http://127.0.0.1:8000"
-    params = {
-        "text": "python",
-        "limit": 100,
-        "offset": 0,
-    }
-    pages = 1
-    headers = {"Content-Type": "application/json"}
-    return items, url, params, pages, headers
-
-
-def get_data() -> list[dict]:
-    """Создает тестовые данные.
-    Returns:
-        list[dict]: Тестовые данные.
-    """
-    data = {
-        "items": [
-            {
-                "job_board": "HeadHunter",
-                "title": "python",
-                "url": "http://example.com/vacancy1",
-                "description": "описание",
-                "company": "company1",
-                "published_at": datetime.date.today().strftime("%Y-%m-%d"),
-                "experience": "Без опыта",
-            }
-        ],
-        "objects": [
-            {
-                "job_board": "SuperJob",
-                "title": "java",
-                "url": "http://example.com/vacancy2",
-                "description": "описание",
-                "company": "company2",
-                "published_at": datetime.date.today().strftime("%Y-%m-%d"),
-                "experience": "Без опыта",
-            }
-        ],
-        "results": {
-            "vacancies": [
-                {
-                    "job_board": "Trudvsem",
-                    "title": "php",
-                    "url": "http://example.com/vacancy3",
-                    "description": "описание",
-                    "company": "company3",
-                    "published_at": datetime.date.today().strftime("%Y-%m-%d"),
-                    "experience": "Без опыта",
-                }
-            ]
-        },
-    }
-
-    return data
-
-
-async def mock_create_session(
-    connection: CreateConnection,
-    url: str,
-    headers: dict | None = None,
-    params: dict | None = None,
-) -> list[dict]:
-    """Функция-заглушка для создания сессии.
-
-    Возвращает фиктивный ответ с данными из функции get_data.
-
-    Args:
-        connection (CreateConnection): Экземпляр соединения.
-        url (str): URL-адрес для запроса.
-        headers (dict | None): Заголовки запроса.
-        params (dict | None): Параметры запроса.
-
-    Returns:
-        list[dict]: Фиктивный ответ с данными из функции get_data.
-    """
-    data = get_data()
-    # Кодируем данные
-    json_str = json.dumps(data)
-    json_bytes = json_str.encode("utf-8")
-
-    # создаем экземпляр класса httpx.Request
-    request = httpx.Request("GET", url=url, headers=headers, params=params)
-
-    # Создаем экземпляр класса httpx.Response
-    response = httpx.Response(
-        status_code=200,
-        request=request,
-        headers=headers,
-        content=json_bytes,
+    fix_param = dict(
+        url="https://example.com",
+        params={"param1": "value1"},
+        pages=2,
+        items="items",
+        results="results",
     )
-    return response
+    return fix_param
 
 
-class TestCreateConnection:
-    """Класс описывает тестовые случаи для создания соединения.
-
-    Этот класс содержит тесты для проверки успешного создания сессии.
-    """
-
-    @pytest.mark.asyncio
-    async def test_create_session_success(self, monkeypatch, params: tuple) -> None:
-        """Тест проверяет успешное создание сессии.
-
-        Создается соединение и используется monkeypatch для замены метода
-        create_session на mock_create_session.
-        Вызывается метод create_session и проверяется код ответа, заголовки и
-        параметры запроса.
-
-        Args:
-            monkeypatch: Фикстура pytest для временной замены атрибутов и методов.
-            params (tuple): Кортеж параметров для теста.
-        """
-        # создаем экземпляр класса CreateConnection
-        connection = CreateConnection()
-        # используем метод setattr фикстуры monkeypatch
-        monkeypatch.setattr(connection, "create_session", mock_create_session)
-        # вызываем метод create_session с переданными аргументами
-        # первый аргумент(connection) уже не передается неявно и должен быть указан при вызове функции
-        response = await connection.create_session(
-            connection, params[1], headers=params[4], params=params[2]
-        )
-        # проверяем, что ответ имеет статус 200
-        assert response.status_code == 200
-        # проверяем, что ответ имеет правильные заголовки и параметры
-        assert response.request.headers["Content-Type"] == "application/json"
-        assert response.request.url.query.decode() == "text=python&limit=100&offset=0"
-
-
+@pytest.mark.asyncio
 class TestParserPositive:
-    """Класс описывает позитивные тестовые случаи для парсера.
+    """
+    Класс описывает позитивные тестовые случаи для парсера.
 
-    Этот класс содержит тесты для проверки получения вакансий с различными параметрами.
+    Этот класс содержит тесты для проверки различных позитивных сценариев
+    при работе с парсером:
+    - обработка данных в случае, если API Trudvsem
+    - получение данных в остальных случаях
+    - общая проверка получения вакансий.
     """
 
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize(
-        "items,expected_job_board",
-        [
-            ("items", "HeadHunter"),
-            ("results", "Trudvsem"),
-            ("objects", "SuperJob"),
-        ],
-    )
-    async def test_get_vacancies(
-        self,
-        monkeypatch,
-        params: tuple,
-        parser: Parser,
-        items: str,
-        expected_job_board: str,
-    ) -> None:
-        """Тест проверяет получение вакансий с различными параметрами.
+    async def test_process_trudvsem_data_vacancies(self, parser: MyParser) -> None:
+        """
+        Тест проверяет обработку данных от trudvsem.
 
-        Используется monkeypatch для замены метода create_session на
-        mock_create_session.
-        Вызывается метод get_vacancies с различными параметрами и проверяется результат.
+        Создается объект json_data с результатами.
+        Ожидается, что результат будет списком длиной 2.
 
         Args:
-            monkeypatch: Фикстура pytest для временной замены атрибутов и методов.
-            params (tuple): Кортеж параметров для теста.
-            parser (Parser): Экземпляр парсера.
-            items (str): Параметр items для метода get_vacancies.
-            expected_job_board (str): Ожидаемое значение поля job_board в первой
-            вакансии.
+            parser (MyParser): Фикстура возвращающая экземпляр парсера.
         """
-        # Имитируем метод создания запросов к API
-        monkeypatch.setattr(CreateConnection, "create_session", mock_create_session)
+        json_data = {"results": {"vacancies": [{"id": 1}, {"id": 2}]}}
+        items = "results"
 
-        # Получаем список вакансий
-        job_list = await parser.get_vacancies(
-            params[1], params[2], params[3], params[4], items
+        result = await parser.process_trudvsem_data(json_data, items)
+        assert isinstance(result, list)
+        assert len(result) == 2
+
+    async def test_get_data_success(
+        self, parser: MyParser, mocker: MockerFixture, fix_param: dict
+    ) -> None:
+        """
+        Тест проверяет успешное получение данных.
+
+        Имитация метода create_client для возврата фиктивного ответа сервера.
+        Ожидается, что результат будет словарем с ключом "key" и значением "value".
+
+        Args:
+            parser (MyParser): Фикстура возвращающая экземпляр парсера.
+            mocker (MockerFixture): Фикстура для создания заглушек и имитации вызовов.
+            fix_param (dict): Фикстура возвращающая параметры для тестирования.
+        """
+        # Имитация метода create_client для возврата фиктивного ответа сервера
+        dummy_response = types.SimpleNamespace(
+            content=json.dumps({"key": "value"}).encode()
+        )
+        mocker.patch.object(
+            parser.connection, "create_client", return_value=dummy_response
         )
 
-        if expected_job_board:
-            # Проверяем, что полученный ответ является списком
-            assert isinstance(job_list, list)
-            # Проверяем, что список не пуст.
-            assert len(job_list) > 0
-            # Проверяем, что содержимое соответствует ожиданиям
-            assert job_list[0]["job_board"] == expected_job_board
-        else:
-            assert isinstance(job_list, list)
-            assert len(job_list) == 0
+        result = await parser.get_data(fix_param["url"], fix_param["params"])
+        assert result == {"key": "value"}
 
-
-class TestParserNegative:
-    """Класс описывает негативные тестовые случаи для парсера.
-
-    Этот класс содержит тесты для проверки поведения парсера при возникновении
-    исключений.
-    """
-
-    @pytest.mark.asyncio
-    async def test_get_vacancies_with_exception(
-        self, parser: Parser, params: tuple
+    async def test_get_vacancies(
+        self, parser: MyParser, mocker: MockerFixture, fix_param: dict
     ) -> None:
-        """Тест проверяет поведение парсера при возникновении исключений.
+        """
+        Тест проверяет получение вакансий.
 
-        Вызывается метод get_vacancies с невалидными параметрами и ожидается
-        возникновение исключения.
+        Имитация метода create_client для возврата фиктивных данных.
+        Ожидается, что результат будет списком длиной 4.
 
         Args:
-            parser (Parser): Экземпляр парсера.
-            params (tuple): Кортеж параметров для теста.
+            parser (MyParser): Фикстура возвращающая экземпляр парсера.
+            mocker (MockerFixture): Фикстура для создания заглушек и имитации вызовов.
+            fix_param (dict): Фикстура возвращающая параметры для тестирования.
         """
-        with pytest.raises(Exception):
-            await parser.get_vacancies(
-                params[1],
-                params[2],
-                params[3],
-                params[4],
-                params[0],  # items is None
-            )
+        # Имитация метода create_client для возврата фиктивных данных
+        dummy_data = {"items": [{"id": 1}, {"id": 2}]}
+        dummy_response = types.SimpleNamespace(content=json.dumps(dummy_data).encode())
+        mocker.patch.object(
+            parser.connection, "create_client", return_value=dummy_response
+        )
 
-        with pytest.raises(Exception):
-            await parser.get_vacancies(
-                "http://example.com/invalid",  # Неверный адрес
-                params[2],
-                params[3],
-                params[4],
-                "items",
-            )
+        result = await parser.get_vacancies(
+            fix_param["url"],
+            fix_param["params"],
+            fix_param["pages"],
+            fix_param["items"],
+        )
+        assert isinstance(result, list)
+        assert len(result) == 4
 
-        with pytest.raises(Exception):
-            await parser.get_vacancies(
-                params[1],
-                "fail",  # Неверный тип объекта параметров.
-                params[3],
-                params[4],
-                "items",
-            )
 
-        with pytest.raises(Exception):
-            await parser.get_vacancies(
-                params[1],
-                params[2],
-                params[3],
-                "fail",  # Неверный тип объекта заголовков.
-                "items",
-            )
+@pytest.mark.asyncio
+class TestParserNegative:
+    """
+    Класс описывает негативные тестовые случаи для парсера.
+
+    Этот класс содержит тесты для проверки различных негативных
+    сценариев при работе с парсером:
+    - обработка данных от trudvsem без элементов или с пустыми вакансиями
+    - получение данных с ошибкой json или ошибкой атрибута
+    - получение результат без данных.
+    """
+
+    async def test_process_trudvsem_data_no_items(self, parser: MyParser) -> None:
+        """
+        Тест проверяет обработку данных от trudvsem без элементов.
+
+        Создается пустой объект json_data.
+        Ожидается, что результат будет None.
+
+        Args:
+            parser (MyParser): Фикстура возвращающая экземпляр парсера.
+        """
+        json_data = {}
+        items = "results"
+
+        result = await parser.process_trudvsem_data(json_data, items)
+        assert result is None
+
+    async def test_process_trudvsem_data_empty_vacancies(
+        self, parser: MyParser
+    ) -> None:
+        """
+        Тест проверяет обработку данных от trudvsem с пустым списком вакансий.
+
+        Создается объект json_data с пустым списком вакансий.
+        Ожидается, что результат будет пустым списком.
+
+        Args:
+            parser (MyParser): Фикстура возвращающая экземпляр парсера.
+        """
+        json_data = {"results": {"vacancies": []}}
+        items = "results"
+
+        result = await parser.process_trudvsem_data(json_data, items)
+        assert result == []
+
+    async def test_get_data_json_error(
+        self, parser: MyParser, mocker: MockerFixture, fix_param: dict
+    ) -> None:
+        """
+        Тест проверяет получение данных с ошибкой json.
+
+        Имитация метода create_client для возврата некорректного ответа сервера.
+        Имитация метода logger.exception для проверки вызова логирования ошибки.
+        Ожидается, что результат будет пустым словарем.
+
+        Args:
+            parser (MyParser): Фикстура возвращающая экземпляр парсера.
+            mocker (MockerFixture): Фикстура для создания заглушек и имитации вызовов.
+            fix_param (dict): Фикстура возвращающая параметры для тестирования.
+        """
+        # Имитация метода create_client для возврата некорректного ответа сервера
+        dummy_response = types.SimpleNamespace(content=b"not json")
+        mocker.patch.object(
+            parser.connection, "create_client", return_value=dummy_response
+        )
+
+        # Имитация метода logger.exception для проверки вызова логирования ошибки
+        mocker.patch.object(logger, "exception")
+
+        result = await parser.get_data(fix_param["url"], fix_param["params"])
+        assert result == {}
+        logger.exception.assert_called_once()
+
+    async def test_get_data_attribute_error(
+        self, parser: MyParser, mocker: MockerFixture, fix_param: dict
+    ) -> None:
+        """
+        Тест проверяет получение данных с ошибкой атрибута.
+
+        Имитация метода create_client для возврата None.
+        Имитация метода logger.exception для проверки вызова логирования ошибки.
+        Ожидается, что результат будет пустым словарем.
+
+        Args:
+            parser (MyParser): Фикстура возвращающая экземпляр парсера.
+            mocker (MockerFixture): Фикстура для создания заглушек и имитации вызовов.
+            fix_param (dict): Фикстура возвращающая параметры для тестирования.
+        """
+        # Имитация метода create_client для возврата None
+        mocker.patch.object(parser.connection, "create_client", return_value=None)
+
+        # Имитация метода logger.exception для проверки вызова логирования ошибки
+        mocker.patch.object(logger, "exception")
+
+        result = await parser.get_data(fix_param["url"], fix_param["params"])
+        assert result == {}
+        logger.exception.assert_called_once()
+
+    async def test_get_vacancies_no_data(
+        self, parser: MyParser, mocker: MockerFixture, fix_param: dict
+    ) -> None:
+        """
+        Тест проверяет получение вакансий без данных.
+
+        Имитация метода get_data для возврата пустых данных.
+        Ожидается, что результат будет пустым списком.
+
+        Args:
+            parser (MyParser): Фикстура возвращающая экземпляр парсера.
+            mocker (MockerFixture): Фикстура для создания заглушек и имитации вызовов.
+            fix_param (dict): Фикстура возвращающая параметры для тестирования.
+        """
+        # Имитация метода get_data для возврата пустых данных
+        dummy_data = {}
+        mocker.patch.object(parser, "get_data", return_value=dummy_data)
+
+        result = await parser.get_vacancies(
+            fix_param["url"],
+            fix_param["params"],
+            fix_param["pages"],
+            fix_param["results"],
+        )
+        assert isinstance(result, list)
+        assert len(result) == 0
