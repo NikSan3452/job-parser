@@ -222,16 +222,16 @@ class Parser(abc.ABC):
                 "type_of_work": await self.get_type_of_work(job),
                 "published_at": await self.get_published_at(job),
             }
-
             # В API площадки Trudvsem на момент написания кода Trudvsem отсутствует
             # поиск по городам поэтому реализуем его сами
             if job_board == "Trudvsem":
                 city = params.get("city", None)
                 if city is not None:
-                    if city.lower() in job_dict.get("city", "").lower():
+                    job_city = job_dict.get("city", "")
+                    if job_city is not None and city.lower() in job_city.lower():
                         Parser.general_job_list.append(job_dict.copy())
-                else:
-                    Parser.general_job_list.append(job_dict.copy())
+                    else:
+                        Parser.general_job_list.append(job_dict.copy())
 
             # Добавляем словарь с вакансией в общий список вакансий
             Parser.general_job_list.append(job_dict.copy())
