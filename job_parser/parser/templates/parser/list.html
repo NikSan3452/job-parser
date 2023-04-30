@@ -52,7 +52,6 @@
 
                 {% if obj.job_board == 'SuperJob' %}
                     <p><span class="card-param">Тип занятости: </span> <span class="card-value">{{ obj.type_of_work|capfirst }}</span></p>
-                    <p><span class="card-param">Формат работы: </span> <span class="card-value">{{ obj.place_of_work|capfirst }}</span></p>
                 {% else %}
                     <p><span class="card-param">Тип занятости: </span> <span class="card-value">{{ obj.type_of_work|capfirst }}</span></p>
                 {% endif %}
