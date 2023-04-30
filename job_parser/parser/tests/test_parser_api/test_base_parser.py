@@ -1,14 +1,13 @@
 import json
 import types
+from parser.api.base_parser import CreateConnection, Parser
+from parser.api.config import ParserConfig
 from typing import Any, Callable
 
 import httpx
 import pytest
 from loguru import logger
 from pytest_mock import MockerFixture
-
-from parser.api.base_parser import CreateConnection, Parser
-from parser.api.config import ParserConfig
 
 
 @pytest.fixture
@@ -82,6 +81,7 @@ class TestCreateClientPositive:
         assert request_headers["x-api-app-id"] == "test_key"
 
 
+@pytest.mark.asyncio
 class TestCreateClientNegative:
     """Класс описывает негативные тестовые случаи для метода create_client.
 
@@ -90,7 +90,6 @@ class TestCreateClientNegative:
     и неустановленного заголовка x-api-app-id.
     """
 
-    @pytest.mark.asyncio
     async def test_failure(self, mock_response: Callable) -> None:
         """Тест проверяет неудачное выполнение запроса из-за неправильного url.
 
@@ -107,7 +106,6 @@ class TestCreateClientNegative:
         response = await connection.create_client(url, params)
         assert response.status_code == 404
 
-    @pytest.mark.asyncio
     async def test_failure_invalid_url(self, mock_response: Callable) -> None:
         """Тест проверяет неудачное выполнение запроса из-за неправильного формата url.
 
@@ -124,7 +122,6 @@ class TestCreateClientNegative:
         with pytest.raises(httpx.InvalidURL):
             await connection.create_client(url, params)
 
-    @pytest.mark.asyncio
     async def test_not_set_header(self) -> None:
         """Тест проверяет отсутствие заголовка x-api-app-id при вызове
         метода create_client с другим url.
@@ -136,10 +133,9 @@ class TestCreateClientNegative:
         """
         connection = CreateConnection()
         url = "https://someotherurl.com"
-        with pytest.raises(httpx.HTTPError):
-            response = await connection.create_client(url)
-            request_headers = response.request.headers
-            assert "x-api-app-id" not in request_headers
+        response = await connection.create_client(url)
+        request_headers = response.request.headers
+        assert "x-api-app-id" not in request_headers
 
 
 class MyParser(Parser):
@@ -174,6 +170,9 @@ class MyParser(Parser):
         pass
 
     async def get_type_of_work(self, job: dict) -> str | None:
+        pass
+
+    async def get_experience(self, job: dict) -> str | None:
         pass
 
     async def get_published_at(self, job: dict) -> str | None:
@@ -324,6 +323,7 @@ class TestParserPositive:
                 "city": "Москва",
                 "company": "Example Inc.",
                 "type_of_work": "Full-time",
+                "experience": "Без опыта",
                 "published_at": "2023-01-01",
             }
         ]
@@ -370,6 +370,11 @@ class TestParserPositive:
             "type_of_work"
         ]
 
+        mock_get_experience = mocker.patch.object(parser, "get_experience")
+        mock_get_experience.return_value = mock_get_vacancies.return_value[0][
+            "experience"
+        ]
+
         mock_get_published_at = mocker.patch.object(parser, "get_published_at")
         mock_get_published_at.return_value = mock_get_vacancies.return_value[0][
             "published_at"
@@ -396,10 +401,12 @@ class TestParserPositive:
             "city": mock_get_vacancies.return_value[0]["city"],
             "company": mock_get_vacancies.return_value[0]["company"],
             "type_of_work": mock_get_vacancies.return_value[0]["type_of_work"],
+            "experience": mock_get_vacancies.return_value[0]["experience"],
             "published_at": mock_get_vacancies.return_value[0]["published_at"],
         }
         assert len(Parser.general_job_list) == 1
         Parser.general_job_list.clear()
+
 
 @pytest.mark.asyncio
 class TestParserNegative:
@@ -557,6 +564,7 @@ class TestParserNegative:
                 "city": None,
                 "company": None,
                 "type_of_work": None,
+                "experience": None,
                 "published_at": None,
             }
         ]
@@ -603,6 +611,11 @@ class TestParserNegative:
             "type_of_work"
         ]
 
+        mock_get_experience = mocker.patch.object(parser, "get_experience")
+        mock_get_experience.return_value = mock_get_vacancies.return_value[0][
+            "experience"
+        ]
+
         mock_get_published_at = mocker.patch.object(parser, "get_published_at")
         mock_get_published_at.return_value = mock_get_vacancies.return_value[0][
             "published_at"
@@ -629,6 +642,8 @@ class TestParserNegative:
             "city": mock_get_vacancies.return_value[0]["city"],
             "company": mock_get_vacancies.return_value[0]["company"],
             "type_of_work": mock_get_vacancies.return_value[0]["type_of_work"],
+            "experience": mock_get_vacancies.return_value[0]["experience"],
             "published_at": mock_get_vacancies.return_value[0]["published_at"],
         }
+
         Parser.general_job_list.clear()
