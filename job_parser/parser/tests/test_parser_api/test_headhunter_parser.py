@@ -28,6 +28,20 @@ def params() -> RequestConfig:
 
 
 @pytest.fixture
+def headhunter(params: RequestConfig) -> Headhunter:
+    """Создает экземпляр парсера HeadHunter с заданными параметрами.
+
+    Args:
+        params (RequestConfig): Экземпляр RequestConfig
+
+    Returns:
+        Headhunter: Экземпляр HeadHunter.
+    """
+    hh = Headhunter(params)
+    return hh
+
+
+@pytest.fixture
 def mock_vacancy_parsing(mocker: MockerFixture) -> list[dict]:
     hh_vacancy = [
         {
@@ -86,7 +100,7 @@ class TestHeadHunterPositive:
     из Headhunter.
     """
 
-    async def test_get_request_params(self, params: RequestConfig) -> None:
+    async def test_get_request_params(self, headhunter: Headhunter) -> None:
         """Тест проверяет формирование параметров запроса.
 
         Создается экземпляр класса Headhunter с указанными параметрами.
@@ -95,10 +109,8 @@ class TestHeadHunterPositive:
         указанным при создании экземпляра класса.
 
         Args:
-            params (RequestConfig): Параметры запроса.
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
-        # Создаем экземпляр парсера с параметрами запроса
-        headhunter = Headhunter(params)
 
         # Вызываем метод, который формирует параметры запроса в понятный для hh вид
         hh_params = await headhunter.get_request_params()
@@ -114,7 +126,7 @@ class TestHeadHunterPositive:
         Parser.general_job_list.clear()
 
     async def test_parsing_vacancy_headhunter(
-        self, params: RequestConfig, mock_vacancy_parsing: dict
+        self, headhunter: Headhunter, mock_vacancy_parsing: dict
     ) -> None:
         """Этот тест проверяет парсинг вакансии с HeadHunter.
 
@@ -124,11 +136,10 @@ class TestHeadHunterPositive:
         Также проверяется, что длина списка `general_job_list` в классе Parser равна 1.
 
         Args:
-            params (RequestConfig): Параметры для создания экземпляра класса Headhunter.
+            headhunter (Headhunter): Экземпляр Headhunter.
             mock_vacancy_parsing (dict): Мок-заглушка с информацией о вакансии.
         """
-        hh = Headhunter(params)
-        result = await hh.parsing_vacancy_headhunter()
+        result = await headhunter.parsing_vacancy_headhunter()
 
         assert isinstance(result, dict)
         assert result == {
@@ -150,6 +161,142 @@ class TestHeadHunterPositive:
         }
         assert len(Parser.general_job_list) == 1
         Parser.general_job_list.clear()
+
+    async def test_get_url(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при наличии поля alternate_url.
+
+        Создается словарь с полем alternate_url.
+        Ожидается, что метод get_url вернет значение этого поля.
+        """
+        job: dict = {"alternate_url": "https://example.com"}
+        assert await headhunter.get_url(job) == "https://example.com"
+
+    async def test_get_title(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при наличии поля name.
+
+        Создается словарь с полем name.
+        Ожидается, что метод get_title вернет значение этого поля.
+        """
+        job: dict = {"name": "Test"}
+        assert await headhunter.get_title(job) == "Test"
+
+    async def test_get_salary_from(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при наличии поля salary и from.
+
+        Создается словарь с полем salary и вложенным полем from.
+        Ожидается, что метод get_salary_from вернет значение поля from.
+        """
+        job: dict = {"salary": {"from": 1000}}
+        assert await headhunter.get_salary_from(job) == 1000
+
+    async def test_get_salary_to(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при наличии поля salary и to.
+
+        Создается словарь с полем salary и вложенным полем to.
+        Ожидается, что метод get_salary_to вернет значение поля to.
+        """
+        job: dict = {"salary": {"to": 2000}}
+        assert await headhunter.get_salary_to(job) == 2000
+
+    async def test_get_salary_currency(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при наличии поля salary и currency.
+
+        Создается словарь с полем salary и вложенным полем currency.
+        Ожидается, что метод get_salary_currency вернет значение поля currency.
+        """
+        job: dict = {"salary": {"currency": "USD"}}
+        assert await headhunter.get_salary_currency(job) == "USD"
+
+    async def test_get_responsibility(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при наличии поля snippet и responsibility.
+
+        Создается словарь с полем snippet и вложенным полем responsibility.
+        Ожидается, что метод get_responsibility вернет значение поля responsibility.
+        """
+        job: dict = {"snippet": {"responsibility": "Test"}}
+        assert await headhunter.get_responsibility(job) == "Test"
+
+    async def test_get_requirement(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при наличии поля snippet и requirement.
+
+        Создается словарь с полем snippet и вложенным полем requirement.
+        Ожидается, что метод get_requirement вернет значение поля requirement.
+        """
+        job: dict = {"snippet": {"requirement": "Test"}}
+        assert await headhunter.get_requirement(job) == "Test"
+
+    async def test_get_city(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при наличии поля area и name.
+
+        Создается словарь с полем area и вложенным полем name.
+        Ожидается, что метод get_city вернет значение поля name.
+        """
+        job: dict = {"area": {"name": "Москва"}}
+        assert await headhunter.get_city(job) == "Москва"
+
+    async def test_get_company(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при наличии поля employer и name.
+
+        Создается словарь с полем employer и вложенным полем name.
+        Ожидается, что метод get_company вернет значение поля name.
+        """
+        job: dict = {"employer": {"name": "Test"}}
+        assert await headhunter.get_company(job) == "Test"
+
+    async def test_get_type_of_work(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при наличии поля employment и name.
+
+        Создается словарь с полем employment и вложенным полем name.
+        Ожидается, что метод get_type_of_work вернет значение поля name.
+        """
+        job: dict = {"employment": {"name": "Полная занятость"}}
+        assert await headhunter.get_type_of_work(job) == "Полная занятость"
+
+    async def test_get_experience(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при наличии поля experience и name.
+
+        Создается словарь с полем experience и вложенным полем name.
+        Ожидается, что метод get_experience вернет значение поля name.
+
+        """
+        job: dict = {"experience": {"name": "Более 6 лет"}}
+        assert await headhunter.get_experience(job) == "Более 6 лет"
+
+    async def test_get_published_at(self, headhunter: Headhunter) -> None:
+        """Тест проверяет корректность возвращаемой даты публикации.
+
+        Создается словарь с указанным значением поля published_at.
+        Ожидается, что метод get_published_at вернет дату, соответствующую
+        указанной при создании словаря.
+
+        """
+        job = {"published_at": "2023-01-01T01:01:01+00:00"}
+        assert (
+            await headhunter.get_published_at(job)
+            == datetime.datetime(2023, 1, 1).date()
+        )
 
 
 @pytest.mark.asyncio
@@ -198,7 +345,7 @@ class TestHeadHunterNegative:
         assert "experience" not in hh_params
 
     async def test_parsing_vacancy_headhunter_wrong_values(
-        self, params: RequestConfig, mock_vacancy_parsing_with_wrong_values: dict
+        self, headhunter: Headhunter, mock_vacancy_parsing_with_wrong_values: dict
     ) -> None:
         """Этот тест проверяет парсинг вакансии с HeadHunter с неверными значениями.
 
@@ -208,11 +355,10 @@ class TestHeadHunterNegative:
         Также проверяется, что длина списка `general_job_list` в классе Parser равна 1.
 
         Args:
-            params (RequestConfig): Параметры для создания экземпляра класса Headhunter.
+            headhunter (Headhunter): Экземпляр Headhunter.
             mock_vacancy_parsing (dict): Мок-заглушка с информацией о вакансии.
         """
-        hh = Headhunter(params)
-        result = await hh.parsing_vacancy_headhunter()
+        result = await headhunter.parsing_vacancy_headhunter()
 
         assert isinstance(result, dict)
         assert result == {
@@ -232,3 +378,141 @@ class TestHeadHunterNegative:
         }
         assert len(Parser.general_job_list) == 1
         Parser.general_job_list.clear()
+
+    async def test_get_url_none(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии поля alternate_url.
+
+        Создается пустой словарь без поля alternate_url.
+        Ожидается, что метод get_url вернет None.
+
+        """
+        job: dict = {}
+        assert await headhunter.get_url(job) is None
+
+    async def test_get_title_none(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии поля name.
+
+        Создается пустой словарь без поля name.
+        Ожидается, что метод get_title вернет None.
+
+        """
+        job: dict = {}
+        assert await headhunter.get_title(job) is None
+
+    async def test_get_salary_from_none(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии поля salary.
+
+        Создается пустой словарь без поля salary.
+        Ожидается, что метод get_salary_from вернет None.
+
+        """
+        job: dict = {}
+        assert await headhunter.get_salary_from(job) is None
+
+    async def test_get_salary_to_none(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии поля salary.
+
+        Создается пустой словарь без поля salary.
+        Ожидается, что метод get_salary_to вернет None.
+        """
+        job: dict = {}
+        assert await headhunter.get_salary_to(job) is None
+
+    async def test_get_salary_currency_none(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии поля salary.
+
+        Создается пустой словарь без поля salary.
+        Ожидается, что метод get_salary_currency вернет None.
+        """
+        job: dict = {}
+        assert await headhunter.get_salary_currency(job) is None
+
+    async def test_get_responsibility_none(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии поля snippet.
+
+        Создается пустой словарь без поля snippet.
+        Ожидается, что метод get_responsibility вернет "Нет описания".
+        """
+        job: dict = {}
+        assert await headhunter.get_responsibility(job) == "Нет описания"
+
+    async def test_get_requirement_none(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии поля snippet.
+
+        Создается пустой словарь без поля snippet.
+        Ожидается, что метод get_requirement вернет "Нет описания".
+        """
+        job: dict = {}
+        assert await headhunter.get_requirement(job) == "Нет описания"
+
+    async def test_get_city_none(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии поля area.
+
+        Создается пустой словарь без поля area.
+        Ожидается, что метод get_city вернет None.
+        """
+        job: dict = {}
+        assert await headhunter.get_city(job) is None
+
+    async def test_get_company_none(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии поля employer.
+
+        Создается пустой словарь без поля employer.
+        Ожидается, что метод get_company вернет None.
+        """
+        job: dict = {}
+        assert await headhunter.get_company(job) is None
+
+    async def test_get_type_of_work_none(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии поля employment.
+
+        Создается пустой словарь без поля employment.
+        Ожидается, что метод get_type_of_work вернет None.
+
+        """
+        job: dict = {}
+        assert await headhunter.get_type_of_work(job) is None
+
+    async def test_get_experience_none(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии поля experience.
+
+        Создается пустой словарь без поля experience.
+        Ожидается, что метод get_experience вернет None.
+
+        """
+        job: dict = {}
+        assert await headhunter.get_experience(job) is None
+
+    async def test_get_published_at(self, headhunter: Headhunter) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии даты публикации.
+
+        Создается пустой словарь без поля published_at.
+        Ожидается, что метод get_published_at вернет None.
+
+        """
+        job: dict = {}
+        assert await headhunter.get_published_at(job) is None
