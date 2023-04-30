@@ -1,10 +1,11 @@
 import datetime
-from parser.api.base_parser import Parser
-from parser.api.config import RequestConfig
-from parser.api.parsers import Headhunter
 
 import pytest
 from pytest_mock import MockerFixture
+
+from parser.api.base_parser import Parser
+from parser.api.config import RequestConfig
+from parser.api.parsers import Headhunter
 
 
 @pytest.fixture
