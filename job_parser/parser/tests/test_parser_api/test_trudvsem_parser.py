@@ -1,10 +1,12 @@
 import datetime
+
+import pytest
+from pytest_mock import MockerFixture
+
 from parser.api.base_parser import Parser
 from parser.api.config import RequestConfig
 from parser.api.parsers import Trudvsem
 from parser.api.utils import Utils
-
-import pytest
 
 
 @pytest.fixture
@@ -26,6 +28,7 @@ def params() -> RequestConfig:
     return params
 
 
+@pytest.mark.asyncio
 class TestTrudvsemPositive:
     """Класс описывает позитивные тестовые случаи для класса Trudvsem.
 
@@ -34,7 +37,6 @@ class TestTrudvsemPositive:
     из Trudvsem.
     """
 
-    @pytest.mark.asyncio
     async def test_get_request_params(self, params: RequestConfig) -> None:
         """Тест проверяет формирование параметров запроса.
 
@@ -68,9 +70,8 @@ class TestTrudvsemPositive:
             3
         )
 
-    @pytest.mark.asyncio
     async def test_get_vacancy_from_trudvsem(
-        self, mocker, params: RequestConfig
+        self, mocker: MockerFixture, params: RequestConfig
     ) -> None:
         """Тест проверяет парсинг вакансий из API Trudvsem.
 
@@ -114,7 +115,7 @@ class TestTrudvsemPositive:
         ]
 
         # Вызываем метод получения вакансий из API Trudvsem
-        job_dict = await trudvsem.get_vacancy_from_trudvsem()
+        job_dict = await trudvsem.parsing_vacancy_trudvsem()
 
         assert job_dict["job_board"] == "Trudvsem"
         assert job_dict["url"] == "https://trudvsem.ru/vacancy/12345"
@@ -129,6 +130,7 @@ class TestTrudvsemPositive:
         )
         assert job_dict["company"] == "company1"
         assert job_dict["type_of_work"] == "Неполный рабочий день"
+        assert job_dict["experience"] == "Без опыта"
         assert job_dict["city"] == "Москва"
         assert job_dict["published_at"] == datetime.date(2023, 1, 1)
         assert len(Parser.general_job_list) == 1
@@ -136,6 +138,7 @@ class TestTrudvsemPositive:
         Parser.general_job_list.clear()
 
 
+@pytest.mark.asyncio
 class TestTrudvsemNegative:
     """Класс описывает негативные тестовые случаи для класса Trudvsem.
 
@@ -144,9 +147,8 @@ class TestTrudvsemNegative:
     значениями и формирования параметров запроса с отсутствующими значениями.
     """
 
-    @pytest.mark.asyncio
     async def test_get_vacancy_from_trudvsem_with_none(
-        self, mocker, params: RequestConfig
+        self, mocker: MockerFixture, params: RequestConfig
     ) -> None:
         """Тест проверяет парсинг вакансий из API Trudvsem с отсутствующими значениями.
 
@@ -169,9 +171,9 @@ class TestTrudvsemNegative:
         trudvsem.get_vacancies.return_value = [
             {
                 "vacancy": {
-                    "vac_url": "https://trudvsem.ru/vacancy/12345",
-                    "creation-date": "2023-01-01",
-                    "job-name": "Программист",
+                    "vac_url": None,
+                    "creation-date": None,
+                    "job-name": None,
                     "salary_min": None,
                     "salary_max": None,
                     "salary_currency": None,
@@ -186,24 +188,24 @@ class TestTrudvsemNegative:
         ]
 
         # Вызываем метод получения вакансий из API Trudvsem
-        job_dict = await trudvsem.get_vacancy_from_trudvsem()
+        job_dict = await trudvsem.parsing_vacancy_trudvsem()
 
         assert job_dict["job_board"] == "Trudvsem"
-        assert job_dict["url"] == "https://trudvsem.ru/vacancy/12345"
-        assert job_dict["title"] == "Программист"
+        assert job_dict["url"] is None
+        assert job_dict["title"] is None
         assert job_dict["salary_from"] is None
         assert job_dict["salary_to"] is None
         assert job_dict["responsibility"] == "Нет описания"
         assert job_dict["requirement"] == "Нет описания"
-        assert job_dict["company"] == "Не указано"
-        assert job_dict["type_of_work"] == "Не указано"
-        assert job_dict["city"] == "Не указано"
-        assert job_dict["published_at"] == datetime.date(2023, 1, 1)
-        assert len(Parser.general_job_list) == 0
+        assert job_dict["company"] is None
+        assert job_dict["type_of_work"] is None
+        assert job_dict["experience"] is None
+        assert job_dict["city"] is None
+        assert job_dict["published_at"] is None
+        assert len(Parser.general_job_list) == 1
 
         Parser.general_job_list.clear()
 
-    @pytest.mark.asyncio
     async def test_get_request_params_with_none(self) -> None:
         """Тест проверяет формирование параметров запроса с отсутствующими значениями.
 
