@@ -234,7 +234,7 @@ class Headhunter(Parser):
         """
         Асинхронный метод для получения типа работы.
 
-        Метод получает значение ключа "schedule" из словаря job и возвращает значение
+        Метод получает значение ключа "employment" из словаря job и возвращает значение
         ключа "name".
 
         Args:
@@ -243,8 +243,24 @@ class Headhunter(Parser):
         Returns:
             str | None: Тип работы по вакансии или None, если тип работы отсутствует.
         """
-        schedule = job.get("schedule", None)
-        return schedule.get("name", None) if schedule else None
+        employment = job.get("employment", None)
+        return employment.get("name", None) if employment else None
+
+    async def get_experience(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения опыта работы.
+
+        Метод получает значение ключа "experience" из словаря job и возвращает значение
+        ключа "name".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Опыт работы по вакансии или None, если опыт работы отсутствует.
+        """
+        experience = job.get("experience", None)
+        return experience.get("name", None) if experience else None
 
     async def get_published_at(self, job: dict) -> str | None:
         """
@@ -467,7 +483,7 @@ class SuperJob(Parser):
         Returns:
             str: Обязанности по вакансии.
         """
-        return job.get("work", "Нет описания")
+        return job.get("work", None) if job.get("work", None) else "Нет описания"
 
     async def get_requirement(self, job: dict) -> str:
         """
@@ -482,7 +498,7 @@ class SuperJob(Parser):
         Returns:
             str: Информация о требованиях к кандидату по вакансии.
         """
-        return job.get("candidat", "Нет описания")
+        return job.get("candidat", None) if job.get("candidat") else "Нет описания"
 
     async def get_city(self, job: dict) -> str | None:
         """
@@ -530,6 +546,22 @@ class SuperJob(Parser):
         """
         type_of_work = job.get("type_of_work", None)
         return type_of_work.get("title", None) if type_of_work else None
+
+    async def get_experience(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения опыта работы.
+
+        Метод получает значение ключа "experience" из словаря job и возвращает
+        значение ключа "title".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Опыт работы по вакансии или None, если опыт работы отсутствует.
+        """
+        experience = job.get("experience", None)
+        return experience.get("title", None) if experience else None
 
     async def get_published_at(self, job: dict) -> str | None:
         """
@@ -717,7 +749,9 @@ class Trudvsem(Parser):
             str: Обязанности по вакансии.
         """
         vacancy = job.get("vacancy", None)
-        return vacancy.get("duty", None) if vacancy else "Нет описания"
+        return (
+            vacancy.get("duty", None) if vacancy.get("duty", None) else "Нет описания"
+        )
 
     async def get_requirement(self, job: dict) -> str:
         """
@@ -805,6 +839,11 @@ class Trudvsem(Parser):
         """
         vacancy = job.get("vacancy", None)
         return vacancy.get("schedule", None) if vacancy else None
+
+    async def get_experience(self, job: dict) -> str | None:
+        vacancy = job.get("vacancy", None)
+        experience = vacancy.get("experience", None)
+        return experience.get("title", None) if experience else None
 
     async def get_published_at(self, job: dict) -> str | None:
         """
