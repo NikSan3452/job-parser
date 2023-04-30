@@ -11,7 +11,7 @@ setup_logging()
 
 
 class HabrParser:
-    """Класс описывает методы парсинга сайта Habrcareer"""
+    """Класс описывает методы парсинга сайта Habr career"""
 
     def __init__(self, fetcher: Fetcher) -> None:
         self.fetcher = fetcher
@@ -66,7 +66,7 @@ class HabrParser:
         """Получает заголовок вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             str: Заголовок.
@@ -81,7 +81,7 @@ class HabrParser:
         """Получает описание вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             str: Описание.
@@ -96,7 +96,7 @@ class HabrParser:
         """Получает город вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             str: Город.
@@ -114,7 +114,7 @@ class HabrParser:
         """Получает зарплату вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             str: Зарплата.
@@ -131,7 +131,7 @@ class HabrParser:
         """Получает компанию вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             str: Компания.
@@ -146,7 +146,7 @@ class HabrParser:
         """Получает требуемый опыт вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             str: Опыт.
@@ -177,7 +177,7 @@ class HabrParser:
         """Получает тип занятости вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             str: Тип занятости.
@@ -201,7 +201,7 @@ class HabrParser:
         """Определяет является ли вакансия удаленной.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             bool: True/False
@@ -223,7 +223,7 @@ class HabrParser:
         """Получает дату публикации вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             datetime.date | None: Дата публикации.
