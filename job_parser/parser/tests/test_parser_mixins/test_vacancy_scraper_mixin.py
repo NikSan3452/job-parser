@@ -7,7 +7,7 @@ from django.db.models import QuerySet
 from django.http import HttpRequest
 from pytest_mock import MockerFixture
 
-
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestVacancyScraperMixinPositive:
     """Класс описывает позитивные тестовые случаи для класса VacancyScraperMixin.
@@ -21,7 +21,6 @@ class TestVacancyScraperMixinPositive:
     вакансий в список вакансий из API.
     """
 
-    @pytest.mark.asyncio
     async def test_get_vacancies_from_scraper(
         self,
         request_: HttpRequest,
@@ -87,7 +86,6 @@ class TestVacancyScraperMixinPositive:
         assert result[0]["title"] == "python"
         assert result[1]["description"] == "python"
 
-    @pytest.mark.asyncio
     async def test_add_vacancy_to_job_list_from_api(
         self, scraper_mixin: VacancyScraperMixin
     ) -> None:
@@ -115,7 +113,7 @@ class TestVacancyScraperMixinPositive:
         assert result[0] == job_list_from_api[0]
         assert result[1] == job_list_from_scraper[0]
 
-
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestVacancyScraperMixinNegative:
     """Класс описывает негативные тестовые случаи для класса VacancyScraperMixin.
@@ -129,7 +127,6 @@ class TestVacancyScraperMixinNegative:
     из скрапера и добавление пустых списков вакансий из API и скрапера.
     """
 
-    @pytest.mark.asyncio
     async def test_get_vacancies_from_scraper_exceptions(
         self,
         request_: HttpRequest,
@@ -173,7 +170,6 @@ class TestVacancyScraperMixinNegative:
             ):
                 await scraper_mixin.get_vacancies_from_scraper(request_, form_params)
 
-    @pytest.mark.asyncio
     async def test_add_vacancy_to_job_list_from_api_empty(
         self, scraper_mixin: VacancyScraperMixin
     ) -> None:
