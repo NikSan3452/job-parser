@@ -1,12 +1,13 @@
 import datetime
+
+import pytest
+
 from parser.api.base_parser import Parser
 from parser.api.main import run
 from parser.api.parsers import Headhunter, SuperJob, Trudvsem
 
-import pytest
 
-
-async def mock_get_vacancy_from_headhunter(self, url=None, job_board=None) -> dict:
+async def mock_parsing_vacancy_headhunter(self, url=None, job_board=None) -> dict:
     """Mock-заглушка, имитирует метод получения вакансий из API HeadHunter.
 
     Args:
@@ -27,7 +28,7 @@ async def mock_get_vacancy_from_headhunter(self, url=None, job_board=None) -> di
     return mock_job_dict
 
 
-async def mock_get_vacancy_from_superjob(self, url=None, job_board=None) -> dict:
+async def mock_parsing_vacancy_superjob(self, url=None, job_board=None) -> dict:
     """Mock-заглушка, имитирует метод получения вакансий из API SuperJob.
 
     Args:
@@ -47,7 +48,7 @@ async def mock_get_vacancy_from_superjob(self, url=None, job_board=None) -> dict
     return mock_job_dict
 
 
-async def mock_get_vacancy_from_trudvsem(self, url=None, job_board=None) -> dict:
+async def mock_parsing_vacancy_trudvsem(self, url=None, job_board=None) -> dict:
     """Mock-заглушка, имитирует метод получения вакансий из API Trudvsem.
 
     Args:
@@ -75,7 +76,8 @@ class TestRun:
         """Тестирует функцию запуска парсера только с площадкой HeadHunter.
 
         Args:
-            mocker (_type_): Фикстура, имитирует результат метода get_vacancy_from_headhunter.
+            mocker (_type_): Фикстура, имитирует результат метода
+            parsing_vacancy_headhunter.
         """
         # Задаем параметры запроса.
         params = {
@@ -85,7 +87,7 @@ class TestRun:
 
         # Мокаем метод получения вакансий
         mocker.patch.object(
-            Headhunter, "get_vacancy_from_headhunter", mock_get_vacancy_from_headhunter
+            Headhunter, "parsing_vacancy_headhunter", mock_parsing_vacancy_headhunter
         )
 
         # Вызываем парсер
@@ -102,7 +104,8 @@ class TestRun:
         """Тестирует функцию запуска парсера только с площадкой SuperJob.
 
         Args:
-            mocker (_type_): Фикстура, имитирует результат метода get_vacancy_from_superjob.
+            mocker (_type_): Фикстура, имитирует результат метода
+            parsing_vacancy_superjob.
         """
         params = {
             "job": "Python",
@@ -110,7 +113,7 @@ class TestRun:
         }
 
         mocker.patch.object(
-            SuperJob, "get_vacancy_from_superjob", mock_get_vacancy_from_superjob
+            SuperJob, "parsing_vacancy_superjob", mock_parsing_vacancy_superjob
         )
 
         job_dict = await run(params)
@@ -125,7 +128,8 @@ class TestRun:
         """Тестирует функцию запуска парсера только с площадкой Trudvsem.
 
         Args:
-            mocker (_type_): Фикстура, имитирует результат метода get_vacancy_from_trudvsem.
+            mocker (_type_): Фикстура, имитирует результат метода
+            parsing_vacancy_trudvsem.
         """
         params = {
             "job": "Python",
@@ -133,7 +137,7 @@ class TestRun:
         }
 
         mocker.patch.object(
-            Trudvsem, "get_vacancy_from_trudvsem", mock_get_vacancy_from_trudvsem
+            Trudvsem, "parsing_vacancy_trudvsem", mock_parsing_vacancy_trudvsem
         )
 
         job_dict = await run(params)
@@ -155,15 +159,15 @@ class TestRun:
         }
 
         mocker.patch.object(
-            Headhunter, "get_vacancy_from_headhunter", mock_get_vacancy_from_headhunter
+            Headhunter, "parsing_vacancy_headhunter", mock_parsing_vacancy_headhunter
         )
 
         mocker.patch.object(
-            SuperJob, "get_vacancy_from_superjob", mock_get_vacancy_from_superjob
+            SuperJob, "parsing_vacancy_superjob", mock_parsing_vacancy_superjob
         )
 
         mocker.patch.object(
-            Trudvsem, "get_vacancy_from_trudvsem", mock_get_vacancy_from_trudvsem
+            Trudvsem, "parsing_vacancy_trudvsem", mock_parsing_vacancy_trudvsem
         )
 
         job_dict = await run(params)
