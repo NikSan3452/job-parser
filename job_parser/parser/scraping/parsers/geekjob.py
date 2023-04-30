@@ -64,7 +64,7 @@ class GeekjobParser:
         """Получает заголовок вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             str: Заголовок.
@@ -79,7 +79,7 @@ class GeekjobParser:
         """Получает город вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             str: Город.
@@ -94,7 +94,7 @@ class GeekjobParser:
         """Получает описание вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             str: Описание.
@@ -109,7 +109,7 @@ class GeekjobParser:
         """Получает зарплату вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             str: Зарплата.
@@ -124,7 +124,7 @@ class GeekjobParser:
         """Получает компанию вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             str: Компания.
@@ -139,7 +139,7 @@ class GeekjobParser:
         """Получает требуемый опыт вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             str: Опыт.
@@ -172,7 +172,7 @@ class GeekjobParser:
         """Получает тип занятости вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             str: Тип занятости.
@@ -193,7 +193,7 @@ class GeekjobParser:
         """Определяет является ли вакансия удаленной.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             bool: True/False
@@ -208,7 +208,7 @@ class GeekjobParser:
         """Получает дату публикации вакансии.
 
         Args:
-            soup (BeautifulSoup): Эксземпляр BeautifulSoup.
+            soup (BeautifulSoup): Экземпляр BeautifulSoup.
 
         Returns:
             datetime.date | None: Дата публикации.
