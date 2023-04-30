@@ -1,10 +1,10 @@
-import re
 import asyncio
 import datetime
-
+import re
 from typing import AsyncGenerator
+
 from bs4 import BeautifulSoup
-from logger import setup_logging, logger
+from logger import logger, setup_logging
 from parser.scraping.fetching import Fetcher
 
 setup_logging()
