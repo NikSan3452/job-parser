@@ -204,7 +204,6 @@ class Parser(abc.ABC):
             pages=pages,
             items=items,
         )
-
         # Формируем словарь с вакансиями
         job_dict: dict = {}
         for job in job_list:
@@ -220,6 +219,7 @@ class Parser(abc.ABC):
                 "city": await self.get_city(job),
                 "company": await self.get_company(job),
                 "type_of_work": await self.get_type_of_work(job),
+                "experience": await self.get_experience(job),
                 "published_at": await self.get_published_at(job),
             }
             # В API площадки Trudvsem на момент написания кода Trudvsem отсутствует
@@ -230,6 +230,7 @@ class Parser(abc.ABC):
                     job_city = job_dict.get("city", "")
                     if job_city is not None and city.lower() in job_city.lower():
                         Parser.general_job_list.append(job_dict.copy())
+                        continue
                     else:
                         Parser.general_job_list.append(job_dict.copy())
 
@@ -380,6 +381,20 @@ class Parser(abc.ABC):
 
         Returns:
             str | None: Тип занятости по вакансии или None, если тип занятости
+            отсутствует.
+        """
+        pass
+
+    @abc.abstractmethod
+    async def get_experience(self, job: dict) -> str | None:
+        """
+        Абстрактный асинхронный метод для получения опыта работы.
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Требуемый опыт работы по вакансии или None, если опыт работы
             отсутствует.
         """
         pass
