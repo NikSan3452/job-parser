@@ -1,9 +1,8 @@
-from parser.forms import SearchingForm
-from parser.tests.TestAssertions import Assertions
-from parser.views import HomePageView
-
 import pytest
 from django.http import HttpRequest
+
+from parser.forms import SearchingForm
+from parser.views import HomePageView
 
 
 @pytest.mark.django_db(transaction=True)
@@ -22,7 +21,7 @@ class TestHomePageView:
         """
         self.view.setup(request_)
         response = self.view.get(request_)
-        Assertions.assert_status_code(response, 200)
+        assert response.status_code == 200
 
     def test_home_page_view_redirect(self, request_: HttpRequest) -> None:
         """Тестирует редирект после отправки формы с представления
@@ -45,5 +44,5 @@ class TestHomePageView:
         self.view.request = request_
         response = self.view.form_valid(form)
 
-        Assertions.assert_compare_values(form.is_valid(), True)
-        Assertions.assert_status_code(response, 302)
+        assert form.is_valid() is True
+        assert response.status_code == 302
