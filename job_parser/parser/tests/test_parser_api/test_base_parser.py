@@ -398,7 +398,8 @@ class TestParserPositive:
             "type_of_work": mock_get_vacancies.return_value[0]["type_of_work"],
             "published_at": mock_get_vacancies.return_value[0]["published_at"],
         }
-
+        assert len(Parser.general_job_list) == 1
+        Parser.general_job_list.clear()
 
 @pytest.mark.asyncio
 class TestParserNegative:
@@ -630,3 +631,4 @@ class TestParserNegative:
             "type_of_work": mock_get_vacancies.return_value[0]["type_of_work"],
             "published_at": mock_get_vacancies.return_value[0]["published_at"],
         }
+        Parser.general_job_list.clear()
