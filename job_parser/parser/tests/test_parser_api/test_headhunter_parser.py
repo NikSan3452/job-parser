@@ -103,13 +103,13 @@ class TestHeadHunterPositive:
         # Вызываем метод, который формирует параметры запроса в понятный для hh вид
         hh_params = await headhunter.get_request_params()
 
-        assert hh_params["text"] == "Программист"
+        assert hh_params["text"] == "Python"
         assert hh_params["per_page"] == 100
         assert hh_params["date_from"] == datetime.date(2023, 1, 1)
         assert hh_params["date_to"] == datetime.date(2023, 12, 31)
         assert hh_params["area"] == 1
         assert hh_params["schedule"] == "remote"
-        assert hh_params["experience"] == "between3And6"
+        assert hh_params["experience"] == "moreThan6"
 
         Parser.general_job_list.clear()
 
