@@ -70,3 +70,7 @@ huey.db-wal
 huey.db
 logs
 nohup.out
+cov.xml
+.coverage
+coverage.xml
+coverage.html
