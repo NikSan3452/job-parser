@@ -5,6 +5,7 @@ from parser.api.parsers import SuperJob
 from parser.api.utils import Utils
 
 import pytest
+from pytest_mock import MockerFixture
 
 
 @pytest.fixture
@@ -26,6 +27,7 @@ def params() -> RequestConfig:
     return params
 
 
+@pytest.mark.asyncio
 class TestSuperJobPositive:
     """Класс описывает позитивные тестовые случаи для класса SuperJob.
 
@@ -34,7 +36,6 @@ class TestSuperJobPositive:
     из SuperJob.
     """
 
-    @pytest.mark.asyncio
     async def test_get_request_params(self, params: RequestConfig) -> None:
         """Тест проверяет формирование параметров запроса.
 
@@ -62,9 +63,8 @@ class TestSuperJobPositive:
         assert sj_params["place_of_work"] == 2
         assert sj_params["experience"] == 3
 
-    @pytest.mark.asyncio
     async def test_get_vacancy_from_superjob(
-        self, mocker, params: RequestConfig
+        self, mocker: MockerFixture, params: RequestConfig
     ) -> None:
         """Тест проверяет парсинг вакансий из API SuperJob.
 
@@ -105,7 +105,7 @@ class TestSuperJobPositive:
         ]
 
         # Вызываем метод получения вакансий из API SuperJob
-        job_dict = await superjob.get_vacancy_from_superjob()
+        job_dict = await superjob.parsing_vacancy_superjob()
 
         assert job_dict["job_board"] == "SuperJob"
         assert job_dict["url"] == "https://superjob.ru/vacancy/12345"
@@ -118,12 +118,14 @@ class TestSuperJobPositive:
         assert job_dict["city"] == "Москва"
         assert job_dict["company"] == "company1"
         assert job_dict["type_of_work"] == "Неполный рабочий день"
+        assert job_dict["experience"] == "Без опыта"
         assert job_dict["published_at"] == datetime.date(2023, 3, 1)
         assert len(Parser.general_job_list) == 1
 
         Parser.general_job_list.clear()
 
 
+@pytest.mark.asyncio
 class TestSuperJobNegative:
     """Класс описывает негативные тестовые случаи для класса SuperJob.
 
@@ -131,9 +133,9 @@ class TestSuperJobNegative:
     классом SuperJob: проверка парсинга вакансий из SuperJob с отсутствующими значениями
     и формирования параметров запроса с отсутствующими значениями.
     """
-    @pytest.mark.asyncio
+
     async def test_get_vacancy_from_superjob_with_none(
-        self, mocker, params: RequestConfig
+        self, mocker: MockerFixture, params: RequestConfig
     ) -> None:
         """Тест проверяет парсинг вакансий из API SuperJob с отсутствующими значениями.
 
@@ -155,9 +157,9 @@ class TestSuperJobNegative:
         mocker.patch.object(superjob, "get_vacancies")
         superjob.get_vacancies.return_value = [
             {
-                "link": "https://superjob.ru/vacancy/12345",
-                "date_published": await Utils.convert_date("2023-03-01"),
-                "profession": "Программист",
+                "link": None,
+                "date_published": None,
+                "profession": None,
                 "payment_from": None,
                 "payment_to": None,
                 "currency": None,
@@ -172,31 +174,29 @@ class TestSuperJobNegative:
         ]
 
         # Вызываем метод получения вакансий из API SuperJob
-        job_dict = await superjob.get_vacancy_from_superjob()
+        job_dict = await superjob.parsing_vacancy_superjob()
 
         assert job_dict["job_board"] == "SuperJob"
-        assert job_dict["url"] == "https://superjob.ru/vacancy/12345"
-        assert job_dict["title"] == "Программист"
+        assert job_dict["url"] is None
+        assert job_dict["title"] is None
         assert job_dict["salary_from"] is None
         assert job_dict["salary_to"] is None
-        assert job_dict["salary_currency"] == "Валюта не указана"
+        assert job_dict["salary_currency"] is None
         assert job_dict["responsibility"] == "Нет описания"
         assert job_dict["requirement"] == "Нет описания"
-        assert job_dict["city"] == "Не указано"
-        assert job_dict["company"] == "Не указано"
-        assert job_dict["type_of_work"] == "Не указано"
-        assert job_dict["place_of_work"] == "Нет описания"
-        assert job_dict["experience"] == "Не указано"
-        assert job_dict["published_at"] == datetime.date(2023, 3, 1)
+        assert job_dict["city"] is None
+        assert job_dict["company"] is None
+        assert job_dict["type_of_work"] is None
+        assert job_dict["experience"] is None
+        assert job_dict["published_at"] is None
         assert len(Parser.general_job_list) == 1
 
         Parser.general_job_list.clear()
 
-    @pytest.mark.asyncio
     async def test_get_request_params_with_none(self) -> None:
         """Тест проверяет формирование параметров запроса с отсутствующими значениями.
 
-        Создается экземпляр класса SuperJob с отсутствующими значениями для некоторых 
+        Создается экземпляр класса SuperJob с отсутствующими значениями для некоторых
         параметров.
         Вызывается метод get_request_params.
         Ожидается, что метод вернет словарь с параметрами запроса, соответствующими
