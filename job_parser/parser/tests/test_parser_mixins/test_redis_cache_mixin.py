@@ -4,7 +4,7 @@ import pytest
 from django.http import HttpRequest
 from pytest_mock import MockerFixture
 
-
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestRedisCacheMixinPositive:
     """Класс описывает позитивные тестовые случаи для миксина RedisCacheMixin.
@@ -18,7 +18,6 @@ class TestRedisCacheMixinPositive:
     получение данных из кэша.
     """
 
-    @pytest.mark.asyncio
     async def test_create_cache_key(
         self, cache_key: RedisCacheMixin, request_: HttpRequest
     ) -> None:
@@ -35,7 +34,6 @@ class TestRedisCacheMixinPositive:
         session_id = f"session_id:{request_.session.session_key}"
         assert cache_key == session_id
 
-    @pytest.mark.asyncio
     async def test_set_data_to_cache(
         self, redis_mixin: RedisCacheMixin, cache_key: RedisCacheMixin
     ) -> None:
@@ -54,7 +52,7 @@ class TestRedisCacheMixinPositive:
         result = await redis_mixin.get_data_from_cache()
         assert job_list == result
 
-
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestRedisCacheMixinNegative:
     """Класс описывает негативные тестовые случаи для миксина RedisCacheMixin.
@@ -76,7 +74,6 @@ class TestRedisCacheMixinNegative:
         """
         raise Exception("Test exception")
 
-    @pytest.mark.asyncio
     async def test_create_cache_key_with_invalid_request(
         self, cache_key: RedisCacheMixin
     ) -> None:
@@ -91,7 +88,6 @@ class TestRedisCacheMixinNegative:
         with pytest.raises(AttributeError):
             await cache_key.create_cache_key(None)
 
-    @pytest.mark.asyncio
     async def test_get_data_from_cache_with_invalid_key(
         self, redis_mixin: RedisCacheMixin
     ) -> None:
@@ -109,7 +105,6 @@ class TestRedisCacheMixinNegative:
         result = await redis_mixin.get_data_from_cache()
         assert result is None
 
-    @pytest.mark.asyncio
     async def test_set_data_to_cache_with_empty_list(
         self, redis_mixin: RedisCacheMixin, cache_key: RedisCacheMixin
     ) -> None:
@@ -128,7 +123,6 @@ class TestRedisCacheMixinNegative:
         result = await redis_mixin.get_data_from_cache()
         assert result == job_list
 
-    @pytest.mark.asyncio
     async def test_get_data_from_cache_with_none_cache(
         self, redis_mixin: RedisCacheMixin, mocker: MockerFixture
     ) -> None:
@@ -147,7 +141,6 @@ class TestRedisCacheMixinNegative:
         with pytest.raises(AttributeError):
             await redis_mixin.get_data_from_cache()
 
-    @pytest.mark.asyncio
     async def test_set_data_to_cache_with_none_cache(
         self, redis_mixin: RedisCacheMixin, mocker: MockerFixture
     ) -> None:
@@ -165,7 +158,6 @@ class TestRedisCacheMixinNegative:
         with pytest.raises(AttributeError):
             await redis_mixin.set_data_to_cache(job_list)
 
-    @pytest.mark.asyncio
     async def test_get_data_from_cache_with_pickle_error(
         self, redis_mixin: RedisCacheMixin, mocker: MockerFixture
     ) -> None:
@@ -182,7 +174,6 @@ class TestRedisCacheMixinNegative:
         with pytest.raises(Exception):
             await redis_mixin.get_data_from_cache()
 
-    @pytest.mark.asyncio
     async def test_set_data_to_cache_with_pickle_error(
         self, redis_mixin: RedisCacheMixin, mocker: MockerFixture
     ) -> None:
