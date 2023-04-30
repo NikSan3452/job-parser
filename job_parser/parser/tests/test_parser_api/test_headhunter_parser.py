@@ -1,9 +1,11 @@
 import datetime
+
+import pytest
+from pytest_mock import MockerFixture
+
 from parser.api.base_parser import Parser
 from parser.api.config import RequestConfig
 from parser.api.parsers import Headhunter
-
-import pytest
 
 
 @pytest.fixture
@@ -16,15 +18,66 @@ def params() -> RequestConfig:
     params = RequestConfig(
         city="Москва",
         city_from_db=1,
-        job="Программист",
+        job="Python",
         remote=True,
         date_from="2023-01-01",
         date_to="2023-12-31",
-        experience=3,
+        experience=4,
     )
     return params
 
 
+@pytest.fixture
+def mock_vacancy_parsing(mocker: MockerFixture) -> list[dict]:
+    hh_vacancy = [
+        {
+            "name": "Python",
+            "area": {"id": "1", "name": "Москва"},
+            "salary": {"from": 10000, "to": 20000, "currency": "USD"},
+            "published_at": "2023-01-01T01:01:01+0100",
+            "alternate_url": "https://example.com/vacancy/1",
+            "employer": {
+                "name": "Test company",
+                "logo_urls": {
+                    "original": "https://hhcdn.ru/employer-logo-original/951707.png",
+                    "240": "https://hhcdn.ru/employer-logo/4247361.png",
+                    "90": "https://hhcdn.ru/employer-logo/4247360.png",
+                },
+            },
+            "snippet": {
+                "requirement": "Test requirement",
+                "responsibility": "Test responsibility",
+            },
+            "experience": {"id": "moreThan6", "name": "Более 6 лет"},
+            "employment": {"id": "full", "name": "Полная занятость"},
+        }
+    ]
+    mock = mocker.patch("parser.api.base_parser.Parser.get_vacancies")
+    mock.return_value = hh_vacancy
+    return mock
+
+
+@pytest.fixture
+def mock_vacancy_parsing_with_wrong_values(mocker: MockerFixture) -> dict:
+    hh_vacancy = [
+        {
+            "name": None,
+            "area": None,
+            "salary": None,
+            "published_at": None,
+            "alternate_url": None,
+            "employer": None,
+            "snippet": None,
+            "experience": None,
+            "employment": None,
+        }
+    ]
+    mock = mocker.patch("parser.api.base_parser.Parser.get_vacancies")
+    mock.return_value = hh_vacancy
+    return mock
+
+
+@pytest.mark.asyncio
 class TestHeadHunterPositive:
     """Класс описывает позитивные тестовые случаи для класса Headhunter.
 
@@ -33,7 +86,6 @@ class TestHeadHunterPositive:
     из Headhunter.
     """
 
-    @pytest.mark.asyncio
     async def test_get_request_params(self, params: RequestConfig) -> None:
         """Тест проверяет формирование параметров запроса.
 
@@ -59,71 +111,48 @@ class TestHeadHunterPositive:
         assert hh_params["schedule"] == "remote"
         assert hh_params["experience"] == "between3And6"
 
-    @pytest.mark.asyncio
-    async def test_get_vacancy_from_headhunter(
-        self, mocker, params: RequestConfig
-    ) -> None:
-        """Тест проверяет парсинг вакансий из API Headhunter.
+        Parser.general_job_list.clear()
 
-        Создается экземпляр класса Headhunter с указанными параметрами.
-        Метод get_vacancies мок-объекта возвращает список с одной вакансией.
-        Вызывается метод get_vacancy_from_headhunter.
-        Ожидается, что метод вернет словарь с информацией о вакансии, соответствующей
-        информации в мок-объекте.
+    async def test_parsing_vacancy_headhunter(
+        self, params: RequestConfig, mock_vacancy_parsing: dict
+    ) -> None:
+        """Этот тест проверяет парсинг вакансии с HeadHunter.
+
+        В начале создает экземпляр класса Headhunter с заданными параметрами и
+        вызывает метод `parsing_vacancy_headhunter`.
+        Ожидается, что результат будет словарем с определенными ключами и значениями.
+        Также проверяется, что длина списка `general_job_list` в классе Parser равна 1.
 
         Args:
-            mocker: Фикстура для создания мок-объектов.
-            params (RequestConfig): Параметры запроса.
+            params (RequestConfig): Параметры для создания экземпляра класса Headhunter.
+            mock_vacancy_parsing (dict): Мок-заглушка с информацией о вакансии.
         """
-        # Создаем экземпляр парсера с параметрами запроса
-        headhunter = Headhunter(params)
+        hh = Headhunter(params)
+        result = await hh.parsing_vacancy_headhunter()
 
-        # Создаем фиктивные данные
-        mocker.patch.object(headhunter, "get_vacancies")
-        headhunter.get_vacancies.return_value = [
-            {
-                "name": "Программист",
-                "area": {
-                    "name": "Москва",
-                },
-                "salary": {
-                    "from": 2000,
-                    "to": None,
-                    "currency": "EUR",
-                },
-                "published_at": "2023-01-01T00:00:00+0300",
-                "alternate_url": "https://hh.ru/vacancy/12345",
-                "employer": {
-                    "name": "company1",
-                },
-                "snippet": {
-                    "requirement": "требования",
-                    "responsibility": "обязанности",
-                },
-                "schedule": {"name": "Полный рабочий день"},
-            }
-        ]
-
-        # Вызываем метод получения вакансий из API HeadHunter
-        job_dict = await headhunter.get_vacancy_from_headhunter()
-
-        assert job_dict["job_board"] == "HeadHunter"
-        assert job_dict["url"] == "https://hh.ru/vacancy/12345"
-        assert job_dict["title"] == "Программист"
-        assert job_dict["salary_from"] == 2000
-        assert job_dict["salary_to"] is None
-        assert job_dict["salary_currency"] == "EUR"
-        assert job_dict["responsibility"] == "обязанности"
-        assert job_dict["requirement"] == "требования"
-        assert job_dict["city"] == "Москва"
-        assert job_dict["company"] == "company1"
-        assert job_dict["type_of_work"] == "Полный рабочий день"
-        assert job_dict["published_at"] == datetime.date(2023, 1, 1)
+        assert isinstance(result, dict)
+        assert result == {
+            "job_board": "HeadHunter",
+            "url": "https://example.com/vacancy/1",
+            "title": "Python",
+            "salary_from": 10000,
+            "salary_to": 20000,
+            "salary_currency": "USD",
+            "responsibility": "Test responsibility",
+            "requirement": "Test requirement",
+            "city": "Москва",
+            "company": "Test company",
+            "type_of_work": "Полная занятость",
+            "experience": "Более 6 лет",
+            "published_at": datetime.datetime.strptime(
+                "2023-01-01T01:01:01+0100", "%Y-%m-%dT%H:%M:%S%z"
+            ).date(),
+        }
         assert len(Parser.general_job_list) == 1
-
         Parser.general_job_list.clear()
 
 
+@pytest.mark.asyncio
 class TestHeadHunterNegative:
     """Класс описывает негативные тестовые случаи для класса Headhunter.
 
@@ -132,61 +161,10 @@ class TestHeadHunterNegative:
     значениями и формирования параметров запроса с отсутствующими значениями.
     """
 
-    @pytest.mark.asyncio
-    async def test_get_vacancy_from_headhunter_with_none(
-        self, mocker, params: RequestConfig
-    ) -> None:
-        """Тест проверяет парсинг вакансий из API Headhunter с отсутствующими
-        значениями.
-
-        Создается экземпляр класса Headhunter с указанными параметрами.
-        Метод get_vacancies мок-объекта возвращает список с одной вакансией,
-        у которой отсутствуют значения для некоторых полей.
-        Вызывается метод get_vacancy_from_headhunter.
-        Ожидается, что метод вернет словарь с информацией о вакансии, соответствующей
-        информации в мок-объекте.
-
-        Args:
-            mocker: Фикстура для создания мок-объектов.
-            params (RequestConfig): Параметры запроса.
-        """
-        # Создаем экземпляр парсера с параметрами запроса
-        headhunter = Headhunter(params)
-
-        # Создаем фиктивные данные со значениями None для проверки условий if/else
-        mocker.patch.object(headhunter, "get_vacancies")
-        headhunter.get_vacancies.return_value = [
-            {
-                "name": "Программист",
-                "area": {
-                    "name": "Москва",
-                },
-                "salary": None,
-                "published_at": "2023-01-01T00:00:00+0300",
-                "alternate_url": "https://hh.ru/vacancy/12345",
-                "employer": {
-                    "name": "company1",
-                },
-                "snippet": None,
-                "schedule": None,
-            }
-        ]
-
-        job_dict = await headhunter.get_vacancy_from_headhunter()
-
-        assert job_dict["salary_from"] is None
-        assert job_dict["salary_to"] is None
-        assert job_dict["requirement"] == "Нет описания"
-        assert job_dict["responsibility"] == "Нет описания"
-        assert job_dict["type_of_work"] == "Не указано"
-
-        Parser.general_job_list.clear()
-
-    @pytest.mark.asyncio
     async def test_get_request_params_with_none(self) -> None:
         """Тест проверяет формирование параметров запроса с отсутствующими значениями.
 
-        Создается экземпляр класса Headhunter с отсутствующими значениями для некоторых 
+        Создается экземпляр класса Headhunter с отсутствующими значениями для некоторых
         параметров.
         Вызывается метод get_request_params.
         Ожидается, что метод вернет словарь с параметрами запроса, соответствующими
@@ -218,3 +196,39 @@ class TestHeadHunterNegative:
         assert "schedule" not in hh_params
         assert "experience" not in hh_params
         assert "experience" not in hh_params
+
+    async def test_parsing_vacancy_headhunter_wrong_values(
+        self, params: RequestConfig, mock_vacancy_parsing_with_wrong_values: dict
+    ) -> None:
+        """Этот тест проверяет парсинг вакансии с HeadHunter с неверными значениями.
+
+        В начале создает экземпляр класса Headhunter с заданными параметрами и
+        вызывает метод `parsing_vacancy_headhunter`.
+        Ожидается, что результат будет словарем с неверными значениями.
+        Также проверяется, что длина списка `general_job_list` в классе Parser равна 1.
+
+        Args:
+            params (RequestConfig): Параметры для создания экземпляра класса Headhunter.
+            mock_vacancy_parsing (dict): Мок-заглушка с информацией о вакансии.
+        """
+        hh = Headhunter(params)
+        result = await hh.parsing_vacancy_headhunter()
+
+        assert isinstance(result, dict)
+        assert result == {
+            "job_board": "HeadHunter",
+            "url": None,
+            "title": None,
+            "salary_from": None,
+            "salary_to": None,
+            "salary_currency": None,
+            "responsibility": "Нет описания",
+            "requirement": "Нет описания",
+            "city": None,
+            "company": None,
+            "type_of_work": None,
+            "experience": None,
+            "published_at": None,
+        }
+        assert len(Parser.general_job_list) == 1
+        Parser.general_job_list.clear()
