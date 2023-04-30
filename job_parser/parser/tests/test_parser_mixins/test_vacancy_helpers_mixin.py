@@ -1,7 +1,4 @@
 import datetime
-from parser.forms import SearchingForm
-from parser.mixins import VacancyHelpersMixin
-from parser.models import City, FavouriteVacancy, HiddenCompanies, VacancyBlackList
 
 import pytest
 from django.contrib.auth.models import AnonymousUser, User
@@ -11,7 +8,12 @@ from django.http import HttpRequest, QueryDict
 from django.test import Client
 from pytest_mock import MockerFixture
 
+from parser.forms import SearchingForm
+from parser.mixins import VacancyHelpersMixin
+from parser.models import City, FavouriteVacancy, HiddenCompanies, VacancyBlackList
 
+
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestCheckRequestDataPositive:
     """Класс описывает позитивные тестовые случаи для проверки данных запроса.
@@ -26,7 +28,6 @@ class TestCheckRequestDataPositive:
     ожидаемым значениям.
     """
 
-    @pytest.mark.asyncio
     async def test_check_request_data(
         self, helpers_mixin: VacancyHelpersMixin, client: Client
     ) -> None:
@@ -58,6 +59,7 @@ class TestCheckRequestDataPositive:
         assert result == expected
 
 
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestCheckRequestDataNegative:
     """Класс описывает негативные тестовые случаи для проверки данных запроса.
@@ -71,7 +73,6 @@ class TestCheckRequestDataNegative:
     проверка поведения метода `check_request_data` при передаче невалидного значения.
     """
 
-    @pytest.mark.asyncio
     async def test_check_request_data_invalid_request(
         self, helpers_mixin: VacancyHelpersMixin
     ) -> None:
@@ -88,6 +89,7 @@ class TestCheckRequestDataNegative:
         assert result is None
 
 
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestCheckVacancyInBlackListPositive:
     """Класс описывает позитивные тестовые случаи для проверки наличия вакансий
@@ -103,7 +105,6 @@ class TestCheckVacancyInBlackListPositive:
     проверка поведения метода `check_vacancy_in_black_list` при анонимном пользователе.
     """
 
-    @pytest.mark.asyncio
     async def test_check_vacancy_in_black_list(
         self,
         helpers_mixin: VacancyHelpersMixin,
@@ -166,6 +167,7 @@ class TestCheckVacancyInBlackListPositive:
         assert result == vacancies
 
 
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestCheckVacancyInBlackListNegative:
     """Класс описывает негативные тестовые случаи для проверки вакансий в черном списке.
@@ -179,7 +181,6 @@ class TestCheckVacancyInBlackListNegative:
     проверка поведения метода `check_vacancy_in_black_list` при ошибке базы данных.
     """
 
-    @pytest.mark.asyncio
     async def test_check_vacancy_in_black_list_exception(
         self,
         helpers_mixin: VacancyHelpersMixin,
@@ -205,6 +206,7 @@ class TestCheckVacancyInBlackListNegative:
         assert result == []
 
 
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestCheckCompanyInHiddenListPositive:
     """Класс описывает позитивные тестовые случаи для проверки компании в списке
@@ -220,7 +222,6 @@ class TestCheckCompanyInHiddenListPositive:
     `check_company_in_hidden_list` при анонимном пользователе.
     """
 
-    @pytest.mark.asyncio
     async def test_check_company_in_hidden_list(
         self,
         helpers_mixin: VacancyHelpersMixin,
@@ -269,6 +270,7 @@ class TestCheckCompanyInHiddenListPositive:
         assert result == vacancies
 
 
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestCheckCompanyInHiddenListNegative:
     """Класс описывает негативные тестовые случаи для проверки компаний в скрытом списке.
@@ -282,7 +284,6 @@ class TestCheckCompanyInHiddenListNegative:
     проверка поведения метода `check_company_in_hidden_list` при ошибке базы данных.
     """
 
-    @pytest.mark.asyncio
     async def test_check_company_in_hidden_list_exception(
         self,
         helpers_mixin: VacancyHelpersMixin,
@@ -306,6 +307,7 @@ class TestCheckCompanyInHiddenListNegative:
         assert result == []
 
 
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestGetFavouriteVacancyPositive:
     """Класс описывает позитивные тестовые случаи для получения списка избранных
@@ -319,7 +321,6 @@ class TestGetFavouriteVacancyPositive:
     списка избранных вакансий пользователя.
     """
 
-    @pytest.mark.asyncio
     async def test_get_favourite_vacancy(
         self,
         helpers_mixin: VacancyHelpersMixin,
@@ -361,6 +362,7 @@ class TestGetFavouriteVacancyPositive:
         assert result == vacancies
 
 
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestGetFavouriteVacancyNegative:
     """Класс описывает негативные тестовые случаи для получения списка избранных вакансий.
@@ -373,7 +375,6 @@ class TestGetFavouriteVacancyNegative:
     списка избранных вакансий пользователя.
     """
 
-    @pytest.mark.asyncio
     async def test_get_favourite_vacancy_exception(
         self,
         helpers_mixin: VacancyHelpersMixin,
@@ -398,6 +399,7 @@ class TestGetFavouriteVacancyNegative:
         assert result == []
 
 
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestGetPaginationPositive:
     """Класс описывает позитивные тестовые случаи для метода get_pagination.
@@ -411,7 +413,6 @@ class TestGetPaginationPositive:
     ожидаемых значений в контексте, проверка обработки пустого списка вакансий.
     """
 
-    @pytest.mark.asyncio
     async def test_get_pagination(
         self,
         helpers_mixin: VacancyHelpersMixin,
@@ -473,6 +474,7 @@ class TestGetPaginationPositive:
         assert empty_context["total_vacancies"] == 0
 
 
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestGetPaginationNegative:
     """Класс описывает негативные тестовые случаи для метода get_pagination.
@@ -485,7 +487,6 @@ class TestGetPaginationNegative:
     метода get_pagination: проверка обработки неправильного номера страницы.
     """
 
-    @pytest.mark.asyncio
     async def test_get_pagination_invalid_page_number(
         request_: HttpRequest, helpers_mixin: VacancyHelpersMixin
     ):
@@ -515,6 +516,7 @@ class TestGetPaginationNegative:
         assert list(context["object_list"]) == job_list[:5]
 
 
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestGetFormDataPositive:
     """Класс описывает позитивные тестовые случаи для получения данных из формы поиска
@@ -528,7 +530,6 @@ class TestGetFormDataPositive:
     поиска вакансий.
     """
 
-    @pytest.mark.asyncio
     async def test_get_form_data(self, helpers_mixin: VacancyHelpersMixin) -> None:
         """Тест проверяет корректность извлечения данных из формы поиска вакансий.
 
@@ -572,6 +573,7 @@ class TestGetFormDataPositive:
         assert data == expected
 
 
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestGetFormDataNegative:
     """Класс описывает негативные тестовые случаи для получения данных из формы поиска
@@ -585,7 +587,6 @@ class TestGetFormDataNegative:
     форм с некорректными данными.
     """
 
-    @pytest.mark.asyncio
     async def test_get_form_data_invalid_form(
         self, helpers_mixin: VacancyHelpersMixin
     ) -> None:
@@ -602,7 +603,6 @@ class TestGetFormDataNegative:
         data = await helpers_mixin.get_form_data(form)
         assert data is None
 
-    @pytest.mark.asyncio
     async def test_get_form_data_wrong_data_type(
         self, helpers_mixin: VacancyHelpersMixin
     ) -> None:
@@ -631,14 +631,34 @@ class TestGetFormDataNegative:
         assert data is None
 
 
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestGetCityIdPositive:
-    @pytest.mark.asyncio
+    """Класс описывает позитивные тестовые случаи для метода get_city_id.
+
+    Декоратор `@pytest.mark.django_db` указывает pytest на необходимость использования
+    базы данных.
+    Параметр `transaction=True` указывает на использование транзакций для ускорения
+    и изоляции тестов.
+    Этот класс содержит тесты для проверки различных позитивных сценариев при вызове
+    метода get_city_id из класса VacancyHelpersMixin:
+    проверка возвращаемого значения при передаче существующего города
+    """
+
     async def test_get_city_id_existing_city(
         self,
         helpers_mixin: VacancyHelpersMixin,
         request_: HttpRequest,
     ) -> None:
+        """Тест проверяет возвращаемое значение при передаче существующего города.
+
+        Вызывается метод get_city_id с передачей существующего города.
+        Ожидается, что возвращаемое значение будет равно 12345.
+
+        Args:
+            helpers_mixin (VacancyHelpersMixin): Миксин с вспомогательными методами.
+            request_ (HttpRequest): Фикстура для создания фиктивных запросов.
+        """
         request_.GET = QueryDict("", mutable=True)
         request_.GET["city"] = "Test City"
         # Проверяем, что функция возвращает правильный id города
@@ -647,7 +667,7 @@ class TestGetCityIdPositive:
         assert isinstance(city_id, str)
         assert city_id == "12345"
 
-
+@pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestGetCityIdNegative:
     """Класс описывает негативные тестовые случаи для метода get_city_id.
@@ -663,7 +683,6 @@ class TestGetCityIdNegative:
     проверка возвращаемого значения при возникновении ошибки базы данных.
     """
 
-    @pytest.mark.asyncio
     async def test_get_city_id_nonexistent_city(
         self,
         helpers_mixin: VacancyHelpersMixin,
@@ -683,7 +702,6 @@ class TestGetCityIdNegative:
         city_id = await helpers_mixin.get_city_id("Nonexistent City", request_)
         assert city_id is None
 
-    @pytest.mark.asyncio
     async def test_get_city_id_error_message(
         self,
         helpers_mixin: VacancyHelpersMixin,
@@ -706,7 +724,6 @@ class TestGetCityIdNegative:
         assert isinstance(messages, list)
         assert str(messages[0]) == expected_message
 
-    @pytest.mark.asyncio
     async def test_get_city_id_database_error(
         self,
         helpers_mixin: VacancyHelpersMixin,
@@ -728,5 +745,7 @@ class TestGetCityIdNegative:
         mocker.patch(
             "parser.models.City.objects.filter", side_effect=Exception("Database error")
         )
+        city_id = await helpers_mixin.get_city_id("Test City", request_)
+        assert city_id is None
         city_id = await helpers_mixin.get_city_id("Test City", request_)
         assert city_id is None
