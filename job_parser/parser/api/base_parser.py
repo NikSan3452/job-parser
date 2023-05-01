@@ -1,4 +1,5 @@
 import abc
+import datetime
 import json
 import random
 from parser.api.config import ParserConfig
@@ -400,7 +401,7 @@ class Parser(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_published_at(self, job: dict) -> str | None:
+    async def get_published_at(self, job: dict) -> datetime.date | None:
         """
         Абстрактный асинхронный метод для получения даты публикации вакансии.
 
