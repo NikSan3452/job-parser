@@ -27,6 +27,20 @@ def params() -> RequestConfig:
     return params
 
 
+@pytest.fixture
+def superjob(params: RequestConfig) -> SuperJob:
+    """Создает экземпляр парсера SuperJob с заданными параметрами.
+
+    Args:
+        params (RequestConfig): Экземпляр RequestConfig
+
+    Returns:
+        SuperJob: Экземпляр SuperJob.
+    """
+    sj = SuperJob(params)
+    return sj
+
+
 @pytest.mark.asyncio
 class TestSuperJobPositive:
     """Класс описывает позитивные тестовые случаи для класса SuperJob.
@@ -36,7 +50,7 @@ class TestSuperJobPositive:
     из SuperJob.
     """
 
-    async def test_get_request_params(self, params: RequestConfig) -> None:
+    async def test_get_request_params(self, superjob: SuperJob) -> None:
         """Тест проверяет формирование параметров запроса.
 
         Создается экземпляр класса SuperJob с указанными параметрами.
@@ -45,10 +59,8 @@ class TestSuperJobPositive:
         указанным при создании экземпляра класса.
 
         Args:
-            params (RequestConfig): Параметры запроса.
+            superjob (SuperJob): Экземпляр SuperJob.
         """
-        # Создаем экземпляр парсера с параметрами запроса
-        superjob = SuperJob(params)
 
         # Вызываем метод, который формирует параметры запроса в понятный для superjob вид
         sj_params = await superjob.get_request_params()
@@ -64,7 +76,7 @@ class TestSuperJobPositive:
         assert sj_params["experience"] == 3
 
     async def test_get_vacancy_from_superjob(
-        self, mocker: MockerFixture, params: RequestConfig
+        self, mocker: MockerFixture, superjob: SuperJob
     ) -> None:
         """Тест проверяет парсинг вакансий из API SuperJob.
 
@@ -76,12 +88,8 @@ class TestSuperJobPositive:
 
         Args:
             mocker: Фикстура для создания мок-объектов.
-            params (RequestConfig): Параметры запроса.
+            superjob (SuperJob): Экземпляр SuperJob.
         """
-
-        # Создаем экземпляр парсера с параметрами запроса
-        superjob = SuperJob(params)
-
         # Создаем фиктивные данные
         mocker.patch.object(superjob, "get_vacancies")
         superjob.get_vacancies.return_value = [
@@ -124,6 +132,162 @@ class TestSuperJobPositive:
 
         Parser.general_job_list.clear()
 
+    async def test_get_url(self, superjob: SuperJob) -> None:
+        """Тест проверяет корректность возвращаемого значения ссылки.
+
+        Создается словарь с указанным значением поля link.
+        Ожидается, что метод get_url вернет ссылку, соответствующую
+        указанной при создании словаря.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job = {"link": "https://www.superjob.ru/vacancy/12345"}
+        assert await superjob.get_url(job) == "https://www.superjob.ru/vacancy/12345"
+
+    async def test_get_title(self, superjob: SuperJob) -> None:
+        """Тест проверяет корректность возвращаемого значения названия профессии.
+
+        Создается словарь с указанным значением поля profession.
+        Ожидается, что метод get_title вернет название профессии, соответствующее
+        указанной при создании словаря.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job = {"profession": "Test"}
+        assert await superjob.get_title(job) == "Test"
+
+    async def test_get_salary_from(self, superjob: SuperJob) -> None:
+        """Тест проверяет корректность возвращаемого значения минимальной зарплаты.
+
+        Создается словарь с указанным значением поля payment_from.
+        Ожидается, что метод get_salary_from вернет значение минимальной зарплаты,
+        соответствующее указанной при создании словаря.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job = {"payment_from": 100000}
+        assert await superjob.get_salary_from(job) == 100000
+
+    async def test_get_salary_to(self, superjob: SuperJob) -> None:
+        """Тест проверяет корректность возвращаемого значения максимальной зарплаты.
+
+        Создается словарь с указанным значением поля payment_to.
+        Ожидается, что метод get_salary_to вернет значение максимальной зарплаты,
+        соответствующее указанной при создании словаря.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job = {"payment_to": 200000}
+        assert await superjob.get_salary_to(job) == 200000
+
+    async def test_get_salary_currency(self, superjob: SuperJob) -> None:
+        """Тест проверяет корректность возвращаемого значения валюты зарплаты.
+
+        Создается словарь с указанным значением поля currency.
+        Ожидается, что метод get_salary_currency вернет значение валюты зарплаты,
+        соответствующее указанной при создании словаря.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job = {"currency": "RUR"}
+        assert await superjob.get_salary_currency(job) == "RUR"
+
+    async def test_get_responsibility(self, superjob: SuperJob) -> None:
+        """Тест проверяет корректность возвращаемого значения описания обязанностей.
+
+        Создается словарь с указанным значением поля work.
+        Ожидается, что метод get_responsibility вернет описание обязанностей,
+        соответствующее указанной при создании словаря.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job = {"work": "Test"}
+        assert await superjob.get_responsibility(job) == "Test"
+
+    async def test_get_requirement(self, superjob: SuperJob) -> None:
+        """Тест проверяет корректность возвращаемого значения описания требований.
+
+        Создается словарь с указанным значением поля candidat.
+        Ожидается, что метод get_requirement вернет описание требований,
+        соответствующее указанной при создании словаря.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job = {"candidat": "Test"}
+        assert await superjob.get_requirement(job) == "Test"
+
+    async def test_get_city(self, superjob: SuperJob) -> None:
+        """Тест проверяет корректность возвращаемого значения города.
+
+        Создается словарь с указанным значением поля town.
+        Ожидается, что метод get_city вернет название города,
+        соответствующее указанной при создании словаря.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job = {"town": {"title": "Москва"}}
+        assert await superjob.get_city(job) == "Москва"
+
+    async def test_get_company(self, superjob: SuperJob) -> None:
+        """Тест проверяет корректность возвращаемого значения названия компании.
+
+        Создается словарь с указанным значением поля firm_name.
+        Ожидается, что метод get_company вернет название компании,
+        соответствующее указанной при создании словаря.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job = {"firm_name": "Test"}
+        assert await superjob.get_company(job) == "Test"
+
+    async def test_get_type_of_work(self, superjob: SuperJob) -> None:
+        """Тест проверяет корректность возвращаемого значения типа работы.
+
+        Создается словарь с указанным значением поля type_of_work.
+        Ожидается, что метод get_type_of_work вернет тип работы,
+        соответствующий указанной при создании словаря.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job = {"type_of_work": {"title": "Полный день"}}
+        assert await superjob.get_type_of_work(job) == "Полный день"
+
+    async def test_get_experience(self, superjob: SuperJob) -> None:
+        """Тест проверяет корректность возвращаемого значения требуемого опыта работы.
+
+        Создается словарь с указанным значением поля experience.
+        Ожидается, что метод get_experience вернет требуемый опыт работы,
+        соответствующий указанной при создании словаря.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job = {"experience": {"title": "Без опыта"}}
+        assert await superjob.get_experience(job) == "Без опыта"
+
+    async def test_get_published_at(self, superjob: SuperJob) -> None:
+        """Тест проверяет корректность возвращаемой даты публикации.
+
+        Создается словарь с указанным значением поля date_published.
+        Ожидается, что метод get_published_at вернет дату, соответствующую
+        указанной при создании словаря.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job = {"date_published": 1640995200}
+        assert await superjob.get_published_at(job) == datetime.date(2022, 1, 1)
+
 
 @pytest.mark.asyncio
 class TestSuperJobNegative:
@@ -135,7 +299,7 @@ class TestSuperJobNegative:
     """
 
     async def test_get_vacancy_from_superjob_with_none(
-        self, mocker: MockerFixture, params: RequestConfig
+        self, mocker: MockerFixture, superjob: SuperJob
     ) -> None:
         """Тест проверяет парсинг вакансий из API SuperJob с отсутствующими значениями.
 
@@ -148,11 +312,8 @@ class TestSuperJobNegative:
 
         Args:
             mocker: Фикстура для создания мок-объектов.
-            params (RequestConfig): Параметры запроса.
+            superjob (SuperJob): Экземпляр SuperJob.
         """
-        # Создаем экземпляр парсера с параметрами запроса
-        superjob = SuperJob(params)
-
         # Создаем фиктивные данные со значениями None для проверки условий if/else
         mocker.patch.object(superjob, "get_vacancies")
         superjob.get_vacancies.return_value = [
@@ -201,7 +362,6 @@ class TestSuperJobNegative:
         Вызывается метод get_request_params.
         Ожидается, что метод вернет словарь с параметрами запроса, соответствующими
         указанным при создании экземпляра класса.
-
         """
         # Создаем тестовые параметры запроса
         data = dict(
@@ -232,3 +392,171 @@ class TestSuperJobNegative:
         assert "experience" not in sj_params
 
         Parser.general_job_list.clear()
+
+    async def test_get_url(self, superjob: SuperJob) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии ссылки.
+
+        Создается пустой словарь без поля link.
+        Ожидается, что метод get_url вернет None.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job: dict = {}
+        assert await superjob.get_url(job) is None
+
+    async def test_get_title(self, superjob: SuperJob) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии названия профессии.
+
+        Создается пустой словарь без поля profession.
+        Ожидается, что метод get_title вернет None.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job: dict = {}
+        assert await superjob.get_title(job) is None
+
+    async def test_get_salary_from(self, superjob: SuperJob) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии минимальной зарплаты.
+
+        Создается пустой словарь без поля payment_from.
+        Ожидается, что метод get_salary_from вернет None.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job: dict = {}
+        assert await superjob.get_salary_from(job) is None
+
+    async def test_get_salary_to(self, superjob: SuperJob) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии максимальной зарплаты.
+
+        Создается пустой словарь без поля payment_to.
+        Ожидается, что метод get_salary_to вернет None.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job: dict = {}
+        assert await superjob.get_salary_to(job) is None
+
+    async def test_get_salary_currency(self, superjob: SuperJob) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии валюты зарплаты.
+
+        Создается пустой словарь без поля currency.
+        Ожидается, что метод get_salary_currency вернет None.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job: dict = {}
+        assert await superjob.get_salary_currency(job) is None
+
+    async def test_get_responsibility(self, superjob: SuperJob) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии описания обязанностей.
+
+        Создается пустой словарь без поля work.
+        Ожидается, что метод get_responsibility вернет "Нет описания".
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job: dict = {}
+        assert await superjob.get_responsibility(job) == "Нет описания"
+
+    async def test_get_requirement(self, superjob: SuperJob) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии описания требований.
+
+        Создается пустой словарь без поля candidat.
+        Ожидается, что метод get_requirement вернет "Нет описания".
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job: dict = {}
+        assert await superjob.get_requirement(job) == "Нет описания"
+
+    async def test_get_city(self, superjob: SuperJob) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии города.
+
+        Создается пустой словарь без поля town.
+        Ожидается, что метод get_city вернет None.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job: dict = {}
+        assert await superjob.get_city(job) is None
+
+    async def test_get_company(self, superjob: SuperJob) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии названия компании.
+
+        Создается пустой словарь без поля firm_name.
+        Ожидается, что метод get_company вернет None.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job: dict = {}
+        assert await superjob.get_company(job) is None
+
+    async def test_get_type_of_work(self, superjob: SuperJob) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии типа работы.
+
+        Создается пустой словарь без поля type_of_work.
+        Ожидается, что метод get_type_of_work вернет None.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job: dict = {}
+        assert await superjob.get_type_of_work(job) is None
+
+    async def test_get_experience(self, superjob: SuperJob) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии требуемого опыта работы.
+
+        Создается пустой словарь без поля experience.
+        Ожидается, что метод get_experience вернет None.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job: dict = {}
+        assert await superjob.get_experience(job) is None
+
+    async def test_get_published_at(self, superjob: SuperJob) -> None:
+        """
+        Тест проверяет корректность возвращаемого значения
+        при отсутствии даты публикации.
+
+        Создается пустой словарь без поля date_published.
+        Ожидается, что метод get_published_at вернет None.
+
+        Args:
+            superjob (SuperJob): Экземпляр SuperJob.
+        """
+        job: dict = {}
+        assert await superjob.get_published_at(job) is None
