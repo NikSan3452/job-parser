@@ -15,12 +15,14 @@
         {% endif %}
     </div>
     <div class="row">
-        <div class="col-md-6 my-5 mx-auto">
+        <div class="col-md-6 my-4 mx-auto">
             <h3 class="profile-user">{{ user }}</h3>
-            <form action="{% url 'profiles:profile' request.user.username %}" method="post">
+            <form class="profile-form" action="{% url 'profiles:profile' request.user.username %}" method="post">
                 {% csrf_token %}
                 {{ form|crispy }}
-                <button type="submit" class="btn btn-primary">Отправить</button>
+                <div class="wrap-button-submit">
+                    <button type="submit" class="btn btn-primary button-submit">Отправить</button>
+                </div>
             </form>
         </div>
     </div>
@@ -35,10 +37,15 @@
     <!-- Избранное -->
       <div class="tab-content" id="nav-tabContent">
         <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
-            <div class="row justify-content-center">
+            {% if favourite_vacancy|length > 0 %}
+            <div class="wrap-button-clear">
+                <button type="submit" class="btn btn-primary button-clear" onclick="clearProfileFavouriteList()">Очистить</button>
+            </div>
+            {% endif %}
+            <div class="row justify-content-center" id="wrap-favourite">
                 <div class="col-12">
                     {% for vacancy in favourite_vacancy %}
-                        <div class="card my-3" id="favourite-block-{{forloop.counter}}">
+                        <div class="card" id="favourite-block-{{forloop.counter}}">
                             <div class="row favourite">
                                 <div class="col-10">
                                     <h5 class="card-header bg-primary bg-opacity-10">
@@ -69,10 +76,15 @@
         </div>
         <!-- Черный список -->
         <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab" tabindex="0">
-            <div class="row justify-content-center">
+            {% if black_list|length > 0 %}
+            <div class="wrap-button-clear">
+                <button type="submit" class="btn btn-primary button-clear" onclick="clearProfileBlackList()">Очистить</button>
+            </div>
+            {% endif %}
+            <div class="row justify-content-center" id="wrap-blacklist">
                 <div class="col-12">
                     {% for vacancy in black_list %}
-                        <div class="card my-3" id="btn-delete-from-black-list-{{forloop.counter}}">
+                        <div class="card" id="btn-delete-from-black-list-{{forloop.counter}}">
                             <div class="row blacklist">
                                 <div class="col-10">
                                     <h5 class="card-header bg-primary bg-opacity-10">
@@ -101,10 +113,15 @@
         </div>
         <!-- Скрытые компании -->
         <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab" tabindex="0">
-            <div class="row justify-content-center">
+            {% if hidden_companies|length > 0 %}
+            <div class="wrap-button-clear">
+                <button type="submit" class="btn btn-primary button-clear" onclick="clearProfileHiddenCompaniesList()">Очистить</button>
+            </div>
+            {% endif %}
+            <div class="row justify-content-center" id="wrap-hidden-companies">
                 <div class="col-12">
                     {% for company in hidden_companies %}
-                        <div class="card my-3" id="btn-delete-from-hidden-companies-{{forloop.counter}}">
+                        <div class="card" id="btn-delete-from-hidden-companies-{{forloop.counter}}">
                             <div class="row hidden-companies">
                                 <div class="col-10">
                                     <h5 class="card-header bg-primary bg-opacity-10">
