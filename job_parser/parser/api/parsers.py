@@ -563,7 +563,7 @@ class SuperJob(Parser):
         experience = job.get("experience", None)
         return experience.get("title", None) if experience else None
 
-    async def get_published_at(self, job: dict) -> str | None:
+    async def get_published_at(self, job: dict) -> datetime.date | None:
         """
         Асинхронный метод для получения даты публикации вакансии.
 
@@ -574,7 +574,8 @@ class SuperJob(Parser):
             job (dict): Словарь с информацией о вакансии.
 
         Returns:
-            str | None: Дата публикации вакансии или None, если дата отсутствует.
+            datetime.date | None: Дата публикации вакансии или None, если дата
+            отсутствует.
         """
         date = job.get("date_published", None)
         return datetime.date.fromtimestamp(date) if date else None
@@ -637,7 +638,7 @@ class Trudvsem(Parser):
 
         return tv_params
 
-    async def parsing_vacancy_trudvsem(self) -> Coroutine[Any, Any, dict]:
+    async def parsing_vacancy_trudvsem(self) -> dict:
         """
         Асинхронный метод для парсинга вакансий с сайта Trudvsem.
 
