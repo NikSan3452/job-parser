@@ -1,5 +1,4 @@
 import datetime
-from typing import Any, Coroutine
 
 from logger import setup_logging
 
@@ -72,7 +71,7 @@ class Headhunter(Parser):
 
         return hh_params
 
-    async def parsing_vacancy_headhunter(self) -> Coroutine[Any, Any, dict]:
+    async def parsing_vacancy_headhunter(self) -> dict:
         """
         Асинхронный метод для парсинга вакансий с сайта HeadHunter.
 
@@ -80,8 +79,7 @@ class Headhunter(Parser):
         метод vacancy_parsing родительского класса Parser.
 
         Returns:
-            Coroutine[Any, Any, dict]: Корутина с результатом выполнения метода
-            vacancy_parsing.
+            dict: Словарь с результатом выполнения метода.
         """
         hh_params = await self.get_request_params()
         return await super().vacancy_parsing(
@@ -262,7 +260,7 @@ class Headhunter(Parser):
         experience = job.get("experience", None)
         return experience.get("name", None) if experience else None
 
-    async def get_published_at(self, job: dict) -> str | None:
+    async def get_published_at(self, job: dict) -> datetime.date | None:
         """
         Асинхронный метод для получения даты публикации вакансии.
 
@@ -273,7 +271,8 @@ class Headhunter(Parser):
             job (dict): Словарь с информацией о вакансии.
 
         Returns:
-            str | None: Дата публикации вакансии или None, если дата отсутствует.
+            datetime.date | None: Дата публикации вакансии или None, если дата
+            отсутствует.
         """
         date = job.get("published_at", None)
         return (
@@ -306,7 +305,7 @@ class Zarplata(Headhunter):
         super().__init__(params)
         self.job_board = "Zarplata"
 
-    async def parsing_vacancy_zarplata(self) -> Coroutine[Any, Any, dict]:
+    async def parsing_vacancy_zarplata(self) -> dict:
         """
         Асинхронный метод для парсинга вакансий с сайта Zarplata.
 
@@ -314,8 +313,7 @@ class Zarplata(Headhunter):
         метод vacancy_parsing родительского класса Parser.
 
         Returns:
-            Coroutine[Any, Any, dict]: Корутина с результатом выполнения метода
-            vacancy_parsing.
+            dict: Словарь с результатом выполнения метода.
         """
         zp_params = await self.get_request_params()
         return await super().vacancy_parsing(
@@ -382,7 +380,7 @@ class SuperJob(Parser):
 
         return sj_params
 
-    async def parsing_vacancy_superjob(self) -> Coroutine[Any, Any, dict]:
+    async def parsing_vacancy_superjob(self) -> dict:
         """
         Асинхронный метод для парсинга вакансий с сайта SuperJob.
 
@@ -390,8 +388,7 @@ class SuperJob(Parser):
         метод vacancy_parsing родительского класса Parser.
 
         Returns:
-            Coroutine[Any, Any, dict]: Корутина с результатом выполнения метода
-            vacancy_parsing.
+            dict: Словарь с результатом выполнения метода.
         """
         sj_params = await self.get_request_params()
         return await super().vacancy_parsing(
@@ -646,8 +643,7 @@ class Trudvsem(Parser):
         метод vacancy_parsing родительского класса Parser.
 
         Returns:
-            Coroutine[Any, Any, dict]: Корутина с результатом выполнения метода
-            vacancy_parsing.
+            dict: Словарь с результатом выполнения метода.
         """
         tv_params = await self.get_request_params()
         return await super().vacancy_parsing(
@@ -764,11 +760,13 @@ class Trudvsem(Parser):
         значение присутствует, то метод проверяет наличие значений ключей "education" и
         "experience" в словаре vacancy["requirement"]. Если оба значения присутствуют,
         то метод формирует строку requirement с требованиями к кандидату, содержащую
-        информацию об образовании и опыте работы. Если присутствует только значение ключа
-        "education", то метод формирует строку requirement с требованием об образовании.
+        информацию об образовании и опыте работы. Если присутствует только значение
+        ключа "education", то метод формирует строку requirement с требованием об
+        образовании.
         Если присутствует только значение ключа "experience", то метод формирует строку
-        requirement с требованием об опыте работы. Если ни одно из значений не присутствует,
-        то метод устанавливает значение переменной requirement равным "Нет описания".
+        requirement с требованием об опыте работы. Если ни одно из значений
+        не присутствует, то метод устанавливает значение переменной requirement равным
+        "Нет описания".
         Возвращает значение переменной requirement.
 
         Args:
@@ -868,7 +866,7 @@ class Trudvsem(Parser):
                 return experience.get("title", None)
         return None
 
-    async def get_published_at(self, job: dict) -> str | None:
+    async def get_published_at(self, job: dict) -> datetime.date | None:
         """
         Асинхронный метод для получения даты публикации вакансии.
 
@@ -880,7 +878,8 @@ class Trudvsem(Parser):
             job (dict): Словарь с информацией о вакансии.
 
         Returns:
-            str | None: Дата публикации вакансии или None, если дата отсутствует.
+            datetime.date | None: Дата публикации вакансии или None, если дата
+            отсутствует.
         """
         vacancy = job.get("vacancy", None)
         date = vacancy.get("creation-date", None) if vacancy else None
