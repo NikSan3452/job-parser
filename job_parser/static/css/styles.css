@@ -132,8 +132,23 @@ body {
     margin: 0;
 }
 
+.wrap-button-submit {
+    display: flex;
+    justify-content: center;
+}
+
 .wrap-button-clear {
-    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.btn {
+    height: 40px;
+    width: 120px;
+    border: none;
+    border-radius: 0;
 }
 
 .btn-wrap {
