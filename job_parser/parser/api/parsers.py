@@ -748,10 +748,8 @@ class Trudvsem(Parser):
         Returns:
             str: Обязанности по вакансии.
         """
-        vacancy = job.get("vacancy", None)
-        return (
-            vacancy.get("duty", None) if vacancy.get("duty", None) else "Нет описания"
-        )
+        duty = job.get("vacancy", {}).get("duty")
+        return duty if duty is not None else "Нет описания"
 
     async def get_requirement(self, job: dict) -> str:
         """
@@ -763,9 +761,13 @@ class Trudvsem(Parser):
 
         Метод проверяет наличие значения ключа "requirement" в словаре vacancy. Если
         значение присутствует, то метод проверяет наличие значений ключей "education" и
-        "experience" в словаре vacancy["requirement"]. Если значения присутствуют,
-        то метод формирует строку requirement с требованиями к кандидату.
-        Иначе устанавливает значение переменной requirement равным "Нет описания".
+        "experience" в словаре vacancy["requirement"]. Если оба значения присутствуют,
+        то метод формирует строку requirement с требованиями к кандидату, содержащую
+        информацию об образовании и опыте работы. Если присутствует только значение ключа
+        "education", то метод формирует строку requirement с требованием об образовании.
+        Если присутствует только значение ключа "experience", то метод формирует строку
+        requirement с требованием об опыте работы. Если ни одно из значений не присутствует,
+        то метод устанавливает значение переменной requirement равным "Нет описания".
         Возвращает значение переменной requirement.
 
         Args:
@@ -776,14 +778,19 @@ class Trudvsem(Parser):
         """
         vacancy = job.get("vacancy", None)
         requirement = None
-        if vacancy.get("requirement"):
-            if vacancy["requirement"]["education"]:
-                education = vacancy["requirement"]["education"]
-            if vacancy["requirement"]["experience"]:
-                experience = vacancy["requirement"]["experience"]
+        if vacancy and vacancy.get("requirement"):
+            education = vacancy["requirement"].get("education")
+            experience = vacancy["requirement"].get("experience")
+            if education and experience:
                 requirement = (
                     f"{education} образование, опыт работы (лет): {experience}"
                 )
+            elif education:
+                requirement = f"{education} образование"
+            elif experience:
+                requirement = f"опыт работы (лет): {experience}"
+            else:
+                requirement = "Нет описания"
         else:
             requirement = "Нет описания"
         return requirement
@@ -841,9 +848,24 @@ class Trudvsem(Parser):
         return vacancy.get("schedule", None) if vacancy else None
 
     async def get_experience(self, job: dict) -> str | None:
+        """
+        Асинхронный метод для получения опыта работы.
+
+        Метод получает значение ключа "experience" из словаря job и возвращает
+        значение ключа "title".
+
+        Args:
+            job (dict): Словарь с информацией о вакансии.
+
+        Returns:
+            str | None: Опыт работы по вакансии или None, если опыт работы отсутствует.
+        """
         vacancy = job.get("vacancy", None)
-        experience = vacancy.get("experience", None)
-        return experience.get("title", None) if experience else None
+        if vacancy:
+            experience = vacancy.get("experience", {})
+            if experience:
+                return experience.get("title", None)
+        return None
 
     async def get_published_at(self, job: dict) -> str | None:
         """
@@ -860,5 +882,5 @@ class Trudvsem(Parser):
             str | None: Дата публикации вакансии или None, если дата отсутствует.
         """
         vacancy = job.get("vacancy", None)
-        date = vacancy.get("creation-date", None)
+        date = vacancy.get("creation-date", None) if vacancy else None
         return datetime.datetime.strptime(date, "%Y-%m-%d").date() if date else None
