@@ -354,6 +354,55 @@ class AddVacancyToFavouritesView(AsyncLoginRequiredMixin, View):
         )
 
 
+class ClearVacancyFavouriteList(AsyncLoginRequiredMixin, View):
+    """
+    Класс представления для очистки списка избранных вакансий.
+
+    Этот класс наследуется от AsyncLoginRequiredMixin и View.
+    Требует аутентификации пользователя перед использованием.
+    """
+
+    async def post(self, request: HttpRequest) -> JsonResponse:
+        """Метод обработки POST-запроса на очистку списка избранных вакансий.
+        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
+
+        Внутри метода создается логгер с привязкой к данным запроса.
+        Затем метод пытается удалить все объекты `FavouriteVacancy` для
+        конкретного пользователя.
+        Если все прошло успешно, в лог записывается информация об успешной очистке
+        списка избранного.
+        В случае возникновения исключения IntegrityError или DatabaseError они
+        записываются в лог и будет возвращен соответствующий JsonResponse со
+        статусом 400 или 500.
+        В конце метода возвращается JSON-ответ с информацией об успешной очистке
+        списка избранного.
+
+        Args:
+            request (HttpRequest): Объект запроса.
+
+        Returns:
+            JsonResponse: JSON-ответ с информацией об
+            успешной очистке списка избранного.
+        """
+        view_logger = logger.bind(request=request.POST)
+        try:
+            await FavouriteVacancy.objects.filter(user=request.user).adelete()
+            view_logger.info("Список избранных вакансий успешно очищен")
+        except IntegrityError as exc:
+            view_logger.exception(exc)
+            return JsonResponse(
+                {"Ошибка": "Список избранных вакансий пуст"}, status=400
+            )
+        except DatabaseError as exc:
+            view_logger.exception(exc)
+            return JsonResponse(
+                {"Ошибка": "Произошла ошибка базы данных"},
+                status=500,
+            )
+
+        return JsonResponse({"status": "Список избранных вакансий успешно очищен"})
+
+
 class DeleteVacancyFromFavouritesView(AsyncLoginRequiredMixin, View):
     """
     Класс представления для удаления вакансии из списка избранных.
@@ -604,6 +653,53 @@ class DeleteVacancyFromBlacklistView(AsyncLoginRequiredMixin, View):
         )
 
 
+class ClearVacancyBlackList(AsyncLoginRequiredMixin, View):
+    """
+    Класс представления для очистки черного списка вакансий.
+
+    Этот класс наследуется от AsyncLoginRequiredMixin и View.
+    Требует аутентификации пользователя перед использованием.
+    """
+
+    async def post(self, request: HttpRequest) -> JsonResponse:
+        """Метод обработки POST-запроса на очистку черного списка вакансий.
+        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
+
+        Внутри метода создается логгер с привязкой к данным запроса.
+        Затем метод пытается удалить все объекты `VacancyBlackList` для
+        конкретного пользователя.
+        Если все прошло успешно, в лог записывается информация об успешной очистке
+        черного списка.
+        В случае возникновения исключения IntegrityError или DatabaseError они
+        записываются в лог и будет возвращен соответствующий JsonResponse со
+        статусом 400 или 500.
+        В конце метода возвращается JSON-ответ с информацией об успешной очистке
+        черного списка.
+
+        Args:
+            request (HttpRequest): Объект запроса.
+
+        Returns:
+            JsonResponse: JSON-ответ с информацией об
+            успешной очистке черного списка.
+        """
+        view_logger = logger.bind(request=request.POST)
+        try:
+            await VacancyBlackList.objects.filter(user=request.user).adelete()
+            view_logger.info("Черный список вакансий успешно очищен")
+        except IntegrityError as exc:
+            view_logger.exception(exc)
+            return JsonResponse({"Ошибка": "Список вакансий пуст"}, status=400)
+        except DatabaseError as exc:
+            view_logger.exception(exc)
+            return JsonResponse(
+                {"Ошибка": "Произошла ошибка базы данных"},
+                status=500,
+            )
+
+        return JsonResponse({"status": "Черный список вакансий успешно очищен"})
+
+
 class DeleteFromHiddenCompaniesView(AsyncLoginRequiredMixin, View):
     """
     Класс представления для удаления компании из списка скрытых.
@@ -661,3 +757,50 @@ class DeleteFromHiddenCompaniesView(AsyncLoginRequiredMixin, View):
             return JsonResponse({"Ошибка": "Произошла ошибка базы данных"}, status=500)
 
         return JsonResponse({"status": f"Компания {company} удалена из списка скрытых"})
+
+
+class ClearHiddenCompaniesList(AsyncLoginRequiredMixin, View):
+    """
+    Класс представления для очистки списка скрытых компаний.
+
+    Этот класс наследуется от AsyncLoginRequiredMixin и View.
+    Требует аутентификации пользователя перед использованием.
+    """
+
+    async def post(self, request: HttpRequest) -> JsonResponse:
+        """Метод обработки POST-запроса на очистку списка скрытых компаний.
+        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
+
+        Внутри метода создается логгер с привязкой к данным запроса.
+        Затем метод пытается удалить все объекты `HiddenCompanies` для
+        конкретного пользователя.
+        Если все прошло успешно, в лог записывается информация об успешной очистке
+        списка скрытых компаний.
+        В случае возникновения исключения IntegrityError или DatabaseError они
+        записываются в лог и будет возвращен соответствующий JsonResponse со
+        статусом 400 или 500.
+        В конце метода возвращается JSON-ответ с информацией об успешной очистке
+        списка скрытых компаний.
+
+        Args:
+            request (HttpRequest): Объект запроса.
+
+        Returns:
+            JsonResponse: JSON-ответ с информацией об
+            успешной очистке списка скрытых компаний.
+        """
+        view_logger = logger.bind(request=request.POST)
+        try:
+            await HiddenCompanies.objects.filter(user=request.user).adelete()
+            view_logger.info("Список скрытых компаний успешно очищен")
+        except IntegrityError as exc:
+            view_logger.exception(exc)
+            return JsonResponse({"Ошибка": "Список скрытых компаний пуст"}, status=400)
+        except DatabaseError as exc:
+            view_logger.exception(exc)
+            return JsonResponse(
+                {"Ошибка": "Произошла ошибка базы данных"},
+                status=500,
+            )
+
+        return JsonResponse({"status": "Список скрытых компаний успешно очищен"})
