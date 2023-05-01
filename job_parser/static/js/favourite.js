@@ -73,9 +73,7 @@ function removeVacancyFromBlackList(index, vacancyUrl) {
             "X-CSRFToken": getCookie("csrftoken"),
         },
         body: JSON.stringify({ url: vacancyUrl }),
-    })
-        .then((response) => response.json())
-        .then((data) => {});
+    }).then((response) => response.json());
 }
 
 function removeCompanyFromHiddenList(index, company) {
@@ -92,9 +90,7 @@ function removeCompanyFromHiddenList(index, company) {
             "X-CSRFToken": getCookie("csrftoken"),
         },
         body: JSON.stringify({ name: company }),
-    })
-        .then((response) => response.json())
-        .then((data) => {});
+    }).then((response) => response.json());
 }
 
 function removeFavouriteFromProfile(index, vacancyUrl) {
@@ -113,6 +109,45 @@ function removeFavouriteFromProfile(index, vacancyUrl) {
         .then((data) => {
             console.log(vacancyUrl);
         });
+}
+
+function clearProfileFavouriteList() {
+    const vacancy = document.getElementById(`wrap-favourite`);
+    vacancy.remove();
+    fetch("/clear-favourite-list/", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": getCookie("csrftoken"),
+        },
+    });
+}
+
+function clearProfileBlackList() {
+    const vacancy = document.getElementById(`wrap-blacklist`);
+    vacancy.remove();
+    fetch("/clear-blacklist-list/", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": getCookie("csrftoken"),
+        },
+    });
+}
+
+function clearProfileHiddenCompaniesList() {
+    const vacancy = document.getElementById(`wrap-hidden-companies`);
+    vacancy.remove();
+    fetch("/clear-hidden-companies-list/", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": getCookie("csrftoken"),
+        },
+    });
 }
 
 function getCookie(name) {
