@@ -169,6 +169,9 @@ class TestHeadHunterPositive:
 
         Создается словарь с полем alternate_url.
         Ожидается, что метод get_url вернет значение этого поля.
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {"alternate_url": "https://example.com"}
         assert await headhunter.get_url(job) == "https://example.com"
@@ -180,6 +183,9 @@ class TestHeadHunterPositive:
 
         Создается словарь с полем name.
         Ожидается, что метод get_title вернет значение этого поля.
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {"name": "Test"}
         assert await headhunter.get_title(job) == "Test"
@@ -191,6 +197,9 @@ class TestHeadHunterPositive:
 
         Создается словарь с полем salary и вложенным полем from.
         Ожидается, что метод get_salary_from вернет значение поля from.
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {"salary": {"from": 1000}}
         assert await headhunter.get_salary_from(job) == 1000
@@ -202,6 +211,9 @@ class TestHeadHunterPositive:
 
         Создается словарь с полем salary и вложенным полем to.
         Ожидается, что метод get_salary_to вернет значение поля to.
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {"salary": {"to": 2000}}
         assert await headhunter.get_salary_to(job) == 2000
@@ -213,6 +225,9 @@ class TestHeadHunterPositive:
 
         Создается словарь с полем salary и вложенным полем currency.
         Ожидается, что метод get_salary_currency вернет значение поля currency.
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {"salary": {"currency": "USD"}}
         assert await headhunter.get_salary_currency(job) == "USD"
@@ -224,6 +239,9 @@ class TestHeadHunterPositive:
 
         Создается словарь с полем snippet и вложенным полем responsibility.
         Ожидается, что метод get_responsibility вернет значение поля responsibility.
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {"snippet": {"responsibility": "Test"}}
         assert await headhunter.get_responsibility(job) == "Test"
@@ -235,6 +253,9 @@ class TestHeadHunterPositive:
 
         Создается словарь с полем snippet и вложенным полем requirement.
         Ожидается, что метод get_requirement вернет значение поля requirement.
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {"snippet": {"requirement": "Test"}}
         assert await headhunter.get_requirement(job) == "Test"
@@ -246,6 +267,9 @@ class TestHeadHunterPositive:
 
         Создается словарь с полем area и вложенным полем name.
         Ожидается, что метод get_city вернет значение поля name.
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {"area": {"name": "Москва"}}
         assert await headhunter.get_city(job) == "Москва"
@@ -257,6 +281,9 @@ class TestHeadHunterPositive:
 
         Создается словарь с полем employer и вложенным полем name.
         Ожидается, что метод get_company вернет значение поля name.
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {"employer": {"name": "Test"}}
         assert await headhunter.get_company(job) == "Test"
@@ -268,6 +295,9 @@ class TestHeadHunterPositive:
 
         Создается словарь с полем employment и вложенным полем name.
         Ожидается, что метод get_type_of_work вернет значение поля name.
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {"employment": {"name": "Полная занятость"}}
         assert await headhunter.get_type_of_work(job) == "Полная занятость"
@@ -280,6 +310,8 @@ class TestHeadHunterPositive:
         Создается словарь с полем experience и вложенным полем name.
         Ожидается, что метод get_experience вернет значение поля name.
 
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {"experience": {"name": "Более 6 лет"}}
         assert await headhunter.get_experience(job) == "Более 6 лет"
@@ -291,6 +323,8 @@ class TestHeadHunterPositive:
         Ожидается, что метод get_published_at вернет дату, соответствующую
         указанной при создании словаря.
 
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job = {"published_at": "2023-01-01T01:01:01+00:00"}
         assert (
@@ -387,6 +421,8 @@ class TestHeadHunterNegative:
         Создается пустой словарь без поля alternate_url.
         Ожидается, что метод get_url вернет None.
 
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {}
         assert await headhunter.get_url(job) is None
@@ -399,6 +435,8 @@ class TestHeadHunterNegative:
         Создается пустой словарь без поля name.
         Ожидается, что метод get_title вернет None.
 
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {}
         assert await headhunter.get_title(job) is None
@@ -411,6 +449,8 @@ class TestHeadHunterNegative:
         Создается пустой словарь без поля salary.
         Ожидается, что метод get_salary_from вернет None.
 
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {}
         assert await headhunter.get_salary_from(job) is None
@@ -422,6 +462,9 @@ class TestHeadHunterNegative:
 
         Создается пустой словарь без поля salary.
         Ожидается, что метод get_salary_to вернет None.
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {}
         assert await headhunter.get_salary_to(job) is None
@@ -433,6 +476,9 @@ class TestHeadHunterNegative:
 
         Создается пустой словарь без поля salary.
         Ожидается, что метод get_salary_currency вернет None.
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {}
         assert await headhunter.get_salary_currency(job) is None
@@ -444,6 +490,9 @@ class TestHeadHunterNegative:
 
         Создается пустой словарь без поля snippet.
         Ожидается, что метод get_responsibility вернет "Нет описания".
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {}
         assert await headhunter.get_responsibility(job) == "Нет описания"
@@ -455,6 +504,9 @@ class TestHeadHunterNegative:
 
         Создается пустой словарь без поля snippet.
         Ожидается, что метод get_requirement вернет "Нет описания".
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {}
         assert await headhunter.get_requirement(job) == "Нет описания"
@@ -466,6 +518,9 @@ class TestHeadHunterNegative:
 
         Создается пустой словарь без поля area.
         Ожидается, что метод get_city вернет None.
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {}
         assert await headhunter.get_city(job) is None
@@ -477,6 +532,9 @@ class TestHeadHunterNegative:
 
         Создается пустой словарь без поля employer.
         Ожидается, что метод get_company вернет None.
+
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {}
         assert await headhunter.get_company(job) is None
@@ -489,6 +547,8 @@ class TestHeadHunterNegative:
         Создается пустой словарь без поля employment.
         Ожидается, что метод get_type_of_work вернет None.
 
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {}
         assert await headhunter.get_type_of_work(job) is None
@@ -501,6 +561,8 @@ class TestHeadHunterNegative:
         Создается пустой словарь без поля experience.
         Ожидается, что метод get_experience вернет None.
 
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {}
         assert await headhunter.get_experience(job) is None
@@ -513,6 +575,8 @@ class TestHeadHunterNegative:
         Создается пустой словарь без поля published_at.
         Ожидается, что метод get_published_at вернет None.
 
+        Args:
+            headhunter (Headhunter): Экземпляр Headhunter.
         """
         job: dict = {}
         assert await headhunter.get_published_at(job) is None
