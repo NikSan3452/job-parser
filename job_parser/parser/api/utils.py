@@ -49,7 +49,7 @@ class Utils:
     @staticmethod
     async def check_date_from(
         date_from: str | None | datetime.date,
-    ) -> tuple[datetime.date | str, datetime.date | str]:
+    ) -> datetime.date | str:
         """Проверяет дату на пустое значение, если истина, то
         будет установлено значение по умолчанию.
 
@@ -57,7 +57,7 @@ class Utils:
             date_from (str | None | datetime.date): Дата от.
 
         Returns:
-            tuple[datetime.date | str, datetime.date | str]: Время задаваемое по 
+            datetime.date | str: Время задаваемое по 
             умолчанию.
         """
         if not date_from or date_from == "":
@@ -71,7 +71,7 @@ class Utils:
     @staticmethod
     async def check_date_to(
         date_to: str | None | datetime.date,
-    ) -> tuple[datetime.date | str, datetime.date | str]:
+    ) -> datetime.date | str:
         """Проверяет дату на пустое значение, если истина, то
         будет установлено значение по умолчанию.
 
@@ -79,7 +79,7 @@ class Utils:
             date_to (str | None | datetime.date): Дата до.
 
         Returns:
-            tuple[datetime.date | str, datetime.date | str]: Время задаваемое по 
+            datetime.date | str: Время задаваемое по 
             умолчанию.
         """
         if not date_to or date_to == "":
