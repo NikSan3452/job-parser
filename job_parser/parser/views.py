@@ -372,9 +372,9 @@ class ClearVacancyFavouriteList(AsyncLoginRequiredMixin, View):
         конкретного пользователя.
         Если все прошло успешно, в лог записывается информация об успешной очистке
         списка избранного.
-        В случае возникновения исключения IntegrityError или DatabaseError они
+        В случае возникновения исключения DatabaseError они
         записываются в лог и будет возвращен соответствующий JsonResponse со
-        статусом 400 или 500.
+        статусом 500.
         В конце метода возвращается JSON-ответ с информацией об успешной очистке
         списка избранного.
 
@@ -389,11 +389,6 @@ class ClearVacancyFavouriteList(AsyncLoginRequiredMixin, View):
         try:
             await FavouriteVacancy.objects.filter(user=request.user).adelete()
             view_logger.info("Список избранных вакансий успешно очищен")
-        except IntegrityError as exc:
-            view_logger.exception(exc)
-            return JsonResponse(
-                {"Ошибка": "Список избранных вакансий пуст"}, status=400
-            )
         except DatabaseError as exc:
             view_logger.exception(exc)
             return JsonResponse(
@@ -612,9 +607,9 @@ class ClearVacancyBlackList(AsyncLoginRequiredMixin, View):
         конкретного пользователя.
         Если все прошло успешно, в лог записывается информация об успешной очистке
         черного списка.
-        В случае возникновения исключения IntegrityError или DatabaseError они
+        В случае возникновения исключения DatabaseError они
         записываются в лог и будет возвращен соответствующий JsonResponse со
-        статусом 400 или 500.
+        статусом 500.
         В конце метода возвращается JSON-ответ с информацией об успешной очистке
         черного списка.
 
@@ -629,9 +624,6 @@ class ClearVacancyBlackList(AsyncLoginRequiredMixin, View):
         try:
             await VacancyBlackList.objects.filter(user=request.user).adelete()
             view_logger.info("Черный список вакансий успешно очищен")
-        except IntegrityError as exc:
-            view_logger.exception(exc)
-            return JsonResponse({"Ошибка": "Список вакансий пуст"}, status=400)
         except DatabaseError as exc:
             view_logger.exception(exc)
             return JsonResponse(
@@ -726,7 +718,8 @@ class DeleteFromHiddenCompaniesView(AsyncLoginRequiredMixin, View):
         Если все прошло успешно, в лог записывается информация о том,
         что компания была удалена из списка скрытых.
         В случае возникновения исключений DatabaseError или IntegrityError они
-        записываются в лог и будет возвращен соответствующий JsonResponse со статусом 500.
+        записываются в лог и будет возвращен соответствующий JsonResponse 
+        со статусом 500.
         В конце метода возвращается JSON-ответ с информацией о том,
         что компания была удалена из списка скрытых.
 
@@ -777,9 +770,9 @@ class ClearHiddenCompaniesList(AsyncLoginRequiredMixin, View):
         конкретного пользователя.
         Если все прошло успешно, в лог записывается информация об успешной очистке
         списка скрытых компаний.
-        В случае возникновения исключения IntegrityError или DatabaseError они
+        В случае возникновения исключения DatabaseError они
         записываются в лог и будет возвращен соответствующий JsonResponse со
-        статусом 400 или 500.
+        статусом 500.
         В конце метода возвращается JSON-ответ с информацией об успешной очистке
         списка скрытых компаний.
 
@@ -794,9 +787,6 @@ class ClearHiddenCompaniesList(AsyncLoginRequiredMixin, View):
         try:
             await HiddenCompanies.objects.filter(user=request.user).adelete()
             view_logger.info("Список скрытых компаний успешно очищен")
-        except IntegrityError as exc:
-            view_logger.exception(exc)
-            return JsonResponse({"Ошибка": "Список скрытых компаний пуст"}, status=400)
         except DatabaseError as exc:
             view_logger.exception(exc)
             return JsonResponse(
