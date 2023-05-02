@@ -2,10 +2,11 @@ import abc
 import datetime
 import json
 import random
-from parser.api.config import ParserConfig
 
 import httpx
 from logger import logger, setup_logging
+
+from parser.api.config import ParserConfig
 
 # Логирование
 setup_logging()
@@ -104,23 +105,13 @@ class Parser(abc.ABC):
 
         for page in range(pages):
             json_data = await self.get_data(url, params)
-            if items == "results":
-                vacancies = await self.process_trudvsem_data(json_data, items)
-                if vacancies is None:
-                    break
-                else:
-                    job_list.extend(vacancies)
+            vacancies = await self.process_data(json_data, items)
+            if vacancies is None:
+                break
             else:
-                vacancies = json_data.get(items, None)
-                if not vacancies or len(vacancies) == 0:
-                    break
-                else:
-                    job_list.extend(vacancies)
+                job_list.extend(vacancies)
             page += 1
-            if items == "results":
-                params["offset"] = page
-            else:
-                params["page"] = page
+            params["offset" if items == "results" else "page"] = page
 
         return job_list
 
@@ -128,51 +119,73 @@ class Parser(abc.ABC):
         """
         Асинхронный метод для получения данных с указанного URL.
 
-        Метод создает соединение с сервером с помощью метода create_client
-        класса CreateConnection.
-        Получает ответ сервера и декодирует его содержимое.
-        Преобразует данные в формате JSON в словарь и возвращает его.
-        В случае ошибки логирует ее и возвращает пустой словарь.
+        Метод отправляет GET-запрос на указанный URL с переданными параметрами
+        и возвращает ответ в формате JSON.
 
         Args:
             url (str): URL-адрес для отправки GET-запроса.
             params (dict): Параметры запроса.
 
         Returns:
-            dict: Словарь с данными, полученными от сервера.
+            dict: Словарь с данными, полученными в ответе на запрос.
         """
         try:
             response = await self.connection.create_client(url, params)
             data = response.content.decode()
             json_data = json.loads(data)
             return json_data
-        except (json.JSONDecodeError, AttributeError) as exc:
+        except Exception as exc:
             logger.exception(exc)
             return {}
+
+    async def process_data(self, json_data: dict, items: str) -> list[dict] | None:
+        """
+        Асинхронный метод для обработки данных, полученных с указанного URL.
+
+        Метод проверяет значение параметра items и вызывает соответствующий метод
+        для обработки данных. Если items равен "results", то вызывается метод
+        process_trudvsem_data. Иначе возвращает данные по ключу items из словаря
+        json_data.
+
+        Args:
+            json_data (dict): Словарь с данными для обработки.
+            items (str): Ключ для получения данных из словаря json_data.
+
+        Returns:
+            list[dict] | None: Список словарей с информацией о вакансиях или None,
+            если данные отсутствуют.
+        """
+        if items == "results":
+            return await self.process_trudvsem_data(json_data, items)
+        else:
+            data = json_data.get(items, None)
+            if data is None or len(data) == 0:
+                return None
+            else:
+                return data
 
     async def process_trudvsem_data(
         self, json_data: dict, items: str
     ) -> list[dict] | None:
         """
-        Асинхронный метод для обработки данных от API Trudvsem.
+        Асинхронный метод для обработки данных с сайта trudvsem.
 
-        Метод проверяет наличие ключа items в json_data и наличие вакансий
-        по этому ключу.
-        Если вакансии есть, то возвращает их. Иначе возвращает None.
+        Метод получает данные по ключу items из словаря json_data и возвращает их.
+        Если данные отсутствуют, то возвращает None.
 
         Args:
-            json_data (dict): Словарь с данными от сервера.
-            items (str): Ключ для получения вакансий из json_data.
+            json_data (dict): Словарь с данными для обработки.
+            items (str): Ключ для получения данных из словаря json_data.
 
         Returns:
             list[dict] | None: Список словарей с информацией о вакансиях или None,
-            если вакансий нет.
+            если данные отсутствуют.
         """
-        if json_data.get(items) is None or len(json_data.get(items)) == 0:
+        data = json_data.get(items, None)
+        if data is None or len(data) == 0:
             return None
         else:
-            vacancies = json_data[items]["vacancies"]
-            return vacancies
+            return json_data[items]["vacancies"]
 
     async def vacancy_parsing(
         self, url: str, params: dict, job_board: str, pages: int, items: str
