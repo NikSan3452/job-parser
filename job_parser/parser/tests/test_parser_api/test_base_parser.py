@@ -1,13 +1,14 @@
 import json
 import types
-from parser.api.base_parser import CreateConnection, Parser
-from parser.api.config import ParserConfig
 from typing import Any, Callable
 
 import httpx
 import pytest
 from loguru import logger
 from pytest_mock import MockerFixture
+
+from parser.api.base_parser import CreateConnection, Parser
+from parser.api.config import ParserConfig
 
 
 @pytest.fixture
@@ -261,6 +262,24 @@ class TestParserPositive:
 
         result = await parser.get_data(fix_param["url"], fix_param["params"])
         assert result == {"key": "value"}
+
+    async def test_process_data(self, parser: MyParser) -> None:
+        """
+        Тест для метода process_data.
+
+        Метод проверяет корректность работы метода process_data при передаче
+        валидных данных.
+
+        Args:
+            parser (MyParser): Экземпляр класса MyParser для тестирования.
+
+        """
+        json_data = {"items": [{"id": 1, "title": "Vacancy 1"}]}
+        items = "items"
+        expected_data = [{"id": 1, "title": "Vacancy 1"}]
+
+        data = await parser.process_data(json_data, items)
+        assert data == expected_data
 
     async def test_get_vacancies(
         self, parser: MyParser, mocker: MockerFixture, fix_param: dict
@@ -533,6 +552,24 @@ class TestParserNegative:
         )
         assert isinstance(result, list)
         assert len(result) == 0
+
+    async def test_process_data_none(self, parser: MyParser) -> None:
+        """
+        Тест для метода process_data.
+
+        Метод проверяет корректность работы метода process_data при передаче
+        невалидных данных.
+
+        Args:
+            parser (MyParser): Экземпляр класса MyParser для тестирования.
+
+        """
+        json_data = {"items": None}
+        items = "items"
+        expected_data = None
+
+        data = await parser.process_data(json_data, items)
+        assert data == expected_data
 
     async def test_vacancy_parsing_with_none(
         self, parser: MyParser, mocker: MockerFixture, fix_param: dict
