@@ -1,4 +1,12 @@
 import json
+
+from django.db import DatabaseError, IntegrityError
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.template.response import TemplateResponse
+from django.views import View
+from django.views.generic.edit import FormView
+from logger import logger, setup_logging
+
 from parser.api import main
 from parser.api.utils import Utils
 from parser.forms import SearchingForm
@@ -9,13 +17,6 @@ from parser.mixins import (
     VacancyScraperMixin,
 )
 from parser.models import FavouriteVacancy, HiddenCompanies, VacancyBlackList
-
-from django.db import DatabaseError, IntegrityError
-from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
-from django.template.response import TemplateResponse
-from django.views import View
-from django.views.generic.edit import FormView
-from logger import logger, setup_logging
 
 # Логирование
 setup_logging()
@@ -533,65 +534,6 @@ class AddVacancyToBlackListView(AsyncLoginRequiredMixin, View):
         )
 
 
-class HideCompanyView(AsyncLoginRequiredMixin, View):
-    """
-    Класс представления для сокрытия вакансий выбранных компаний.
-
-    Этот класс наследуется от AsyncLoginRequiredMixin и View.
-    Требует аутентификации пользователя перед использованием.
-    """
-
-    async def post(self, request: HttpRequest) -> JsonResponse:
-        """Метод обработки POST-запроса на скрытие компании.
-        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
-
-        Внутри метода создается логгер с привязкой к данным запроса.
-        Данные из запроса десериализуются в блоке try/except и в случае успеха
-        загружаются в переменную `data`, из которой извлекается URL вакансии.
-        В противном случае будет вызвано исключение JSONDecodeError с последующей
-        отправкой соответствующего ответа JsonResponse со статусом 400.
-        Если URL вакансии отсутствует, будет возвращен соответствующий JsonResponse
-        со статусом 400.
-        Затем метод пытается создать или получить объект `HiddenCompanies`
-        с указанными данными пользователя и названием компании.
-        Если все прошло успешно, в лог записывается информация о том,
-        что компания была скрыта.
-        В случае возникновения исключения DatabaseError или IntegrityError они
-        записываются в лог и будет возвращен соответствующий JsonResponse со статусом 500.
-        В конце метода возвращается JSON-ответ с информацией о том,
-        что компания была скрыта.
-
-        Args:
-            request (HttpRequest): Объект запроса.
-
-        Returns:
-            JsonResponse: JSON-ответ с информацией о том,
-            что компания была скрыта.
-        """
-        view_logger = logger.bind(request=request.POST)
-
-        try:
-            data = json.load(request)
-        except json.JSONDecodeError as exc:
-            view_logger.exception(exc)
-            return JsonResponse({"Ошибка": "Невалидный JSON"}, status=400)
-
-        company = data.get("company")
-        if not company:
-            return JsonResponse({"Ошибка": "Отсутствуют обязательные поля"}, status=400)
-
-        try:
-            await HiddenCompanies.objects.aget_or_create(
-                user=request.user, name=company
-            )
-            view_logger.info(f"Компания {company} скрыта")
-        except (DatabaseError, IntegrityError) as exc:
-            view_logger.exception(exc)
-            return JsonResponse({"Ошибка": "Произошла ошибка базы данных"}, status=500)
-
-        return JsonResponse({"status": f"Компания {company} скрыта"})
-
-
 class DeleteVacancyFromBlacklistView(AsyncLoginRequiredMixin, View):
     """
     Класс представления для удаления вакансии из черного списка.
@@ -698,6 +640,65 @@ class ClearVacancyBlackList(AsyncLoginRequiredMixin, View):
             )
 
         return JsonResponse({"status": "Черный список вакансий успешно очищен"})
+
+
+class HideCompanyView(AsyncLoginRequiredMixin, View):
+    """
+    Класс представления для сокрытия вакансий выбранных компаний.
+
+    Этот класс наследуется от AsyncLoginRequiredMixin и View.
+    Требует аутентификации пользователя перед использованием.
+    """
+
+    async def post(self, request: HttpRequest) -> JsonResponse:
+        """Метод обработки POST-запроса на скрытие компании.
+        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
+
+        Внутри метода создается логгер с привязкой к данным запроса.
+        Данные из запроса десериализуются в блоке try/except и в случае успеха
+        загружаются в переменную `data`, из которой извлекается URL вакансии.
+        В противном случае будет вызвано исключение JSONDecodeError с последующей
+        отправкой соответствующего ответа JsonResponse со статусом 400.
+        Если URL вакансии отсутствует, будет возвращен соответствующий JsonResponse
+        со статусом 400.
+        Затем метод пытается создать или получить объект `HiddenCompanies`
+        с указанными данными пользователя и названием компании.
+        Если все прошло успешно, в лог записывается информация о том,
+        что компания была скрыта.
+        В случае возникновения исключения DatabaseError или IntegrityError они
+        записываются в лог и будет возвращен соответствующий JsonResponse со статусом 500.
+        В конце метода возвращается JSON-ответ с информацией о том,
+        что компания была скрыта.
+
+        Args:
+            request (HttpRequest): Объект запроса.
+
+        Returns:
+            JsonResponse: JSON-ответ с информацией о том,
+            что компания была скрыта.
+        """
+        view_logger = logger.bind(request=request.POST)
+
+        try:
+            data = json.load(request)
+        except json.JSONDecodeError as exc:
+            view_logger.exception(exc)
+            return JsonResponse({"Ошибка": "Невалидный JSON"}, status=400)
+
+        company = data.get("company")
+        if not company:
+            return JsonResponse({"Ошибка": "Отсутствуют обязательные поля"}, status=400)
+
+        try:
+            await HiddenCompanies.objects.aget_or_create(
+                user=request.user, name=company
+            )
+            view_logger.info(f"Компания {company} скрыта")
+        except (DatabaseError, IntegrityError) as exc:
+            view_logger.exception(exc)
+            return JsonResponse({"Ошибка": "Произошла ошибка базы данных"}, status=500)
+
+        return JsonResponse({"status": f"Компания {company} скрыта"})
 
 
 class DeleteFromHiddenCompaniesView(AsyncLoginRequiredMixin, View):
