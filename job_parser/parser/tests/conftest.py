@@ -80,7 +80,7 @@ def redis_mixin() -> RedisCacheMixin:
     return RedisCacheMixin()
 
 
-@pytest.fixture()
+@pytest.fixture
 def scraper_mixin() -> VacancyScraperMixin:
     """Фикстура добавляющая экземпляр VacancyScraperMixin.
 
