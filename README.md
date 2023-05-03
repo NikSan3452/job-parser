@@ -35,11 +35,11 @@
     `cd job-parser`<br>
 
 -   **Создайте новое виртуальное окружение:**
-    `python -m vevn venv` - для Windows
+    `python -m vevn venv` - для Windows<br>
     `python3 -m venv venv` - для Linux<br>
 
 -   **Активируйте виртуальное окружение:**
-    `venv\Scripts\activate.bat` - для Windows
+    `venv\Scripts\activate.bat` - для Windows<br>
     `source venv/bin/activate` - для Linux<br>
 
 -   **Установите необходимые библиотеки:**
