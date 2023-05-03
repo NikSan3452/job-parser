@@ -28,7 +28,8 @@
 ### Установка:
 
 -   **Клонируйте репозиторий в свою рабочую папку:**
-    `git clone https://github.com/NikSan3452/job-parser.git`<br>
+    `git clone https://github.com/NikSan3452/job-parser.git`
+    
 
 -   **Перейдите в папку проекта:**
     `cd job-parser`<br>
