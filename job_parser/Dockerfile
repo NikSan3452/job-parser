@@ -50,9 +50,10 @@ RUN sed -i 's/\r$//g'  $JOB_PARSER_HOME/entrypoint.sh
 COPY . $JOB_PARSER_HOME
 
 USER root
-
+RUN mkdir -p /home/job_parser/logs
 RUN chmod +x  $JOB_PARSER_HOME/entrypoint.sh
 RUN chown -R job_parser:job_parser $JOB_PARSER_HOME
+RUN chown -R job_parser:job_parser /home/job_parser/logs
 
 USER job_parser
 
