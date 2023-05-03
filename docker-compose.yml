@@ -13,11 +13,10 @@ services:
       - media_volume:/home/job_parser/django/mediafiles
     networks:
       app_net:
-        ipv4_address: 172.16.238.13
+        ipv4_address: 172.16.238.10
     depends_on: 
-    - cache
-    - broker
-    - db
+      db:
+        condition: service_healthy      
 
   cache:
       image: redis
@@ -26,7 +25,7 @@ services:
       - redis:/data/cache
       networks:
         app_net:
-          ipv4_address: 172.16.238.10
+          ipv4_address: 172.16.238.11
       env_file:
       - ./job_parser/.env.prod
       ports:
@@ -38,13 +37,19 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./job_parser/.env.prod
+    user: postgres
     ports:
       - 5432:5432
     restart: always
     networks:
       app_net:
         ipv4_address: 172.16.238.12
-
+    healthcheck:
+      test: /usr/bin/pg_isready
+      interval: 5s
+      timeout: 10s
+      retries: 120
+      
   nginx:
     build: ./job_parser/nginx
     ports:
@@ -56,7 +61,7 @@ services:
       - media_volume:/home/job_parser/django/mediafiles
     networks:
       app_net:
-        ipv4_address: 172.16.238.16
+        ipv4_address: 172.16.238.13
 
 volumes:
   postgres_data:
