@@ -30,22 +30,40 @@
 -   **Клонируйте репозиторий в свою рабочую папку:**<br>
     ```rs
     git clone https://github.com/NikSan3452/job-parser.git
-    ```<br>
+    ```
 
 -   **Перейдите в папку проекта:**<br>
-    `cd job-parser`<br>
+    ```rs
+    cd job-parser
+    ```
 
 -   **Создайте новое виртуальное окружение:**<br>
-    `python -m vevn venv` - для Windows<br>
-    `python3 -m venv venv` - для Linux<br>
+    Для Windows:
+    ```rs
+    python -m vevn venv
+    ```
+    Для Linux:
+    ```rs
+    python3 -m venv venv
+    ```
 
 -   **Активируйте виртуальное окружение:**<br>
-    `venv\Scripts\activate.bat` - для Windows<br>
-    `source venv/bin/activate` - для Linux<br>
+    Для Windows:
+    ```rs
+    venv\Scripts\activate.bat
+    ```
+    Для Linux:
+    ```rs
+    source venv/bin/activate
+    ```
 
 -   **Установите необходимые библиотеки:**<br>
-    `cd job_parser`<br>
-    `pip install -r requirements.txt`<br>
+    ```rs
+    cd job_parser
+    ```
+    ```rs
+    pip install -r requirements.txt
+    ```
 
 -   **Создайте файл .env в текущей директории (job_parser) и укажите в нем следующие параметры:**<br>
 
@@ -87,23 +105,56 @@
     `EMAIL_HOST_PASSWORD=1234Qwerty` - Пароль.<br>
 
 -   **Запустите миграции:**<br>
-    `python manage.py migrate` - для Windows<br>
-    `python3 manage.py migrate` - для Linux<br>
-    `django m` - Либо можно использовать сокращения<br>
+    Для Windows:
+    ```rs
+    python manage.py migrate
+    ```
+    Для Linux:
+    ```rs
+    python3 manage.py migrate
+    ```
+    Либо можно использовать сокращения:
+    ```rs
+    django m
+    ```
 
 -   **Запустите сбор статики:**<br>
-    `python mange.py collectstatic --noinput` - для Windows<br>
-    `python3 mange.py collectstatic --noinput` - для Linux<br>
-    `django с` - Либо можно использовать сокращения<br>
+    Для Windows:
+    ```rs
+    python mange.py collectstatic --noinput
+    ```
+    Для Linux:
+    ```rs
+    python3 mange.py collectstatic --noinput
+    ```
+    Либо можно использовать сокращения:
+    ```rs
+    django с
+    ```
 
 -   **Запустите скрипт insert_data.py для заполнения базы данных городами:**<br>
-    `python insert_data.py` - для Windows<br>
-    `python3 insert_data.py` - для Linux<br>
+    Для Windows:
+    ```rs
+    python insert_data.py
+    ```
+    Для Linux:
+    ```rs
+    python3 insert_data.py
+    ```
 
 -   **Запустите приложение Django:**<br>
-    `python manage.py runserver` - для Windows<br>
-    `python3 manage.py runserver` - для Linux<br>
-    `django r` - Либо можно использовать сокращения<br>
+    Для Windows:
+    ```rs
+    python manage.py runserver
+    ```
+    Для Linux:
+    ```rs
+    python3 manage.py runserver
+    ```
+    Либо можно использовать сокращения:
+    ```rs
+    django r
+    ```
 -   **В браузере перейдите по адресу `http://127.0.0.1:8000`**
     <br>
 
@@ -121,15 +172,26 @@
     `REDIS_HOST=172.16.238.11`<br>
 
 -   **В корневой папке job-parser запустите команду:**<br>
-    `docker compose up --build`<br>
+    ```rs
+    docker compose up --build
+    ```
 
 -   **В браузере перейдите по адресу `http://127.0.0.1:1337`**<br>
 
 ### Запуск скрапера с помощью Huey
 
 -   **В папке job_parser запустите команду:**<br>
-    `python manage.py run_huey` - Для Windows<br>
-    `python3 manage.py run_huey` - Для Linux<br>
-    `django run_huey` - Либо можно использовать сокращения<br>
+    Для Windows:
+    ```rs
+    python manage.py run_huey
+    ```
+    Для Linux:
+    ```rs
+    python3 manage.py run_huey
+    ```
+    Либо можно использовать сокращения:
+    ```rs
+    django run_huey
+    ```
     Эта команда запустит переодические задачи для скрапинга вакансий, а также рассылку писем и удаление устаревших вакансий из базы данных.
     Варианты запуска Huey с дополнительными опциями смотрите в [документации](https://huey.readthedocs.io/en/latest/django.html).
