@@ -77,33 +77,33 @@
 
 -   **Создайте файл .env в текущей директории (job_parser) и укажите в нем следующие параметры:**<br>
 
-    _Django_<br>
-
     ```rs
+    # Django
+
     SECRET_KEY=1234Qwerty                        # Ваш секретный ключ для приложения Django
     DEBUG=1                                      # 1 если нужен режим дебага, 0 - в противном случае
     DJANGO_ALLOWED_HOSTS="*"                     # Разрешенные хосты, можно оставить по умолчанию
     CSRF_TRUSTED_ORIGINS="http://127.0.0.1:1337" # Укажите список хостов, которые являются доверенными источниками для небезопасных запросов.
 
 
-    _Postgres_
+    # Postgres
 
     POSTGRES_USER=postgresql                     # Пользователь postgres
     POSTGRES_PASSWORD= 1234Qwerty                # Пароль
     POSTGRES_SERVER=localhost                    # Адрес сервера
     POSTGRES_PORT=5432                           # Порт
-    POSTGRES_DB=postgres`                        # Имя базы
-    ENGINE="django.db.backends.postgresql"`      # Настройка для Django, указывающая, какая именно база используется, 
+    POSTGRES_DB=postgres                         # Имя базы
+    ENGINE="django.db.backends.postgresql"       # Настройка для Django, указывающая, какая именно база используется, 
                                                  # если оставить по умолчанию, то нужно настроить и запустить postgresql
                                                  # на хосте, иначе можно закомментировать эту строку и тогда создастся 
                                                  # база sqlite3
 
-    _Redis Cache_
+    # Redis Cache
 
     REDIS_HOST=localhost                         # Адрес сервера
     REDIS_PORT=6379                              # Порт
 
-    _Huey_
+    # Huey
 
     GEEKJOB_PAGES_COUNT=5                        # Количество страниц, которые будет парсить парсер GeekJob начиная с первой
     HABR_PAGES_COUNT=10                          # Количество страниц, которые будет парсить парсер Habr career начиная с первой
@@ -115,7 +115,7 @@
 
     DELETE_OLD_VACANCIES_HOURS=6                 # Интервал между удалением устаревших вакансий из базы данных
 
-    _parser Superjob_
+    # parser Superjob
 
     SUPERJOB_SECRET_KEY1=v3.qw1e2r3ty            # Секретный ключ для приложения SuperJob. 
                                                  # Создается в личном кабинете на сайте Superjob. Чем больше приложений, 
@@ -123,7 +123,7 @@
     SUPERJOB_SECRET_KEY2=v3.qw1e2r3ty            # Тоже что и выше (Можно не создавать, достаточно первого)
     SUPERJOB_SECRET_KEY3=v3.qw1e2r3ty            # Тоже что и выше (Можно не создавать, достаточно первого)
 
-    _Email_
+    # Email
 
     EMAIL_HOST=smtp.example.ru                   # Сервер исходящей почты
     EMAIL_HOST_USER=example.example@mail.ru      # Ваш адрес электронной почты
