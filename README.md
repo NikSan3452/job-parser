@@ -29,7 +29,6 @@
 
 -   **Клонируйте репозиторий в свою рабочую папку:**<br>
     `git clone https://github.com/NikSan3452/job-parser.git`<br>
-    
 
 -   **Перейдите в папку проекта:**<br>
     `cd job-parser`<br>
@@ -88,12 +87,12 @@
 -   **Запустите миграции:**<br>
     `python manage.py migrate` - для Windows<br>
     `python3 manage.py migrate` - для Linux<br>
-    `django m` - либо можно использовать сокращения<br>
+    `django m` - Либо можно использовать сокращения<br>
 
 -   **Запустите сбор статики:**<br>
     `python mange.py collectstatic --noinput` - для Windows<br>
     `python3 mange.py collectstatic --noinput` - для Linux<br>
-    `django с` - либо можно использовать сокращения<br>
+    `django с` - Либо можно использовать сокращения<br>
 
 -   **Запустите скрипт insert_data.py для заполнения базы данных городами:**<br>
     `python insert_data.py` - для Windows<br>
@@ -102,4 +101,33 @@
 -   **Запустите приложение Django:**<br>
     `python manage.py runserver` - для Windows<br>
     `python3 manage.py runserver` - для Linux<br>
-    `django r` - либо можно использовать сокращения<br>
+    `django r` - Либо можно использовать сокращения<br>
+-   **В браузере перейдите по адресу `http://127.0.0.1:8000`**
+    <br>
+
+    #### Docker
+
+      <br>
+
+-   **Создайте файл `.env.prod`**.<br>
+
+-   **Скопируйте содержимое файла `.env` в `.env.prod`.**<br>
+
+-   **Измените следующие параметры в `.env.prod`:**<br>
+
+    `POSTGRES_SERVER=172.16.238.12`<br>
+    `REDIS_HOST=172.16.238.11`<br>
+
+-   **В корневой папке job-parser запустите команду:**<br>
+    `docker compose up --build`<br>
+
+-   **В браузере перейдите по адресу `http://127.0.0.1:1337`**<br>
+
+### Запуск скрапера с помощью Huey
+
+-   **В папке job_parser запустите команду:**<br>
+    `python manage.py run_huey` - Для Windows<br>
+    `python3 manage.py run_huey` - Для Linux<br>
+    `django run_huey` - Либо можно использовать сокращения<br>
+    Эта команда запустит переодические задачи для скрапинга вакансий, а также рассылку писем и удаление устаревших вакансий из базы данных.
+    Варианты запуска Huey с дополнительными опциями смотрите в [документации](https://huey.readthedocs.io/en/latest/django.html).
