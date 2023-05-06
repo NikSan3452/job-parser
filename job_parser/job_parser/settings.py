@@ -22,9 +22,7 @@ DEBUG = int(os.getenv("DEBUG", default=0))
 ALLOWED_HOSTS = ["*"]
 CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS").split(" ")
 
-
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -43,7 +41,8 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
-    "allauth.socialaccount.providers.github",
+    "allauth.socialaccount.providers.vk",
+    "allauth.socialaccount.providers.yandex",
     "widget_tweaks",
     "crispy_forms",
     "crispy_bootstrap5",
@@ -155,7 +154,7 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
-SITE_ID = 2
+SITE_ID = 3
 LOGIN_REDIRECT_URL = "/"
 ACCOUNT_SIGNUP_REDIRECT_URL = "/"
 ACCOUNT_EMAIL_VERIFICATION = "none"
@@ -187,6 +186,15 @@ SENDING_EMAILS_HOURS = os.getenv("SENDING_EMAILS_HOURS", 14)
 SCRAPING_SCHEDULE_MINUTES = os.getenv("SCRAPING_SCHEDULE_MINUTES", 60)
 DELETE_OLD_VACANCIES_HOURS = os.getenv("DELETE_OLD_VACANCIES", 0)
 
+settings_dir = os.path.dirname(os.path.abspath(__file__))
+job_parser_dir = os.path.join(settings_dir, "..")
+
+HUEY = {
+    "huey_class": "huey.SqliteHuey",
+    "filename": os.path.join(job_parser_dir, "huey.db"),
+    "immediate": False,
+}
+
 # Sending emails
 EMAIL_HOST = os.getenv("EMAIL_HOST")
 EMAIL_PORT = os.getenv("EMAIL_PORT")
@@ -199,12 +207,3 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 LOGGING_CONFIG = None
-
-settings_dir = os.path.dirname(os.path.abspath(__file__))
-job_parser_dir = os.path.join(settings_dir, "..")
-
-HUEY = {
-    "huey_class": "huey.SqliteHuey",
-    "filename": os.path.join(job_parser_dir, "huey.db"),
-    "immediate": False,
-}
