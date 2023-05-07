@@ -75,16 +75,28 @@
                         {% endif %}
                     </p>
 
+                {% elif obj.job_board == 'SuperJob' %}
+                    <p class="card-text">
+                        {% if obj.requirement  %}
+                        <span class="card-param">Обязанности:</span> {{ obj.requirement|truncatechars:300|striptags }}
+                        {% endif %}
+
+                        <p class="card-text">
+                            {% if obj.responsibility  %}
+                            <span class="card-param">Требования:</span> {{ obj.responsibility|truncatechars:300|striptags }}
+                            {% endif %}
+                        </p>
+                    </p>
                 {% else %}
                     <p class="card-text">
                         {% if obj.responsibility  %}
-                        <span class="card-param">Обязанности:</span> {{ obj.requirement|truncatechars:300|striptags }}
+                        <span class="card-param">Обязанности:</span> {{ obj.responsibility|truncatechars:300|striptags }}
                         {% endif %}
                     </p>
                     
                     <p class="card-text">
                         {% if obj.requirement %}
-                        <span class="card-param">Требования:</span> {{ obj.responsibility|truncatechars:300|striptags }}
+                        <span class="card-param">Требования:</span> {{ obj.requirement|truncatechars:300|striptags }}
                         {% endif %}
                     </p>
                 {% endif %}
