@@ -113,7 +113,7 @@ body {
 }
 
 .heart:hover, .trash:hover {
-    color: red;
+    color: rgb(255, 161, 161);
 }
 
 .favourite-list:checked ~ .add-to-favourite .fa-solid {
@@ -123,10 +123,12 @@ body {
 .black-list:checked ~ .add-to-black-list .fa-solid {
     color: red;
 }
+
 .hidden-companies {
     margin-left: 10px;
     margin-right: 10px;
 }
+
 .hidden-companies-name {
     padding: 0;
     margin: 0;
