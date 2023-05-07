@@ -1,3 +1,10 @@
+/**
+ * Раскрывает и сворачивает текстовые блоки на странице при клике на соответствующие ссылки.
+ * @param {NodeListOf<Element>} expandLinks - Список ссылок для раскрытия текста.
+ * @param {NodeListOf<Element>} collapseLinks - Список ссылок для сворачивания текста.
+ * @param {NodeListOf<Element>} shortTexts - Список коротких текстовых блоков, которые будут скрыты при раскрытии полного текста.
+ * @param {NodeListOf<Element>} fullTexts - Список полных текстовых блоков, которые будут показаны при раскрытии текста.
+ */
 const expandLinks = document.querySelectorAll(".expand-link");
 const collapseLinks = document.querySelectorAll(".collapse-link");
 const shortTexts = document.querySelectorAll(".short-text");

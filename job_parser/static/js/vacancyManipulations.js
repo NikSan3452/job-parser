@@ -1,3 +1,9 @@
+/**
+ * Добавляет или удаляет вакансию из избранного при клике на соответствующую кнопку.
+ * @param {number} index - Индекс кнопки на странице.
+ * @param {string} vacancyUrl - URL вакансии.
+ * @param {string} vacancyTitle - Заголовок вакансии.
+ */
 function addToFavourite(index, vacancyUrl, vacancyTitle) {
     let checkbox = document.getElementById(`btn-check-outlined-${index}`);
 
@@ -32,6 +38,12 @@ function addToFavourite(index, vacancyUrl, vacancyTitle) {
     }
 }
 
+/**
+ * Удаляет вакансию из списка на странице и добавляет ее в черный список при клике на соответствующую кнопку.
+ * @param {number} index - Индекс кнопки на странице.
+ * @param {string} vacancyUrl - URL вакансии.
+ * @param {string} vacancyTitle - Заголовок вакансии.
+ */
 function addVacancyToBlackList(index, vacancyUrl, vacancyTitle) {
     let vacancy = document.getElementById(`delete-vacancy-${index}`);
     vacancy.remove();
@@ -59,6 +71,11 @@ function addVacancyToBlackList(index, vacancyUrl, vacancyTitle) {
         });
 }
 
+/**
+ * Удаляет вакансию из черного списка при клике на соответствующую кнопку.
+ * @param {number} index - Индекс кнопки на странице.
+ * @param {string} vacancyUrl - URL вакансии.
+ */
 function removeVacancyFromBlackList(index, vacancyUrl) {
     const vacancy = document.getElementById(
         `btn-delete-from-black-list-${index}`
@@ -76,6 +93,11 @@ function removeVacancyFromBlackList(index, vacancyUrl) {
     }).then((response) => response.json());
 }
 
+/**
+ * Удаляет компанию из списка скрытых компаний при клике на соответствующую кнопку.
+ * @param {number} index - Индекс кнопки на странице.
+ * @param {string} company - Название компании.
+ */
 function removeCompanyFromHiddenList(index, company) {
     const vacancy = document.getElementById(
         `btn-delete-from-hidden-companies-${index}`
@@ -93,6 +115,11 @@ function removeCompanyFromHiddenList(index, company) {
     }).then((response) => response.json());
 }
 
+/**
+ * Удаляет вакансию из избранного на странице профиля пользователя при клике на соответствующую кнопку.
+ * @param {number} index - Индекс блока вакансии на странице.
+ * @param {string} vacancyUrl - URL вакансии.
+ */
 function removeFavouriteFromProfile(index, vacancyUrl) {
     const vacancy = document.getElementById(`favourite-block-${index}`);
     vacancy.remove();
@@ -111,6 +138,9 @@ function removeFavouriteFromProfile(index, vacancyUrl) {
         });
 }
 
+/**
+ * Очищает список избранных вакансий на странице профиля пользователя.
+ */
 function clearProfileFavouriteList() {
     const vacancy = document.getElementById(`wrap-favourite`);
     vacancy.remove();
@@ -124,6 +154,9 @@ function clearProfileFavouriteList() {
     });
 }
 
+/**
+ * Очищает черный список на странице профиля пользователя.
+ */
 function clearProfileBlackList() {
     const vacancy = document.getElementById(`wrap-blacklist`);
     vacancy.remove();
@@ -137,6 +170,9 @@ function clearProfileBlackList() {
     });
 }
 
+/**
+ * Очищает список скрытых компаний на странице профиля пользователя.
+ */
 function clearProfileHiddenCompaniesList() {
     const vacancy = document.getElementById(`wrap-hidden-companies`);
     vacancy.remove();
@@ -150,6 +186,11 @@ function clearProfileHiddenCompaniesList() {
     });
 }
 
+/**
+ * Получает значение cookie по имени.
+ * @param {string} name - Имя cookie.
+ * @returns {string|null} - Значение cookie или null, если cookie не найден.
+ */
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== "") {
@@ -167,6 +208,12 @@ function getCookie(name) {
     return cookieValue;
 }
 
+/**
+ * Добавляет обработчик события "DOMContentLoaded" для элементов с классом "company-name".
+ * При клике на элемент с классом "company-name" создает модальное окно с вопросом "Скрыть компанию?".
+ * При подтверждении скрытия компании скрывает все вакансии этой компании на странице и отправляет запрос на сервер для скрытия компании.
+ * @function
+ */
 document.addEventListener("DOMContentLoaded", function () {
     let companyLinks = document.querySelectorAll(".company-name");
 
