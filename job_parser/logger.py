@@ -1,9 +1,17 @@
 import os
 import sys
+
 from loguru import logger
 
 
-def setup_logging():
+def setup_logging() -> None:
+    """Настройка логирования.
+
+    Функция настраивает логирование для записи в файл и вывода в консоль.
+    Файл лога называется 'parser_views.json' и находится в папке 'logs'.
+    Логирование в файл происходит с уровнем 'ERROR', а в консоль - с уровнем 'TRACE'.
+
+    """
     log_filename = "parser_views.json"
     log_path = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "..", "logs", log_filename
