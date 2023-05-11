@@ -1,16 +1,32 @@
-from loguru import logger
-import uuid
 import time
+import uuid
+from typing import Any
+
+from django.http import HttpRequest
+from loguru import logger
 
 
-def logging_middleware(get_response):
-    def middleware(request):
+def logging_middleware(get_response) -> Any:
+    """Промежуточное ПО для регистрации информации о запросе и ответе.
+
+    Это промежуточное ПО регистрирует информацию о входящих запросах и исходящих 
+    ответах, включая путь запроса, метод, статус код ответа, размер ответа и время 
+    выполнения запроса.
+    Также добавляет идентификатор запроса в заголовок ответа "X-Request-ID".
+
+    Args:
+        get_response: Функция для получения ответа на запрос.
+
+    Returns:
+        Функция middleware (Any), которая принимает запрос и возвращает ответ.
+    """
+
+    def middleware(request: HttpRequest) -> Any:
         # Создаем идентификатор запроса
         request_id = str(uuid.uuid4())
 
         # Добавляем контекст ко всем регистраторам во всех представлениях
         with logger.contextualize(request_id=request_id):
-
             request.start_time = time.time()
 
             response = get_response(request)
