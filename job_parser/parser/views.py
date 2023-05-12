@@ -247,7 +247,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
                 self.job_list_from_api, job_list_from_scraper
             )
 
-            list_favourite = []
+            list_favourite: list[dict] = []
 
             if request.user.is_authenticated:
                 # Проверяем находится ли компания в списке скрытых
