@@ -218,7 +218,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
             params = await self.get_form_data(form)
 
             # Получаем id города для API HeadHunter и Zarplata
-            city_id = await self.get_city_id(params.get("city"), request)
+            city_id = await self.get_city_id(params.get("city", None), request)
             params.update({"city_from_db": city_id})
 
             job_list_from_scraper = []
