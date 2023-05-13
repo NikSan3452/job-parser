@@ -507,7 +507,7 @@ class TestGetPaginationNegative:
         # Создаем фиктивный список вакансий
         job_list = [{"id": 1}, {"id": 2}]
         # Создаем фиктивный контекст
-        context = {}
+        context: dict = {}
         # Вызываем метод get_pagination с фиктивными данными
         await helpers_mixin.get_pagination(request_, job_list, context)
         # Проверяем, что в контексте есть ключ "object_list" и его значение равно
