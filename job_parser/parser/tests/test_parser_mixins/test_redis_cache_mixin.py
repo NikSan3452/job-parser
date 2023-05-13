@@ -118,7 +118,7 @@ class TestRedisCacheMixinNegative:
             redis_mixin (RedisCacheMixin): Фикстура возвращающая экземпляр миксина.
             cache_key (RedisCacheMixin): Фикстура возвращающая ключ кэша.
         """
-        job_list = []
+        job_list: list = []
         await redis_mixin.set_data_to_cache(job_list)
         result = await redis_mixin.get_data_from_cache()
         assert result == job_list
