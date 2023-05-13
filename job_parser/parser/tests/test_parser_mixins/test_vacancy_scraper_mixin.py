@@ -183,8 +183,8 @@ class TestVacancyScraperMixinNegative:
         Args:
             scraper_mixin (VacancyScraperMixin): Экземпляр класса VacancyScraperMixin.
         """
-        job_list_from_api = []
-        job_list_from_scraper = []
+        job_list_from_api: list = []
+        job_list_from_scraper: list = []
 
         result = await scraper_mixin.add_vacancy_to_job_list_from_api(
             job_list_from_api, job_list_from_scraper
