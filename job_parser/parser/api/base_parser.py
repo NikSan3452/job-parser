@@ -142,37 +142,9 @@ class Parser(abc.ABC):
         """
         Асинхронный метод для обработки данных, полученных с указанного URL.
 
-        Метод проверяет значение параметра items и вызывает соответствующий метод
-        для обработки данных. Если items равен "results", то вызывается метод
-        process_trudvsem_data. Иначе возвращает данные по ключу items из словаря
-        json_data.
-
-        Args:
-            json_data (dict): Словарь с данными для обработки.
-            items (str): Ключ для получения данных из словаря json_data.
-
-        Returns:
-            list[dict] | None: Список словарей с информацией о вакансиях или None,
-            если данные отсутствуют.
-        """
-        if items == "results":
-            return await self.process_trudvsem_data(json_data, items)
-        else:
-            data = json_data.get(items, None)
-            if data is None or len(data) == 0:
-                return None
-            else:
-                return data
-
-    async def process_trudvsem_data(
-        self, json_data: dict, items: str
-    ) -> list[dict] | None:
-        """
-        Асинхронный метод для обработки данных с сайта trudvsem.
-
-        Метод получает данные по ключу items из словаря json_data и возвращает их.
-        Если данные отсутствуют, то возвращает None.
-
+        Метод проверяет значение параметра items. Если items равен None, вернется None.
+        Если items равен 'results', то попытается получить вакансии по ключу 'vacancies'.
+        Иначе вернет данные по ключу 'items'.
         Args:
             json_data (dict): Словарь с данными для обработки.
             items (str): Ключ для получения данных из словаря json_data.
@@ -183,9 +155,11 @@ class Parser(abc.ABC):
         """
         data = json_data.get(items, None)
         if data is None or len(data) == 0:
-            return None
-        else:
+                return None
+        elif items == "results":
             return json_data[items]["vacancies"]
+        else:
+            return data
 
     async def vacancy_parsing(
         self, url: str, params: dict, job_board: str, pages: int, items: str
