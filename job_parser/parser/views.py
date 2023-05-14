@@ -132,7 +132,7 @@ class VacancyListView(View, RedisCacheMixin, VacancyHelpersMixin, VacancyScraper
         await self.create_cache_key(request)
         job_list_from_cache = await self.get_data_from_cache()
 
-        list_favourite = []
+        list_favourite: list = []
 
         if request.user.is_authenticated:
             # Проверяем находится ли компания в списке скрытых
