@@ -210,7 +210,7 @@ class Parser(abc.ABC):
                 "experience": await self.get_experience(job),
                 "published_at": await self.get_published_at(job),
             }
-            # В API площадки Trudvsem на момент написания кода Trudvsem отсутствует
+            # В API площадки Trudvsem на момент написания кода отсутствует
             # поиск по городам поэтому реализуем его сами
             if job_board == "Trudvsem":
                 city = params.get("city", None)
