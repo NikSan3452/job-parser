@@ -154,6 +154,9 @@ class EmailSender:
             logger.exception(exc)
 
 
+
+
+
 @periodic_task(crontab(hour=settings.SENDING_EMAILS_HOURS))
 def start_sending_emails() -> None:
     """
@@ -186,7 +189,7 @@ def delete_old_vacancies() -> None:
 
 
 @periodic_task(crontab(minute=f"*/{settings.SCRAPING_SCHEDULE_MINUTES}"))
-def run_parser() -> None:
+def run_scraping() -> None:
     """
     Запуск парсера.
 
