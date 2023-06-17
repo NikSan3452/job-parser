@@ -380,7 +380,12 @@ class Parser(abc.ABC):
 
     @abc.abstractmethod
     async def get_remote(self) -> bool:
-        # TODO добавить доки
+        """
+        Абстрактный асинхронный метод для получения удаленной работы.
+
+        Returns:
+            bool: Удаленная работа.
+        """
         pass
 
     @abc.abstractmethod
