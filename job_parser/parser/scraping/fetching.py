@@ -23,7 +23,7 @@ class Fetcher:
         pages (int): Количество страниц для получения
     """
 
-    def __init__(self, url: str, session: aiohttp.ClientSession, pages: int) -> None:
+    def __init__(self, url: str, pages: int, session: aiohttp.ClientSession) -> None:
         """
         Инициализация класса Fetcher.
 
@@ -77,8 +77,6 @@ class Fetcher:
             async with self.session.get(
                 url, params=params, headers=headers
             ) as response:
-                logger.debug(headers)
-                logger.debug(f"Status code: {response.status}")
                 return await response.text(), str(response.url)
         except Exception as exc:
             return logger.exception(exc)
@@ -157,7 +155,6 @@ class Fetcher:
                     links += [
                         config.HABR_DOMAIN + link.get("href") for link in page_links
                     ]
-        logger.debug(f"Собрано ссылок: {len(links)} ")
         return links
 
     async def fetch_vacancy_pages(self, links: list[str]) -> AsyncGenerator:
@@ -195,8 +192,6 @@ class Fetcher:
             await asyncio.sleep(config.DOWNLOAD_DELAY)
             task = asyncio.create_task(self.fetch(link))
             tasks.append(task)
-
-            logger.debug(f"Идет выборка данных со страницы {link}")
 
         # Проверяем, что вернет задача, если None то пропускаем,
         # таким образом избавляемся от пустых и некорректных значений в БД
