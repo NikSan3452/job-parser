@@ -1,44 +1,36 @@
+from parser.models import Favourite, HiddenCompanies, Vacancies, BlackList
+
 from django.contrib import admin
 
-from parser.models import (
-    City,
-    FavouriteVacancy,
-    HiddenCompanies,
-    VacancyBlackList,
-    VacancyScraper,
-)
 
-
-@admin.register(City)
-class CityAdmin(admin.ModelAdmin):
-    fields = ("city_id", "city")
-
-
-@admin.register(FavouriteVacancy)
-class FavouriteVacancyAdmin(admin.ModelAdmin):
-    fields = ("user", "url", "title")
-
-
-@admin.register(VacancyBlackList)
-class VacancyBlackListAdmin(admin.ModelAdmin):
-    fields = ("user", "url", "title")
-
-
-@admin.register(VacancyScraper)
-class VacancyScraperAdmin(admin.ModelAdmin):
+@admin.register(Vacancies)
+class VacanciesAdmin(admin.ModelAdmin):
     fields = (
         "job_board",
         "url",
         "title",
+        "salary_from",
+        "salary_to",
+        "salary_currency",
         "description",
         "city",
-        "salary",
         "company",
+        "employment",
+        "schedule",
         "experience",
-        "type_of_work",
         "remote",
         "published_at",
     )
+
+
+@admin.register(Favourite)
+class FavouriteAdmin(admin.ModelAdmin):
+    fields = ("user", "url", "title")
+
+
+@admin.register(BlackList)
+class VacancyBlackListAdmin(admin.ModelAdmin):
+    fields = ("user", "url", "title")
 
 
 @admin.register(HiddenCompanies)
