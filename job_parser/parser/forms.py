@@ -49,21 +49,21 @@ class SearchingForm(forms.Form):
         initial=exp_values[0],
         required=False,
         choices=exp_values,
-        widget=forms.CheckboxSelectMultiple(),
+        widget=forms.CheckboxSelectMultiple,
     )
     job_board = forms.MultipleChoiceField(
         label="Площадка",
         initial=job_board_values[0],
         required=False,
         choices=job_board_values,
-        widget=forms.CheckboxSelectMultiple(),
+        widget=forms.CheckboxSelectMultiple,
     )
 
     title_search = forms.BooleanField(
         label="Искать в заголовках вакансий",
         required=False,
-        widget=forms.CheckboxInput(),
+        widget=forms.CheckboxInput,
     )
     remote = forms.BooleanField(
-        label="Удаленная работа", required=False, widget=forms.CheckboxInput()
+        label="Удаленная работа", required=False, widget=forms.CheckboxInput
     )
