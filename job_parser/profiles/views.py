@@ -1,4 +1,4 @@
-from parser.models import FavouriteVacancy, HiddenCompanies, VacancyBlackList
+from parser.models import Favourite, HiddenCompanies, BlackList
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -89,8 +89,8 @@ class ProfileView(LoginRequiredMixin, FormView):
         black_list = None
         hidden_companies = None
         try:
-            favourite_vacancy = FavouriteVacancy.objects.filter(user=user).all()
-            black_list = VacancyBlackList.objects.filter(user=user).all()
+            favourite_vacancy = Favourite.objects.filter(user=user).all()
+            black_list = BlackList.objects.filter(user=user).all()
             hidden_companies = HiddenCompanies.objects.filter(user=user).all()
         except ObjectDoesNotExist as exc:
             logger.exception(f"Ошибка: {exc} объект не существует")
