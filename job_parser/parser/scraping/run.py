@@ -2,95 +2,70 @@ import asyncio
 import time
 
 import aiohttp
-from django.db import DatabaseError, Error, IntegrityError, ProgrammingError
-from logger import logger, setup_logging
-from parser.models import VacancyScraper
+from loguru import logger
+from logger import setup_logging
+
 from parser.scraping.configuration import Config
-from parser.scraping.fetching import Fetcher
-from parser.scraping.parsers.geekjob import GeekjobParser
-from parser.scraping.parsers.habr import HabrParser
+from parser.scraping.scrapers.geekjob import GeekjobParser
+from parser.scraping.scrapers.habr import HabrParser
 
 setup_logging()
 
 
-config = Config()
-
-
 class StartParsers:
-    """Запуск парсеров"""
+    """Класс предназначен для запуска скраперов сайтов поиска работы.
 
-    def __init__(self, session: aiohttp.ClientSession) -> None:
+    Args:
+        session (aiohttp.ClientSession): Объект сессии aiohttp.
+        config (Config): Объект класса Config, содержит настройки для парсера.
+
+    """
+    def __init__(self, session: aiohttp.ClientSession, config: Config) -> None:
         self.session = session
+        self.config = config
 
-    async def initial_params(self) -> None:
-        """Инициализирует параметры парсера."""
-        self.geekjob_fetcher = Fetcher(
-            config.GEEKJOB_URL, self.session, config.GEEKJOB_PAGES_COUNT
-        )
-        self.habr_fetcher = Fetcher(
-            config.HABR_URL, self.session, config.HABR_PAGES_COUNT
-        )
-
-        self.geekjob_parser = GeekjobParser(self.geekjob_fetcher)
-        self.habr_parser = HabrParser(self.habr_fetcher)
-
-        self.geekjob_links = await self.geekjob_fetcher.fetch_vacancy_links("Geekjob")
-        self.habr_links = await self.habr_fetcher.fetch_vacancy_links("Habr")
-
-    async def save_data(
-        self, links: list[str], fetcher: Fetcher, parser: GeekjobParser | HabrParser
-    ) -> int:
-        """Сохраняет данные в БД.
-
-        Args:
-            links (list[str]): Список ссылок на страницы с вакансиями.
-            fetcher (Fetcher): Экземпляр класса Fetcher.
-            parser (GeekjobParser | HabrParser): Экземпляр класса парсера.
-
-        Returns:
-            int: Количество объектов записанных в БД.
-        """
-        vacancy_counter = 0
-        async for page in fetcher.fetch_vacancy_pages(links):
-            async for vacancy in parser.get_vacancy_details(page):
-                try:
-                    await VacancyScraper.objects.aget_or_create(**vacancy)
-                except (Error, IntegrityError, DatabaseError, ProgrammingError) as exc:
-                    logger.exception(exc)
-                vacancy_counter += 1
-        return vacancy_counter
+        self.geekjob_parser = GeekjobParser(config, session)
+        self.habr_parser = HabrParser(config, session)
 
     async def run_parsers(self) -> asyncio.Future[list]:
-        """Запускает асинхронные задачи парсеров."""
+        """Запускает скраперы сайтов поиска работы.
+
+        Создает задачи для сохранения данных с сайтов geekjob.ru и career.habr.com и 
+        ожидает их завершения. Возвращает список результатов выполнения задач.
+
+        Returns:
+            asyncio.Future[list]: Список результатов выполнения задач.
+
+        """
         tasks: list[asyncio.Future] = []
-        await self.initial_params()
-        task1 = asyncio.create_task(
-            self.save_data(
-                self.geekjob_links, self.geekjob_fetcher, self.geekjob_parser
-            )
-        )
-        task2 = asyncio.create_task(
-            self.save_data(self.habr_links, self.habr_fetcher, self.habr_parser)
-        )
+
+        task1 = asyncio.create_task(self.geekjob_parser.save_data())
+        task2 = asyncio.create_task(self.habr_parser.save_data())
         tasks.append(task1)
         tasks.append(task2)
-        logger.debug(f"Вакансий записано в базу: {await task1 + await task2}")
         return await asyncio.gather(*tasks)
 
 
 async def run():
-    """Запуск скрипта"""
+    """Запускает скрапер сайтов поиска работы.
+
+    Создает объект сессии aiohttp и объект класса Config. Затем создает объект класса 
+    StartParsers и вызывает его метод run_parsers. 
+    Выводит информацию о времени работы скрапера в лог.
+
+    """
     async with aiohttp.ClientSession() as session:
-        parser = StartParsers(session)
+        config = Config()
+        parser = StartParsers(session, config)
 
         start_time = time.time()
-        logger.info("Парсер запущен")
+        logger.info("Скрапер запущен")
 
         await parser.run_parsers()
 
-        logger.info("Работа парсера завершена")
+        logger.info("Работа скрапера завершена")
         finish_time = time.time() - start_time
-        logger.debug(f"Затраченное на работу скрипта время: {round(finish_time, 2)}")
+        logger.debug(f"Затраченное на работу скрапера время: {round(finish_time, 2)}")
 
 
 if __name__ == "__main__":
