@@ -1,28 +1,34 @@
-import pickle
-from parser.api.utils import Utils
+from dataclasses import dataclass
+
+from loguru import logger
 from parser.forms import SearchingForm
-from parser.models import (
-    City,
-    FavouriteVacancy,
-    HiddenCompanies,
-    VacancyBlackList,
-    VacancyScraper,
-)
+from parser.models import Favourite, HiddenCompanies, Vacancies, BlackList
+from parser.parsing.utils import Utils
 from typing import Any, Awaitable
 
-from django.conf import settings
-from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
-from django.contrib.auth.models import AnonymousUser
-from django.core.paginator import Paginator
 from django.db.models import Q, QuerySet
 from django.http import HttpRequest, HttpResponse
-from logger import logger, setup_logging
+from django.contrib.auth.models import AnonymousUser
+
+from logger import setup_logging
 
 # Логирование
 setup_logging()
 
 utils = Utils()
+
+
+@dataclass
+class RequestParams:
+    title: str
+    city: str
+    date_from: str
+    date_to: str
+    experience: str
+    job_board: str
+    remote: str
+    title_search: str
 
 
 class AsyncLoginRequiredMixin(AccessMixin):
@@ -57,44 +63,93 @@ class AsyncLoginRequiredMixin(AccessMixin):
         return await super().dispatch(request, *args, **kwargs)
 
 
-class VacancyHelpersMixin:
-    """Класс со вспомогательными методами для работы со списком вакансий.
+class VacanciesMixin:
+    def get_vacancies(self, form_data: dict) -> QuerySet:
+        params = self.get_request_params(form_data)
+        vacancies = self.fetch(params)
+        return vacancies
 
-    Этот класс содержит методы для проверки данных запроса, проверки вакансий и
-    компаний в черном и скрытом списках, получения списка избранных вакансий, данных
-    пагинации и формы, а также идентификатора города.
-    """
+    def get_form_data(self, form: SearchingForm) -> dict:
+        """Метод получения данных формы.
 
-    @logger.catch(message="Ошибка в методе VacancyHelpersMixin.check_request_data()")
-    async def check_request_data(self, request: HttpRequest) -> dict:
-        """Метод проверки данных запроса для отображения списка вакансий.
-
-        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
-        Внутри метода данные запроса преобразуются в словарь с помощью метода `dict()`.
-        Затем удаляются ключи со значениями "None" и "False".
-        В случае ошибки будет вызвано исключение, которое записывается в лог.
-        В конце метода возвращается обработанный словарь с данными запроса.
+        Этот метод принимает объект формы `form` и обрабатывает его асинхронно.
+        Внутри метода создается список полей формы для обработки.
+        Затем для каждого поля извлекается значение из очищенных данных формы и
+        преобразуется при необходимости.
+        В конце метода возвращается словарь с данными формы.
 
         Args:
-            request (HttpRequest): Объект запроса.
+            form (SearchingForm): Объект формы.
 
         Returns:
-            dict: Словарь с данными запроса.
+            dict: Словарь с данными формы.
         """
-        request_data: dict = request.GET.dict()
-        values: tuple = ("None", "False")
+        form_data: dict = {}
+        if form.is_valid():
+            fields = [
+                "city",
+                "title",
+                "date_from",
+                "date_to",
+                "title_search",
+                "experience",
+                "remote",
+                "job_board",
+            ]
 
-        # Т.к во время итерации и удаления ключей размер словаря меняется,
-        # чтобы избежать ошибки RuntimeError, оборачиваем список ключей в list,
-        # тем самым делаем его копию.
-        for key in list(request_data.keys()):
-            if request_data.get(key) in values:
-                del request_data[key]
-        return request_data
+            for field in fields:
+                value = form.cleaned_data.get(field)
+                form_data[field] = value
 
-    async def check_vacancy_in_black_list(
-        self, vacancies: list[dict], request: HttpRequest
-    ) -> list[dict]:
+        return form_data
+
+    def get_request_params(self, form_data: dict) -> RequestParams:
+        params = RequestParams(
+            title=self.get_title(form_data),
+            city=self.get_city(form_data),
+            date_from=self.get_date_from(form_data),
+            date_to=self.get_date_to(form_data),
+            experience=self.get_experience(form_data),
+            job_board=self.get_job_board(form_data),
+            remote=self.get_remote(form_data),
+            title_search=self.get_title_search(form_data),
+        )
+        return params
+
+    def fetch(self, params: RequestParams) -> QuerySet:
+        q_objects = Q()
+
+        if params.title:
+            if params.title_search:
+                q_objects &= Q(title__icontains=params.title)
+            else:
+                q_objects &= Q(title__icontains=params.title) | Q(
+                    description__icontains=params.title
+                )
+
+        if params.city:
+            q_objects &= Q(city__icontains=params.city)
+
+        if params.date_from:
+            q_objects &= Q(published_at__gte=params.date_from)
+
+        if params.date_to:
+            q_objects &= Q(published_at__lte=params.date_to)
+
+        if params.experience and params.experience[0] != "Не имеет значения":
+            q_objects &= Q(experience__in=params.experience)
+
+        if params.job_board and params.job_board[0] != "Не имеет значения":
+            q_objects &= Q(job_board__in=params.job_board)
+
+        if params.remote:
+            q_objects &= Q(remote=True)
+
+        vacancies = Vacancies.objects.filter(q_objects)
+        return vacancies
+    def check_blacklist(
+        self, vacancies: QuerySet, request: HttpRequest
+    ) -> QuerySet:
         """Метод проверки вакансий в черном списке.
 
         Этот метод принимает список вакансий `vacancies` и объект запроса `request`,
@@ -109,13 +164,13 @@ class VacancyHelpersMixin:
         В конце метода возвращается отфильтрованный список вакансий.
 
         Args:
-            vacancies (list[dict]): Список вакансий.
+            vacancies (QuerySet): Список вакансий.
             request (HttpRequest): Объект запроса.
 
         Returns:
-            list[dict]: Отфильтрованный список вакансий.
+            QuerySet: Отфильтрованный список вакансий.
         """
-        mixin_logger = logger.bind(request=request)
+        
         filtered_vacancies: list[dict] = []
         try:
             user = request.user
@@ -125,7 +180,7 @@ class VacancyHelpersMixin:
 
             # Получаем url из черного списка
             blacklist_urls = {
-                job.url async for job in VacancyBlackList.objects.filter(user=user)
+                job.url for job in BlackList.objects.filter(user=user)
             }
 
             # Проверяем наличие url вакансии в черном списке
@@ -133,23 +188,23 @@ class VacancyHelpersMixin:
             filtered_vacancies = [
                 vacancy
                 for vacancy in vacancies
-                if vacancy.get("url") not in blacklist_urls
+                if vacancy.url not in blacklist_urls
             ]
 
             # Если url вакансии был в списке избранных, то удаляем его от туда
-            await FavouriteVacancy.objects.filter(
+            Favourite.objects.filter(
                 user=user, url__in=blacklist_urls
-            ).adelete()
+            ).delete()
 
         except Exception as exc:
-            mixin_logger.exception(exc)
+            logger.exception(exc)
             filtered_vacancies = vacancies
 
         return filtered_vacancies
 
-    async def check_company_in_hidden_list(
-        self, vacancies: list[dict], request: HttpRequest
-    ) -> list[dict]:
+    def check_hidden_list(
+        self, vacancies: QuerySet, request: HttpRequest
+    ) -> QuerySet:
         """Метод проверки компаний в скрытом списке.
 
         Этот метод принимает список вакансий `vacancies` и объект запроса `request`,
@@ -179,7 +234,7 @@ class VacancyHelpersMixin:
             # Получаем компании из списка скрытых
             hidden_companies = {
                 company.name
-                async for company in HiddenCompanies.objects.filter(user=user)
+                for company in HiddenCompanies.objects.filter(user=user)
             }
 
             # Проверяем наличие компании в списке скрытых
@@ -187,7 +242,7 @@ class VacancyHelpersMixin:
             filtered_vacancies = [
                 vacancy
                 for vacancy in vacancies
-                if vacancy.get("company") not in hidden_companies
+                if vacancy.company not in hidden_companies
             ]
 
         except Exception as exc:
@@ -196,7 +251,7 @@ class VacancyHelpersMixin:
 
         return filtered_vacancies
 
-    async def get_favourite_vacancy(self, request: HttpRequest) -> QuerySet | list:
+    def get_favourite(self, request: HttpRequest) -> QuerySet | list:
         """Метод получения списка избранных вакансий.
 
         Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
@@ -212,308 +267,49 @@ class VacancyHelpersMixin:
         Returns:
             QuerySet | list: Список избранных вакансий.
         """
-        mixin_logger = logger.bind(request=request)
         list_favourite: list = []
         try:
             user = request.user
             if not isinstance(user, AnonymousUser):
-                list_favourite = FavouriteVacancy.objects.filter(user=user).all()
+                list_favourite = Favourite.objects.filter(user=user).all()
         except Exception as exc:
-            mixin_logger.exception(exc)
+            logger.exception(exc)
         return list_favourite
 
-    @logger.catch(message="Ошибка в методе VacancyHelpersMixin.get_pagination()")
-    async def get_pagination(
-        self, request: HttpRequest, job_list: list[dict], context: dict
-    ) -> None:
-        """Метод получения данных пагинации.
+    def get_title(self, form_data: dict) -> str | None:
+        title: str = form_data.get("title", None)
+        return title.strip() if title else None
 
-        Этот метод принимает объект запроса `request`, список вакансий `job_list` и
-        словарь контекста `context`, и обрабатывает их асинхронно.
-        Внутри метода создается объект пагинатора с заданным количеством элементов
-        на странице.
-        Затем извлекается номер страницы из запроса и объект страницы с помощью метода
-        `get_page`.
-        В контекст добавляются данные объекта страницы и общее количество вакансий.
+    def get_city(self, form_data: dict) -> str | None:
+        city: str = form_data.get("city", None)
+        return city.lower().strip() if city else None
 
-        Args:
-            request (HttpRequest): Объект запроса.
-            job_list (list[dict]): Список вакансий.
-            context (dict): Словарь контекста.
+    def get_date_from(self, form_data: dict) -> str | None:
+        date_from: str = form_data.get("date_from", None)
+        date_from = utils.check_date_from(date_from)
+        return date_from
 
-        Returns:
-            None
-        """
-        paginator = Paginator(job_list, 5)
-        page_number = request.GET.get("page")
-        page_obj = paginator.get_page(page_number)
-        context["object_list"] = page_obj
-        context["total_vacancies"] = len(job_list)
+    def get_date_to(self, form_data: dict) -> str | None:
+        date_to: str = form_data.get("date_to", None)
+        date_to = utils.check_date_to(date_to)
+        return date_to
 
-    @logger.catch(message="Ошибка в методе VacancyHelpersMixin.get_form_data()")
-    async def get_form_data(self, form: SearchingForm) -> dict:
-        """Метод получения данных формы.
+    def get_experience(self, form_data: dict) -> str | None:
+        experience: str = form_data.get("experience", None)
+        if experience == ["Не имеет значения"]:
+            experience = None
+        return experience
 
-        Этот метод принимает объект формы `form` и обрабатывает его асинхронно.
-        Внутри метода создается список полей формы для обработки.
-        Затем для каждого поля извлекается значение из очищенных данных формы и
-        преобразуется при необходимости.
-        В конце метода возвращается словарь с данными формы.
+    def get_remote(self, form_data: dict) -> bool | None:
+        remote: str = form_data.get("remote", None)
+        return bool(remote) if remote else None
 
-        Args:
-            form (SearchingForm): Объект формы.
+    def get_job_board(self, form_data: dict) -> str | None:
+        job_board = form_data.get("job_board", None)
+        if job_board == ["Не имеет значения"]:
+            job_board = None
+        return job_board
 
-        Returns:
-            dict: Словарь с данными формы.
-        """
-        params: dict = {}
-        fields = [
-            "city",
-            "job",
-            "date_from",
-            "date_to",
-            "title_search",
-            "experience",
-            "remote",
-            "job_board",
-        ]
-
-        for field in fields:
-            value = form.cleaned_data.get(field)
-            if field == "city":
-                value = value.lower() if value else None
-            elif field == "experience":
-                value = int(value)
-            params[field] = value
-
-        return params
-
-    async def get_city_id(self, city: str, request: HttpRequest) -> str | None:
-        """Метод получения идентификатора города.
-
-        Этот метод принимает название города `city` и объект запроса `request`,
-        и обрабатывает их асинхронно.
-        Внутри метода проверяется, задано ли название города. Если нет, то возвращается
-        `None`.
-        Затем пытается извлечь город из базы данных.
-        Если город найден в базе данных, то возвращается его идентификатор.
-        В противном случае будет вызвано исключение, которое записывается в лог.
-        Если город не найден выводится сообщение об ошибке.
-        В конце метода возвращается идентификатор города или `None`.
-
-        Args:
-            city (str): Название города.
-            request (HttpRequest): Объект запроса.
-
-        Returns:
-            str | None: Идентификатор города или `None`
-        """
-        mixin_logger = logger.bind(request=request)
-        city_id = None
-        city_from_db = None
-
-        if city:  # Если город передан в запросе получаем его id из базы
-            try:
-                city_from_db = await City.objects.filter(city=city).afirst()
-            except Exception as exc:
-                mixin_logger.exception(exc)
-
-            if city_from_db:  # Если для города существует id в базе
-                city_id = city_from_db.city_id  # то получаем его
-            else:  # А иначе выводим сообщение
-                messages.error(
-                    request,
-                    """Город с таким названием отсутствует в базе""",
-                )
-        return city_id
-
-
-class RedisCacheMixin:
-    """Класс отвечает за взаимодействие с Redis"""
-
-    @logger.catch(message="Ошибка в методе RedisCacheMixin.create_cache_key()")
-    async def create_cache_key(self, request: HttpRequest) -> str:
-        """
-        Метод создает ключ кэша на основе идентификатора сессии из объекта запроса.
-
-        Этот метод принимает объект запроса `request` и асинхронно обрабатывает его.
-        Внутри метода извлекается идентификатор сессии из объекта запроса и создается
-        ключ кэша, который сохраняется в атрибуте `cache_key` экземпляра класса.
-        В конце метода возвращается ключ кэша.
-
-        Args:
-            request (HttpRequest): Объект запроса.
-
-        Returns:
-            str: Ключ кэша.
-        """
-        session_id = request.session.session_key
-        self.cache_key = f"session_id:{session_id}"
-        return self.cache_key
-
-    async def get_data_from_cache(self) -> Any | None:
-        """
-        Метод получает данные из кэша с использованием ключа кэша.
-
-        Этот метод асинхронно обрабатывает запрос на получение данных из кэша.
-        Внутри метода создается логгер с привязкой к ключу кэша.
-        Затем в блоке try/except пытается получить данные из кэша с использованием
-        ключа кэша.
-        Если данные были найдены, они десериализуются с помощью модуля pickle и
-        возвращается результат.
-        В противном случае будет вызвано исключение, которое записывается в лог.
-
-        Returns:
-            Any | None: Данные из кэша или None, если данные не были найдены.
-        """
-        mixin_logger = logger.bind(cache_key=self.cache_key)
-        try:
-            result = settings.CACHE.get(self.cache_key)
-            if result:
-                return pickle.loads(result)
-        except Exception as exc:
-            mixin_logger.exception(exc)
-
-    async def set_data_to_cache(self, job_list: list[dict]) -> None:
-        """
-        Метод сохраняет данные в кэше с использованием ключа кэша и устанавливает время
-        истечения срока действия.
-
-        Этот метод принимает список словарей `job_list` и асинхронно обрабатывает его.
-        Внутри метода создается логгер с привязкой к ключу кэша.
-        Затем в блоке try/except удаляется старый ключ кэша (если он существует),
-        сериализуются данные с помощью модуля pickle и сохраняются в кэше с
-        использованием ключа кэша и установкой времени истечения срока действия
-        в 3600 секунд.
-        В случае возникновения исключения оно записывается в лог.
-
-        Args:
-            job_list (list[dict]): Список словарей для сохранения в кэше.
-
-        Returns:
-            None
-        """
-        mixin_logger = logger.bind(cache_key=self.cache_key)
-        try:
-            settings.CACHE.delete(self.cache_key)
-            pickle_dump = pickle.dumps(job_list)
-            settings.CACHE.set(self.cache_key, pickle_dump, ex=3600)
-        except Exception as exc:
-            mixin_logger.exception(exc)
-
-
-class VacancyScraperMixin:
-    """Класс содержит методы для получения вакансий из скрапера."""
-
-    async def get_vacancies_from_scraper(
-        self, request: HttpRequest, form_params: dict
-    ) -> QuerySet:
-        """
-        Метод получает вакансии из скрапера с использованием параметров формы.
-
-        Этот метод принимает объект запроса `request` и словарь с параметрами формы
-        `form_params` и асинхронно обрабатывает их.
-        Внутри метода создается логгер с привязкой к данным запроса.
-        Затем проверяются даты "от" и "до" с помощью вспомогательного метода
-        `check_date`.
-        Далее формируется словарь с параметрами запроса на основе данных из формы.
-        Если в форме указан город, он добавляется в параметры запроса.
-        Если в форме указан опыт работы, он конвертируется с помощью вспомогательного
-        метода `convert_experience` и добавляется в параметры запроса.
-        Если в форме указано что работа удаленная, она добавляется в параметры запроса.
-        Если в форме указана доска объявлений, она добавляется в параметры запроса.
-        Даты "от" и "до" также добавляются в параметры запроса.
-        Если в форме указана работа, она обрабатывается и используется для поиска
-        вакансий в заголовках или в описании (в зависимости от того, выбран ли поиск
-        по заголовкам вакансий).
-        В случае возникновения ошибок они записываются в лог.
-        В конце метода возвращается список найденных вакансий.
-
-        Args:
-            request (HttpRequest): Объект запроса.
-            form_params (dict): Словарь с параметрами формы.
-
-        Returns:
-            QuerySet: Список найденных вакансий.
-        """
-        mixin_logger = logger.bind(request=request)
-
-        params: dict = {}  # Словарь параметров запроса
-
-        # Проверяем дату и если нужно устанавливаем дефолтную
-        date_from = await utils.check_date_from(form_params.get("date_from"))
-        date_to = await utils.check_date_to(form_params.get("date_to"))
-
-        # Формируем словарь с параметрами запроса
-        if form_params.get("city") is not None:
-            params.update({"city": form_params.get("city", "").strip()})
-        if form_params.get("experience", 0) > 0:
-            # Конвертируем опыт
-            converted_experience = await utils.convert_experience(
-                form_params.get("experience", None), True
-            )
-            params.update({"experience": converted_experience})
-        if form_params.get("remote"):
-            params.update({"remote": form_params.get("remote")})
-        if form_params.get("job_board") != "Не имеет значения":
-            params.update({"job_board": form_params.get("job_board")})
-        params.update({"published_at__gte": date_from})
-        params.update({"published_at__lte": date_to})
-
-        if form_params.get("job") is not None:
-            job = form_params.get("job", "").lower().strip()
-
-        # Если чекбокс с поиском в заголовке вакансии активен,
-        # то поиск осуществляется только по столбцу title
-        if form_params.get("title_search"):
-            try:
-                job_list_from_scraper = (
-                    VacancyScraper.objects.filter(title__contains=job, **params)
-                    .order_by("-published_at")
-                    .values()
-                )
-            except Exception as exc:
-                mixin_logger.exception(exc)
-
-        # Иначе поиск осуществляется также в описании вакансии
-        else:
-            try:
-                job_list_from_scraper = (
-                    VacancyScraper.objects.filter(
-                        Q(title__contains=job) | Q(description__contains=job),
-                        **params,
-                    )
-                    .order_by("-published_at")
-                    .values()
-                )
-            except Exception as exc:
-                mixin_logger.exception(exc)
-        return job_list_from_scraper
-
-    @logger.catch(
-        message="Ошибка в методе VacancyScraperMixin.add_vacancy_to_job_list_from_api()"
-    )
-    async def add_vacancy_to_job_list_from_api(
-        self, job_list_from_api: list[dict], job_list_from_scraper: QuerySet
-    ) -> list[dict]:
-        """Метод добавляет вакансии из скрапера в список вакансий из API.
-
-        Этот метод принимает список словарей `job_list_from_api` и QuerySet
-        `job_list_from_scraper` и асинхронно обрабатывает их.
-        Внутри метода создается новый список вакансий из скрапера, который не содержит
-        вакансий, уже присутствующих в списке вакансий из API.
-        Затем этот новый список добавляется к списку вакансий из API.
-        В конце метода возвращается обновленный список вакансий.
-
-        Args:
-            job_list_from_api (list[dict]): Список словарей с вакансиями из API.
-            job_list_from_scraper (QuerySet): QuerySet с вакансиями из скрапера.
-
-        Returns:
-            list[dict]: Обновленный список словарей с вакансиями.
-        """
-        job_list_from_scraper = [
-            job for job in job_list_from_scraper if job not in job_list_from_api
-        ]
-        job_list_from_api.extend(job_list_from_scraper)
-        return job_list_from_api
+    def get_title_search(self, form_data: dict) -> str | None:
+        title_search = form_data.get("title_search", None)
+        return bool(title_search) if title_search else None
