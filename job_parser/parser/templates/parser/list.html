@@ -18,7 +18,7 @@
 
 <div class="row justify-content-center">
     <div class="col-md-3 my-2">
-        <form action="{% url 'list' %}" method="post">
+        <form action="{% url 'list' %}" method="get">
                 {% csrf_token %}
                 {{ form|crispy }}
             <div class="row justify-content-center">
@@ -50,64 +50,29 @@
                         <span class="card-param">{{ obj.salary_currency|upper }}</span>{% endif %}
                 </p>
 
-                {% if obj.job_board == 'SuperJob' %}
-                    <p><span class="card-param">Тип занятости: </span> <span class="card-value">{{ obj.type_of_work|capfirst }}</span></p>
-                {% else %}
-                    <p><span class="card-param">Тип занятости: </span> <span class="card-value">{{ obj.type_of_work|capfirst }}</span></p>
+                {% if obj.schedule %}
+                <p><span class="card-param">Тип занятости: </span> <span class="card-value">{{ obj.schedule|capfirst }}</span></p>
                 {% endif %}
 
                 {% if obj.experience %}
                     <p><span class="card-param">Опыт работы: </span> <span class="card-value">{{ obj.experience|capfirst }}</span></p>
                 {% endif %}
 
-                {% if obj.job_board == "Habr career" or obj.job_board == "Geekjob" %}
-                    <p class="card-text">
-                        {% if obj.description %}
-                            {% if obj.description|length > 300 %}
-                                <span class="card-param">Описание вакансии:</span>
-                                <span class="short-text">{{ obj.description|truncatechars:300 }}</span>
-                                <span class="full-text" style="display:none">{{ obj.description }}</span>
-                                <a href="javascript:void(0);" class="expand-link">Развернуть</a>
-                                <a href="javascript:void(0);" class="collapse-link" style="display:none">Свернуть</a>
-                            {% else %}
-                                <span class="card-param">Описание вакансии:</span> {{ obj.description }}
-                            {% endif %}
-                        {% endif %}
-                    </p>
-
-                {% elif obj.job_board == 'SuperJob' %}
-                    <p class="card-text">
-                        {% if obj.requirement  %}
-                        <span class="card-param">Обязанности:</span> {{ obj.requirement|truncatechars:300|striptags }}
-                        {% endif %}
-
-                        <p class="card-text">
-                            {% if obj.responsibility  %}
-                            <span class="card-param">Требования:</span> {{ obj.responsibility|truncatechars:300|striptags }}
-                            {% endif %}
-                        </p>
-                    </p>
-                {% else %}
-                    <p class="card-text">
-                        {% if obj.responsibility  %}
-                        <span class="card-param">Обязанности:</span> {{ obj.responsibility|truncatechars:300|striptags }}
-                        {% endif %}
-                    </p>
-                    
-                    <p class="card-text">
-                        {% if obj.requirement %}
-                        <span class="card-param">Требования:</span> {{ obj.requirement|truncatechars:300|striptags }}
-                        {% endif %}
-                    </p>
+                {% if obj.description %}
+                    {% if obj.description|length > 300 %}
+                        <span class="card-param">Описание вакансии:</span>
+                    <span class="short-text">{{ obj.description|truncatechars:300|striptags }}</span>
+                    <span class="full-text" style="display:none">{{ obj.description|safe }}</span>
+                        <a href="javascript:void(0);" class="expand-link">Развернуть</a>
+                        <a href="javascript:void(0);" class="collapse-link" style="display:none">Свернуть</a>
+                    {% else %}
+                        <span class="card-param">Описание вакансии:</span> {{ obj.description|safe }}
+                    {% endif %}
                 {% endif %}
 
                 <p>
                     <span class="card-param">Город:</span>
-                    {% if obj.job_board == "Geekjob" %}
-                        <span class="card-value">{{ obj.city|title }}</span>
-                    {% else %}
                         <span class="card-value">{{ obj.city|capfirst }}</span>
-                    {% endif %}
                     |
                     <span class="card-param">Компания:</span>
                     <span class="card-value">
@@ -136,7 +101,7 @@
                                 <i class="fa-solid fa-trash-can trash"></i>
                             </label>
 
-                            <input {% for favourite in list_favourite %} {% if favourite.url == obj.url %}
+                            <input {% for job in favourite %} {% if job.url == obj.url %}
                             checked
                             {% endif %}
                             {% endfor %}
@@ -166,21 +131,21 @@
                 <div class="col paginator-wrap">
                     <nav aria-label="Page navigation example">
                         <ul class="pagination overflow-auto">
-                            {% if object_list.has_previous %}
+                            {% if page_obj.has_previous %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?city={{ city }}&job={{ job }}&date_from={{ date_from }}&date_to={{ date_to }}&experience={{ experience }}&title_search={{ title_search }}&remote={{ remote }}&job_board={{ job_board }}&page=1" aria-label="Previous">
+                                    <a class="page-link" href="?{{ request.GET.urlencode }}&page=1" aria-label="Previous">
                                         <span aria-hidden="true">&laquo;</span>
                                     </a>
                                 </li>
                             {% endif %}
-                            {% for page in object_list.paginator.page_range %}
+                            {% for page in page_obj.paginator.page_range %}
                                 <li class="page-item {% if page == object_list.number %} active {% endif %}">
-                                    <a class="page-link" href="?city={{ city }}&job={{ job }}&date_from={{ date_from }}&date_to={{ date_to }}&experience={{ experience }}&title_search={{ title_search }}&remote={{ remote }}&job_board={{ job_board }}&page={{ page }}">{{ page }}</a>
+                                    <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page }}">{{ page }}</a>
                                 </li>
                             {% endfor %}
-                            {% if object_list.has_next %}
+                            {% if page_obj.has_next %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?city={{ city }}&job={{ job }}&date_from={{ date_from }}&date_to={{ date_to }}&experience={{ experience }}&title_search={{ title_search }}&remote={{ remote }}&job_board={{ job_board }}&page={{ object_list.next_page_number }}" aria-label="Next">
+                                    <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ object_list.next_page_number }}" aria-label="Next">
                                         <span aria-hidden="true">&raquo;</span>
                                     </a>
                                 </li>
@@ -194,5 +159,6 @@
         {% endif %}
 </div>
 <script src="{% static 'js/vacancyManipulations.js' %}"></script>
-<script src="{% static 'js/expand_description.js' %}"></script>
+<script src="{% static 'js/expandDescription.js' %}"></script>
+<script src="{% static 'js/checkboxControl.js' %}"></script>
 {% endblock %}
