@@ -1,36 +1,42 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 
 
-class City(models.Model):
-    city_id = models.CharField(max_length=255, unique=True)
-    city = models.CharField(max_length=255, verbose_name="Город", unique=True)
-
-    class Meta:
-        app_label = "parser"
-        verbose_name = "Город"
-        verbose_name_plural = "Города"
-
-    def __str__(self) -> str:
-        return self.city
-
-
-class VacancyScraper(models.Model):
-    job_board = models.CharField(max_length=255, verbose_name="Площадка")
+class Vacancies(models.Model):
+    job_board = job_board = models.CharField(max_length=100, verbose_name="Площадка")
     url = models.URLField(null=False)
-    title = models.CharField(max_length=255, null=True, verbose_name="Вакансия")
-    description = models.TextField(null=True, verbose_name="Описание вакансии")
-    city = models.CharField(max_length=255, null=True, verbose_name="Город")
-    salary = models.CharField(max_length=255, null=True, verbose_name="Зарплата")
-    company = models.CharField(max_length=255, null=True, verbose_name="Компания")
-    experience = models.CharField(max_length=100, null=True, verbose_name="Опыт работы")
-    type_of_work = models.CharField(
-        max_length=255, null=True, verbose_name="Тип занятости"
+    title = models.CharField(max_length=500, null=True, verbose_name="Вакансия")
+    salary_from = models.CharField(
+        max_length=30, null=True, blank=True, verbose_name="Зарплата от"
     )
-    remote = models.BooleanField(
-        default=False, null=True, verbose_name="Удаленная работа"
+    salary_to = models.CharField(
+        max_length=30, null=True, blank=True, verbose_name="Зарплата до"
     )
-    published_at = models.DateField(null=True, verbose_name="Дата публикации")
+    salary_currency = models.CharField(
+        max_length=30, null=True, blank=True, verbose_name="Валюта"
+    )
+    description = models.TextField(
+        max_length=10000, null=True, blank=True, verbose_name="Описание вакансии"
+    )
+    city = models.TextField(
+        max_length=5000, null=True, blank=True, verbose_name="Город"
+    )
+    company = models.CharField(
+        max_length=500, null=True, blank=True, verbose_name="Компания"
+    )
+    employment = models.CharField(
+        max_length=255, null=True, blank=True, verbose_name="Тип занятости"
+    )
+    schedule = models.CharField(
+        max_length=255, null=True, blank=True, verbose_name="График работы"
+    )
+    experience = models.CharField(
+        max_length=100, null=True, blank=True, verbose_name="Опыт работы"
+    )
+    remote = models.BooleanField(default=False, null=True, blank=True)
+    published_at = models.DateField(
+        null=True, blank=True, verbose_name="Дата публикации"
+    )
 
     class Meta:
         verbose_name = "Вакансия"
@@ -41,7 +47,7 @@ class VacancyScraper(models.Model):
         return self.title
 
 
-class FavouriteVacancy(models.Model):
+class Favourite(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, verbose_name="Пользователь"
     )
@@ -56,7 +62,7 @@ class FavouriteVacancy(models.Model):
         return self.title
 
 
-class VacancyBlackList(models.Model):
+class BlackList(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, verbose_name="Пользователь"
     )
