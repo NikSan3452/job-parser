@@ -91,16 +91,24 @@ WSGI_APPLICATION = "job_parser.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": os.getenv("ENGINE", "django.db.backends.sqlite3"),
-        "NAME": os.getenv("POSTGRES_DB"),
-        "USER": os.getenv("POSTGRES_USER"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        "HOST": os.getenv("POSTGRES_SERVER"),
-        "PORT": os.getenv("POSTGRES_PORT"),
+if "ENGINE" in os.environ:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("POSTGRES_DB"),
+            "USER": os.getenv("POSTGRES_USER"),
+            "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+            "HOST": os.getenv("POSTGRES_SERVER"),
+            "PORT": os.getenv("POSTGRES_PORT"),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
@@ -126,7 +134,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "ru"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Yekaterinburg"
 
 USE_I18N = True
 
@@ -184,6 +192,7 @@ HABR_PAGES_COUNT = os.getenv("HABR_PAGES_COUNT", 10)
 SENDING_EMAILS_HOURS = os.getenv("SENDING_EMAILS_HOURS", 14)
 
 SCRAPING_SCHEDULE_MINUTES = os.getenv("SCRAPING_SCHEDULE_MINUTES", 60)
+PARSING_SCHEDULE_MINUTES = os.getenv("PARSING_SCHEDULE_MINUTES", 1)
 DELETE_OLD_VACANCIES_HOURS = os.getenv("DELETE_OLD_VACANCIES", 0)
 
 settings_dir = os.path.dirname(os.path.abspath(__file__))
