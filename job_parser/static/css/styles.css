@@ -9,6 +9,11 @@ body {
     font-family: 'Ubuntu', sans-serif;
 }
 
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
 .header {
     background-color: rgb(15, 23, 36);
 }
@@ -224,4 +229,16 @@ body {
     border-radius: 5px;
     color: white;
     font-size: 10px;
+}
+
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: start;
+}
+
+.form-row .form-group {
+    width: 50%;
 }
