@@ -10,8 +10,8 @@ from huey.contrib.djhuey import periodic_task
 from logger import logger, setup_logging
 from profiles.models import Profile
 
-from .api import main
-from .models import City, VacancyScraper
+from .parsing.main import start
+from .models import Vacancies
 
 setup_logging()
 
@@ -156,44 +156,55 @@ class EmailSender:
 
 
 
+# TODO Раскомментировать
+# @periodic_task(crontab(hour=settings.SENDING_EMAILS_HOURS))
+# def start_sending_emails() -> None:
+#     """
+#     Отправка электронных писем с вакансиями.
 
-@periodic_task(crontab(hour=settings.SENDING_EMAILS_HOURS))
-def start_sending_emails() -> None:
+#     Эта функция создает экземпляр класса `EmailSender` и вызывает его метод
+#     `sending_emails` для отправки электронных писем с вакансиями.
+#     Функция выполняется периодически с интервалом, указанным в настройках.
+#     """
+#     sender = EmailSender()
+#     sender.sending_emails()
+
+
+# @periodic_task(crontab(hour=settings.DELETE_OLD_VACANCIES_HOURS))
+# def delete_old_vacancies() -> None:
+#     """
+#     Удаление устаревших вакансий.
+
+#     Эта функция удаляет объекты модели `VacancyScraper`, у которых значение поля
+#     `published_at` меньше или равно текущей дате минус 10 дней.
+#     Если во время выполнения возникает исключение, оно записывается в журнал.
+#     Функция выполняется периодически с интервалом, указанным в настройках.
+#     """
+#     min_date = datetime.datetime.today() - datetime.timedelta(days=10)
+#     try:
+#         Vacancies.objects.filter(published_at__lte=min_date).delete()
+#     except Exception as exc:
+#         logger.exception(exc)
+#     logger.debug("Устаревшие вакансии удалены")
+
+
+@periodic_task(crontab(minute=f"*/{settings.PARSING_SCHEDULE_MINUTES}"))
+def run_parsing() -> None:
     """
-    Отправка электронных писем с вакансиями.
+    Запуск парсера.
 
-    Эта функция создает экземпляр класса `EmailSender` и вызывает его метод
-    `sending_emails` для отправки электронных писем с вакансиями.
+    Эта функция запускает асинхронную функцию `run` для выполнения парсинга.
     Функция выполняется периодически с интервалом, указанным в настройках.
     """
-    sender = EmailSender()
-    sender.sending_emails()
-
-
-@periodic_task(crontab(hour=settings.DELETE_OLD_VACANCIES_HOURS))
-def delete_old_vacancies() -> None:
-    """
-    Удаление устаревших вакансий.
-
-    Эта функция удаляет объекты модели `VacancyScraper`, у которых значение поля
-    `published_at` меньше или равно текущей дате минус 10 дней.
-    Если во время выполнения возникает исключение, оно записывается в журнал.
-    Функция выполняется периодически с интервалом, указанным в настройках.
-    """
-    min_date = datetime.datetime.today() - datetime.timedelta(days=10)
-    try:
-        VacancyScraper.objects.filter(published_at__lte=min_date).delete()
-    except Exception as exc:
-        logger.exception(exc)
-    logger.debug("Устаревшие вакансии удалены")
+    asyncio.run(start())
 
 
 @periodic_task(crontab(minute=f"*/{settings.SCRAPING_SCHEDULE_MINUTES}"))
 def run_scraping() -> None:
     """
-    Запуск парсера.
+    Запуск скрапера.
 
-    Эта функция запускает асинхронную функцию `run` для выполнения парсинга.
+    Эта функция запускает асинхронную функцию `run` для выполнения скрапинга.
     Функция выполняется периодически с интервалом, указанным в настройках.
     """
     asyncio.run(run())
