@@ -64,7 +64,8 @@ class Parser(abc.ABC):
         затем для каждой вакансии из списка создает объект `Vacancy` с
         деталями конкретной вакансии.
         Сформированный объект добавляется в базу данных с помощью 
-        метода `add_vacancy_to_database`. 
+        метода `add_vacancy_to_database`. Для регулирования количества запросов в 
+        секунду устанавливается задержка с помощью метода `set_delay`.
         В конце работы метода выводится сообщение о завершении сбора вакансий 
         с указанием источника.
 
@@ -90,6 +91,7 @@ class Parser(abc.ABC):
 
             await self.update_vacancy_data(vacancy, vacancy_data)
             await self.add_vacancy_to_database(vacancy_data)
+            await self.config.set_delay()
 
         logger.debug(f"Сбор вакансий с {self.job_board} завершен")
 
@@ -141,9 +143,8 @@ class Parser(abc.ABC):
 
         Метод принимает на вход словарь с данными о вакансии и возвращает словарь 
         с деталями конкретной вакансии. Метод получает идентификатор вакансии из словаря
-        с данными с помощью метода `get_data`. Для регулирования количества запросов в 
-        секунду устанавливается задержка с помощью метода `set_delay`. Полученные данные
-        возвращаются, как результат работы метода. 
+        с данными с помощью метода `get_data`. Полученные данные возвращаются, 
+        как результат работы метода. 
 
         Args:
             vacancy (dict): Словарь с данными о вакансии.
@@ -153,7 +154,6 @@ class Parser(abc.ABC):
         """
         vacancy_id = vacancy.get("id", None)
         if vacancy_id:
-            await self.config.set_delay()
             details = await self.get_data(f"{self.url}/{vacancy_id}")
         return details
 
