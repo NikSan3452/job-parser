@@ -224,7 +224,7 @@ class GeekjobParser(Scraper):
             case "":
                 experience = "Нет опыта"
             case "опыт работы от 1 года до 3х лет":
-                experience = "От 1 до 3 лет"
+                experience = "От 1 года до 3 лет"
             case "опыт работы От 3 до 5 лет":
                 experience = "От 3 до 6 лет"
             case "опыт работы более 5 лет":

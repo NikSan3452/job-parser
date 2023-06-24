@@ -232,7 +232,7 @@ class HabrParser(Scraper):
             case "":
                 experience = "Нет опыта"
             case "младший (junior)":
-                experience = "От 1 до 3 лет"
+                experience = "От 1 года до 3 лет"
             case "средний (middle)":
                 experience = "От 3 до 6 лет"
             case "старший (senior)" | "ведущий (lead)":

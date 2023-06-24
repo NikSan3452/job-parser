@@ -72,7 +72,7 @@ class Utils:
                 case 0 | 1:
                     converted_experience = "Нет опыта"
                 case 2:
-                    converted_experience = "от 1 до 3 лет"
+                    converted_experience = "от 1 года до 3 лет"
                 case 3:
                     converted_experience = "от 3 до 6 лет"
                 case 4:
@@ -82,7 +82,7 @@ class Utils:
                 case 0:
                     converted_experience = "Нет опыта"
                 case 1 | 2 | 3:
-                    converted_experience = "от 1 до 3 лет"
+                    converted_experience = "от 1 года до 3 лет"
                 case 4 | 5 | 6:
                     converted_experience = "от 3 до 6 лет"
                 case _ if experience > 6:
