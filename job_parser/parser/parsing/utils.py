@@ -72,20 +72,20 @@ class Utils:
                 case 0 | 1:
                     converted_experience = "Нет опыта"
                 case 2:
-                    converted_experience = "от 1 года до 3 лет"
+                    converted_experience = "От 1 года до 3 лет"
                 case 3:
-                    converted_experience = "от 3 до 6 лет"
+                    converted_experience = "От 3 до 6 лет"
                 case 4:
-                    converted_experience = "от 6 лет"
+                    converted_experience = "От 6 лет"
         elif job_board == "Trudvsem":
             match experience:
                 case 0:
                     converted_experience = "Нет опыта"
                 case 1 | 2 | 3:
-                    converted_experience = "от 1 года до 3 лет"
+                    converted_experience = "От 1 года до 3 лет"
                 case 4 | 5 | 6:
-                    converted_experience = "от 3 до 6 лет"
+                    converted_experience = "От 3 до 6 лет"
                 case _ if experience > 6:
-                    converted_experience = "от 6 лет"
+                    converted_experience = "От 6 лет"
                     
         return converted_experience
