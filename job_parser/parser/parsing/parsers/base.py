@@ -72,7 +72,7 @@ class Parser(abc.ABC):
             vacancy_data (Vacancy): Объект с данными о вакансии.
         """
         vacancy_list: list[dict] = await self.get_vacancies()
-
+        vacancy_data = None
         for vacancy in vacancy_list:
             vacancy_data = Vacancy(
                 job_board=self.job_board,
