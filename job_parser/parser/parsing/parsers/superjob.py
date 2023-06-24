@@ -79,7 +79,10 @@ class SuperJob(Parser):
             str | None: Минимальная зарплата по вакансии или None, если зарплата
             отсутствует.
         """
-        return vacancy.get("payment_from", None)
+        salary_from = vacancy.get("payment_from", None)
+        if int(salary_from) == 0:
+            salary_from = None
+        return salary_from
 
     async def get_salary_to(self, vacancy: dict) -> str | None:
         """
@@ -94,7 +97,10 @@ class SuperJob(Parser):
             str | None: Максимальная зарплата по вакансии или None, если зарплата
             отсутствует.
         """
-        return vacancy.get("payment_to", None)
+        salary_to = vacancy.get("payment_to", None)
+        if int(salary_to) == 0:
+            salary_to = None
+        return salary_to
 
     async def get_salary_currency(self, vacancy: dict) -> str | None:
         """

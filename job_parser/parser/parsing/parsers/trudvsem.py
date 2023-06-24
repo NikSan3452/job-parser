@@ -92,7 +92,10 @@ class Trudvsem(Parser):
             отсутствует.
         """
         vacancy = vacancy.get("vacancy", None)
-        return vacancy.get("salary_min", None) if vacancy else None
+        salary_from = vacancy.get("salary_min", None)
+        if int(salary_from) == 0:
+            salary_from = None
+        return salary_from
 
     async def get_salary_to(self, vacancy: dict) -> str | None:
         """
