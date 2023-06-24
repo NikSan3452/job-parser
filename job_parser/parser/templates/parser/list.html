@@ -139,13 +139,13 @@
                                 </li>
                             {% endif %}
                             {% for page in page_obj.paginator.page_range %}
-                                <li class="page-item {% if page == object_list.number %} active {% endif %}">
+                                <li class="page-item {% if page == page_obj.number %} active {% endif %}">
                                     <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page }}">{{ page }}</a>
                                 </li>
                             {% endfor %}
                             {% if page_obj.has_next %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ object_list.next_page_number }}" aria-label="Next">
+                                    <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_obj.next_page_number }}" aria-label="Next">
                                         <span aria-hidden="true">&raquo;</span>
                                     </a>
                                 </li>
