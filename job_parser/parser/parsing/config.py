@@ -36,7 +36,7 @@ class ParserConfig:
     sj_domain: str = "https://api.superjob.ru"
     sj_api_version: str = "2.0"
     sj_api_path: str = "vacancies"
-    sj_secret_keys_list: list[str] = field(default_factory=list)
+    sj_secret_key: str = os.getenv("SUPERJOB_SECRET_KEY1", "")
     sj_url: str = f"{sj_domain}/{sj_api_version}/{sj_api_path}/"
     sj_pages: int = 5
     sj_items: str = "objects"
@@ -60,11 +60,11 @@ class ParserConfig:
         """
         Метод для обновления заголовков запроса.
 
-        Метод принимает на вход URL и возвращает словарь с заголовками запроса. 
+        Метод принимает на вход URL и возвращает словарь с заголовками запроса.
         Метод создает пустой словарь `headers`, затем проверяет, равен ли переданный URL
-        значению атрибута `sj_url`. Если это так, то в словарь `headers` добавляется 
-        пара ключ-значение, где ключ равен "x-api-app-id", а значение выбирается 
-        случайным образом из списка секретных ключей (атрибут `sj_secret_keys_list`). 
+        значению атрибута `sj_url`. Если это так, то в словарь `headers` добавляется
+        пара ключ-значение, где ключ равен "x-api-app-id", а значение выбирается
+        случайным образом из списка секретных ключей (атрибут `sj_secret_keys_list`).
         В конце работы метода возвращается словарь с заголовками запроса.
 
         Args:
@@ -76,14 +76,14 @@ class ParserConfig:
         headers = {}
         # headers.update({"User-Agent": self.ua.random})
         if url == self.sj_url:
-            headers.update({"x-api-app-id": random.choice(self.sj_secret_keys_list)})
+            headers.update({"x-api-app-id": self.sj_secret_key})
         return headers
 
     async def set_delay(self) -> None:
         """
         Асинхронный метод для установки задержки между запросами.
 
-        Метод устанавливает задержку между запросами на время, равное значению атрибута 
+        Метод устанавливает задержку между запросами на время, равное значению атрибута
         `delay`, с помощью функции `sleep` модуля `asyncio`.
 
         Returns:
@@ -106,13 +106,6 @@ class ParserConfig:
                 "date_to": datetime.date.today(),
             }
         )
-        self.sj_secret_keys_list.extend(
-            [
-                os.getenv("SUPERJOB_SECRET_KEY1", ""),
-                os.getenv("SUPERJOB_SECRET_KEY2", ""),
-                os.getenv("SUPERJOB_SECRET_KEY3", ""),
-            ]
-        )
         self.sj_params.update(
             {
                 "count": 100,
@@ -131,10 +124,10 @@ class ParserConfig:
         """
         Метод для получения начальной даты для SuperJob.
 
-        Получает текущую дату с помощью метода `today` класса `date` модуля `datetime`, 
-        затем создает объект `datetime` с началом текущего дня с помощью метода 
-        `combine` класса `datetime`. Затем метод получает timestamp начала текущего дня 
-        с помощью метода `timestamp` и преобразует его в целое число. 
+        Получает текущую дату с помощью метода `today` класса `date` модуля `datetime`,
+        затем создает объект `datetime` с началом текущего дня с помощью метода
+        `combine` класса `datetime`. Затем метод получает timestamp начала текущего дня
+        с помощью метода `timestamp` и преобразует его в целое число.
         Полученное значение возвращается как результат работы метода.
 
         Returns:
@@ -150,9 +143,9 @@ class ParserConfig:
         """
         Метод для получения конечной даты для SuperJob.
 
-        Метод создает объект `datetime` с текущим временем с помощью метода `now` 
-        класса `datetime` модуля `datetime`, затем получает timestamp текущего времени 
-        с помощью метода `timestamp` и преобразует его в целое число. 
+        Метод создает объект `datetime` с текущим временем с помощью метода `now`
+        класса `datetime` модуля `datetime`, затем получает timestamp текущего времени
+        с помощью метода `timestamp` и преобразует его в целое число.
         Полученное значение возвращается как результат работы метода.
 
         Returns:
@@ -167,9 +160,9 @@ class ParserConfig:
         Метод для получения начальной даты для Trudvsem.
 
         Метод получает текущую дату, вычитает из нее 1 день с помощью метода `timedelta`
-        класса `timedelta` модуля `datetime`, затем создает объект `datetime` с началом 
-        предыдущего дня с помощью метода `combine`. Затем метод преобразует объект 
-        `datetime` в строку в формате "YYYY-MM-DDTHH:MM:SSZ" с помощью метода 
+        класса `timedelta` модуля `datetime`, затем создает объект `datetime` с началом
+        предыдущего дня с помощью метода `combine`. Затем метод преобразует объект
+        `datetime` в строку в формате "YYYY-MM-DDTHH:MM:SSZ" с помощью метода
         `strftime`. Полученная строка возвращается как результат работы метода.
 
         Returns:
@@ -184,9 +177,9 @@ class ParserConfig:
         """
         Метод для получения конечной даты для Trudvsem.
 
-        Метод создает объект `datetime` с текущим временем с помощью метода `now` 
-        класса `datetime` модуля `datetime`, затем преобразует его в строку в формате 
-        "YYYY-MM-DDTHH:MM:SSZ" с помощью метода `strftime`. 
+        Метод создает объект `datetime` с текущим временем с помощью метода `now`
+        класса `datetime` модуля `datetime`, затем преобразует его в строку в формате
+        "YYYY-MM-DDTHH:MM:SSZ" с помощью метода `strftime`.
         Полученная строка возвращается как результат работы метода.
 
         Returns:
