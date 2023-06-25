@@ -5,25 +5,28 @@ class SearchingForm(forms.Form):
     """
     Класс для формы поиска вакансий.
 
-    Класс наследуется от класса `Form` модуля `forms` и содержит поля для ввода 
-    информации для поиска вакансий. Поля включают в себя название вакансии, город, 
-    даты начала и конца поиска, опыт работы, площадку для поиска, флажки для поиска 
+    Класс наследуется от класса `Form` модуля `forms` и содержит поля для ввода
+    информации для поиска вакансий. Поля включают в себя название вакансии, город,
+    даты начала и конца поиска, опыт работы, площадку для поиска, флажки для поиска
     в заголовках вакансий и удаленной работы.
 
     Attributes:
-        exp_values (tuple[tuple[str, str], ...]): Кортеж с кортежами из двух строк с 
+        exp_values (tuple[tuple[str, str], ...]): Кортеж с кортежами из двух строк с
         возможными значениями опыта работы.
-        job_board_values (tuple[tuple[str, str], ...]): Кортеж с кортежами из двух 
+        job_board_values (tuple[tuple[str, str], ...]): Кортеж с кортежами из двух
         строк с возможными значениями площадок для поиска.
         title (CharField): Поле для ввода названия вакансии.
         city (CharField): Поле для ввода города.
         date_from (DateField): Поле для выбора даты начала поиска.
         date_to (DateField): Поле для выбора даты конца поиска.
+        salary_from (DecimalField): Поле для выбора минимального диапазона зарплаты.
+        salary_to (DecimalField): Поле для выбора максимального диапазона зарплаты.
         experience (MultipleChoiceField): Поле для выбора опыта работы.
         job_board (MultipleChoiceField): Поле для выбора площадки для поиска.
         title_search (BooleanField): Флажок для поиска в заголовках вакансий.
         remote (BooleanField): Флажок для поиска удаленной работы.
     """
+
     exp_values = (
         ("Не имеет значения", "Не имеет значения"),
         ("Нет опыта", "Нет опыта"),
@@ -64,6 +67,12 @@ class SearchingForm(forms.Form):
         required=False,
         widget=forms.DateInput(format="%d/%m/%Y", attrs={"type": "date"}),
     )
+    salary_from = forms.DecimalField(
+        label="Зарплата от:", initial=0, required=False, widget=forms.NumberInput
+    )
+    salary_to = forms.DecimalField(
+        label="Зарплата до:", initial=300000, required=False, widget=forms.NumberInput
+    )
     experience = forms.MultipleChoiceField(
         label="Опыт работы",
         initial=exp_values[0],
@@ -87,3 +96,29 @@ class SearchingForm(forms.Form):
     remote = forms.BooleanField(
         label="Удаленная работа", required=False, widget=forms.CheckboxInput
     )
+
+    def clean(self) -> dict:
+        """
+        Очищает и проверяет данные формы.
+
+        Этот метод вызывает метод `clean` родительского класса для очистки данных формы.
+        Затем он получает значения полей `salary_from` и `salary_to`. 
+        Если значение `salary_to` меньше значения `salary_from`, то возникает ошибка 
+        проверки формы с сообщением об ошибке.
+
+        Args:
+            self: Экземпляр класса формы.
+
+        Returns:
+            dict: Очищенные данные формы.
+        """
+        cleaned_data = super().clean()
+        salary_from = cleaned_data.get("salary_from")
+        salary_to = cleaned_data.get("salary_to")
+
+        if salary_to < salary_from:
+            raise forms.ValidationError(
+                'Значение поля "Зарплата до" не может быть меньше значения поля "Зарплата от"'
+            )
+
+        return cleaned_data
