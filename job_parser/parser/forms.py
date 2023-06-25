@@ -1,5 +1,5 @@
 from django import forms
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class SearchingForm(forms.Form):
@@ -73,14 +73,14 @@ class SearchingForm(forms.Form):
         initial=0,
         required=False,
         widget=forms.NumberInput,
-        validators=[MinValueValidator(0)],
+        validators=[MinValueValidator(0), MaxValueValidator(1000000000)],
     )
     salary_to = forms.IntegerField(
         label="Зарплата до:",
         initial=300000,
         required=False,
         widget=forms.NumberInput,
-        validators=[MinValueValidator(0)],
+        validators=[MinValueValidator(0), MaxValueValidator(1000000000)],
     )
     experience = forms.MultipleChoiceField(
         label="Опыт работы",
