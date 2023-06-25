@@ -270,7 +270,7 @@ class Parser(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_salary_from(self, vacancy: dict) -> str | None:
+    async def get_salary_from(self, vacancy: dict) -> int | None:
         """
         Абстрактный асинхронный метод для получения минимальной зарплаты.
 
@@ -278,13 +278,13 @@ class Parser(abc.ABC):
             vacancy (dict): Словарь с информацией о вакансии.
 
         Returns:
-            str | None: Минимальная зарплата по вакансии или None, если зарплата
+            int | None: Минимальная зарплата по вакансии или None, если зарплата
             отсутствует.
         """
         pass
 
     @abc.abstractmethod
-    async def get_salary_to(self, vacancy: dict) -> str | None:
+    async def get_salary_to(self, vacancy: dict) -> int | None:
         """
         Абстрактный асинхронный метод для получения максимальной зарплаты.
 
@@ -292,7 +292,7 @@ class Parser(abc.ABC):
             vacancy (dict): Словарь с информацией о вакансии.
 
         Returns:
-            str | None: Максимальная зарплата по вакансии или None, если зарплата
+            int | None: Максимальная зарплата по вакансии или None, если зарплата
             отсутствует.
         """
         pass
