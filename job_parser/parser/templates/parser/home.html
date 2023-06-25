@@ -15,12 +15,20 @@
             {{ form.date_from|as_crispy_field }}
             {{ form.date_to|as_crispy_field }}
             <div class="form-row">
-                {{ form.experience|as_crispy_field }}
-                {{ form.job_board|as_crispy_field }}
+                {{ form.title_search|as_crispy_field }}
+                {{ form.remote|as_crispy_field }}
             </div>
-            {{ form.title_search|as_crispy_field }}
-            {{ form.remote|as_crispy_field }}
-            <div class="row">
+            <div class="form-row">
+                <div class="form-experience">
+                    {{ form.salary_from|as_crispy_field }}
+                    {{ form.experience|as_crispy_field }}
+                </div>
+                <div class="form-job_board">
+                    {{ form.salary_to|as_crispy_field }}
+                    {{ form.job_board|as_crispy_field }}
+                </div>
+            </div>
+            <div class="row my-2">
                 <div class="col text-center">
                     <button type="submit" class="btn btn-primary">Найти</button>
                 </div>
