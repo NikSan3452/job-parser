@@ -126,7 +126,7 @@ class HabrParser(Scraper):
             match = re.search(r"от(\d+)", salary)
             if match:
                 salary_from = int(match.group(1))
-        return salary_from
+        return int(salary_from) if salary_from else None
 
     async def get_salary_to(self, soup: BeautifulSoup) -> int | None:
         """Извлекает максимальную зарплату из объекта BeautifulSoup.
@@ -154,7 +154,7 @@ class HabrParser(Scraper):
             match = re.search(r"до(\d+)", salary)
             if match:
                 salary_to = int(match.group(1))
-        return salary_to
+        return int(salary_to) if salary_to else None
 
     async def get_salary_currency(self, soup: BeautifulSoup) -> str | None:
         """Извлекает валюту зарплаты из объекта BeautifulSoup.

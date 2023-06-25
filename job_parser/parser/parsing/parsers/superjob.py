@@ -66,7 +66,7 @@ class SuperJob(Parser):
         """
         return vacancy.get("profession", None)
 
-    async def get_salary_from(self, vacancy: dict) -> str | None:
+    async def get_salary_from(self, vacancy: dict) -> int | None:
         """
         Асинхронный метод для получения минимальной зарплаты.
 
@@ -76,15 +76,15 @@ class SuperJob(Parser):
             vacancy (dict): Словарь с информацией о вакансии.
 
         Returns:
-            str | None: Минимальная зарплата по вакансии или None, если зарплата
+            int | None: Минимальная зарплата по вакансии или None, если зарплата
             отсутствует.
         """
         salary_from = vacancy.get("payment_from", None)
         if int(salary_from) == 0:
             salary_from = None
-        return salary_from
+        return int(salary_from) if salary_from else None
 
-    async def get_salary_to(self, vacancy: dict) -> str | None:
+    async def get_salary_to(self, vacancy: dict) -> int | None:
         """
         Асинхронный метод для получения максимальной зарплаты.
 
@@ -94,13 +94,13 @@ class SuperJob(Parser):
             vacancy (dict): Словарь с информацией о вакансии.
 
         Returns:
-            str | None: Максимальная зарплата по вакансии или None, если зарплата
+            int | None: Максимальная зарплата по вакансии или None, если зарплата
             отсутствует.
         """
         salary_to = vacancy.get("payment_to", None)
         if int(salary_to) == 0:
             salary_to = None
-        return salary_to
+        return int(salary_to) if salary_to else None
 
     async def get_salary_currency(self, vacancy: dict) -> str | None:
         """

@@ -67,7 +67,7 @@ class Headhunter(Parser):
         """
         return vacancy.get("name", None)
 
-    async def get_salary_from(self, vacancy: dict) -> str | None:
+    async def get_salary_from(self, vacancy: dict) -> int | None:
         """
         Асинхронный метод для получения минимальной зарплаты.
 
@@ -78,13 +78,16 @@ class Headhunter(Parser):
             vacancy (dict): Словарь с информацией о вакансии.
 
         Returns:
-            str | None: Минимальная зарплата по вакансии или None, если зарплата
+            int | None: Минимальная зарплата по вакансии или None, если зарплата
             отсутствует.
         """
         salary = vacancy.get("salary", None)
-        return salary.get("from", None) if salary else None
+        salary_from = salary.get("from", None) if salary else None
+        if salary_from:
+            salary_from = int(salary_from)
+        return salary_from
 
-    async def get_salary_to(self, vacancy: dict) -> str | None:
+    async def get_salary_to(self, vacancy: dict) -> int | None:
         """
         Асинхронный метод для получения максимальной зарплаты.
 
@@ -95,11 +98,14 @@ class Headhunter(Parser):
             vacancy (dict): Словарь с информацией о вакансии.
 
         Returns:
-            str | None: Максимальная зарплата по вакансии или None, если зарплата
+            int | None: Максимальная зарплата по вакансии или None, если зарплата
             отсутствует.
         """
         salary = vacancy.get("salary", None)
-        return salary.get("to", None) if salary else None
+        salary_to = salary.get("to", None) if salary else None
+        if salary_to:
+            salary_to = int(salary_to)
+        return salary_to
 
     async def get_salary_currency(self, vacancy: dict) -> str | None:
         """
