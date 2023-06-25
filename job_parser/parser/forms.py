@@ -1,4 +1,5 @@
 from django import forms
+from django.core.validators import MinValueValidator
 
 
 class SearchingForm(forms.Form):
@@ -67,11 +68,19 @@ class SearchingForm(forms.Form):
         required=False,
         widget=forms.DateInput(format="%d/%m/%Y", attrs={"type": "date"}),
     )
-    salary_from = forms.DecimalField(
-        label="Зарплата от:", initial=0, required=False, widget=forms.NumberInput
+    salary_from = forms.IntegerField(
+        label="Зарплата от:",
+        initial=0,
+        required=False,
+        widget=forms.NumberInput,
+        validators=[MinValueValidator(0)],
     )
-    salary_to = forms.DecimalField(
-        label="Зарплата до:", initial=300000, required=False, widget=forms.NumberInput
+    salary_to = forms.IntegerField(
+        label="Зарплата до:",
+        initial=300000,
+        required=False,
+        widget=forms.NumberInput,
+        validators=[MinValueValidator(0)],
     )
     experience = forms.MultipleChoiceField(
         label="Опыт работы",
@@ -102,8 +111,8 @@ class SearchingForm(forms.Form):
         Очищает и проверяет данные формы.
 
         Этот метод вызывает метод `clean` родительского класса для очистки данных формы.
-        Затем он получает значения полей `salary_from` и `salary_to`. 
-        Если значение `salary_to` меньше значения `salary_from`, то возникает ошибка 
+        Затем он получает значения полей `salary_from` и `salary_to`.
+        Если значение `salary_to` меньше значения `salary_from`, то возникает ошибка
         проверки формы с сообщением об ошибке.
 
         Args:
@@ -115,10 +124,10 @@ class SearchingForm(forms.Form):
         cleaned_data = super().clean()
         salary_from = cleaned_data.get("salary_from")
         salary_to = cleaned_data.get("salary_to")
-
-        if salary_to < salary_from:
-            raise forms.ValidationError(
-                'Значение поля "Зарплата до" не может быть меньше значения поля "Зарплата от"'
-            )
+        if salary_from and salary_to:
+            if salary_to < salary_from:
+                raise forms.ValidationError(
+                    'Значение поля "Зарплата до" не может быть меньше значения поля "Зарплата от"'
+                )
 
         return cleaned_data
