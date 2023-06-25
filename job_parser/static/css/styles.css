@@ -235,10 +235,17 @@ pre {
 .form-row {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: start;
 }
 
-.form-row .form-group {
+.form-experience .form-group {
     width: 50%;
+}
+
+.form-salary {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: start;
 }
