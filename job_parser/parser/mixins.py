@@ -377,7 +377,7 @@ class VacanciesMixin:
         Returns:
             str | None: Строка с названием вакансии или `None`.
         """
-        title: str = form_data.get("title", None)
+        title = form_data.get("title", None)
         return title.strip() if title else None
 
     def get_city(self, form_data: dict) -> str | None:
@@ -397,7 +397,7 @@ class VacanciesMixin:
         Returns:
             str | None: Строка с городом или `None`.
         """
-        city: str = form_data.get("city", None)
+        city = form_data.get("city", None)
         return city.lower().strip() if city else None
 
     def get_date_from(self, form_data: dict) -> str | None:
@@ -453,7 +453,7 @@ class VacanciesMixin:
         Returns:
             str | None: Строка с датой конца поиска или `None`.
         """
-        salary_from: int = form_data.get("salary_from", None)
+        salary_from = form_data.get("salary_from", None)
         return int(salary_from) if salary_from else 1
 
     def get_salary_to(self, form_data: dict) -> int:
@@ -469,7 +469,7 @@ class VacanciesMixin:
         Returns:
             str | None: Строка с датой конца поиска или `None`.
         """
-        salary_from: int = form_data.get("salary_to", None)
+        salary_from = form_data.get("salary_to", None)
         return int(salary_from) if salary_from else 100000000
 
     def get_experience(self, form_data: dict) -> str | None:
