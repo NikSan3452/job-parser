@@ -33,8 +33,8 @@ class JobParser:
 
     def __init__(self) -> None:
         self.hh = Headhunter(config)
-        self.sj = SuperJob(config)
         self.zp = Zarplata(config)
+        self.sj = SuperJob(config)
         self.tv = Trudvsem(config)
 
     async def parse_vacancies(self) -> None:
