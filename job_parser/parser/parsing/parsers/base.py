@@ -14,18 +14,18 @@ setup_logging()
 @dataclass
 class Vacancy:
     job_board: str
-    url: str
-    title: str
-    salary_from: int
-    salary_to: int
-    salary_currency: str
-    city: str
-    company: str
-    employment: str
-    experience: str
-    published_at: str
-    description: str = ""
-    schedule: str = ""
+    url: str | None
+    title: str | None
+    salary_from: int | None
+    salary_to: int | None
+    salary_currency: str | None
+    city: str | None
+    company: str | None
+    employment: str | None
+    experience: str | None
+    published_at: datetime.date | None
+    description: str | None = ""
+    schedule: str | None = ""
     remote: bool = False
 
 class Parser(abc.ABC):
@@ -56,7 +56,7 @@ class Parser(abc.ABC):
         self.pages = getattr(config, f"{parser}_pages")
         self.items = getattr(config, f"{parser}_items")
 
-    async def vacancy_parsing(self) -> Vacancy:
+    async def vacancy_parsing(self) -> Vacancy | None:
         """
         Асинхронный метод для парсинга вакансий.
 
@@ -379,7 +379,7 @@ class Parser(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_remote(self) -> bool:
+    async def get_remote(self, schedule: str | None) -> bool:
         """
         Абстрактный асинхронный метод для получения удаленной работы.
 

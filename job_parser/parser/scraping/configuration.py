@@ -27,6 +27,7 @@ class Config:
 
     def __post_init__(self) -> dict:
         self.headers = {"User-Agent": self.ua.random}
+        return self.headers
 
     def update_headers(self) -> dict:
         """Обновляет заголовки запроса.

@@ -5,7 +5,7 @@ from logger import setup_logging
 
 from ..config import ParserConfig
 from ...utils import Utils
-from .base import Parser
+from .base import Parser, Vacancy
 
 # Логирование
 setup_logging()
@@ -27,7 +27,7 @@ class Headhunter(Parser):
     def __init__(self, config: ParserConfig, parser: str = "hh") -> None:
         super().__init__(config, parser)
 
-    async def parsing_vacancy_headhunter(self) -> dict:
+    async def parsing_vacancy_headhunter(self) -> Vacancy | None:
         """
         Асинхронный метод для парсинга вакансий с сайта HeadHunter.
 
@@ -214,7 +214,7 @@ class Headhunter(Parser):
         await self.get_remote(schedule)
         return schedule
 
-    async def get_remote(self, schedule: str) -> bool:
+    async def get_remote(self, schedule: str | None) -> bool:
         """
         Асинхронный метод для определения удаленной работы.
 

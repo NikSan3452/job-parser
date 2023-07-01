@@ -5,7 +5,7 @@ from logger import setup_logging
 
 from ..config import ParserConfig
 from ...utils import Utils
-from .base import Parser
+from .base import Parser, Vacancy
 
 # Логирование
 setup_logging()
@@ -33,7 +33,7 @@ class Trudvsem(Parser):
         """
         super().__init__(config, "tv")
 
-    async def parsing_vacancy_trudvsem(self) -> dict:
+    async def parsing_vacancy_trudvsem(self) -> Vacancy | None:
         """
         Асинхронный метод для парсинга вакансий с сайта Trudvsem.
 
@@ -232,7 +232,7 @@ class Trudvsem(Parser):
         await self.get_remote(schedule)
         return schedule
 
-    async def get_remote(self, schedule: str) -> bool:
+    async def get_remote(self, schedule: str | None) -> bool:
         """
         Асинхронный метод для определения удаленной работы.
 

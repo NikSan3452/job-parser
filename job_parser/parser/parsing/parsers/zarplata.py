@@ -3,6 +3,7 @@ from logger import setup_logging
 from ..config import ParserConfig
 from ...utils import Utils
 from .headhunter import Headhunter
+from .base import Vacancy
 
 # Логирование
 setup_logging()
@@ -23,7 +24,7 @@ class Zarplata(Headhunter):
     def __init__(self, config: ParserConfig) -> None:
         super().__init__(config, "zp")
 
-    async def parsing_vacancy_zarplata(self) -> dict:
+    async def parsing_vacancy_zarplata(self) -> Vacancy | None:
         """
         Асинхронный метод для парсинга вакансий с сайта Zarplata.
 

@@ -38,16 +38,16 @@ class RequestParams:
         title_search (str): Строка с флажком поиска в заголовках вакансий.
     """
 
-    title: str
-    city: str
-    date_from: str
-    date_to: str
-    salary_from: int
-    salary_to: int
-    experience: str
-    job_board: str
-    remote: str
-    title_search: str
+    title: str | None
+    city: str | None
+    date_from: str | None
+    date_to: str | None
+    salary_from: int | None
+    salary_to: int | None
+    experience: str | None
+    job_board: str | None
+    remote: bool | None
+    title_search: bool | None
 
 
 class AsyncLoginRequiredMixin(AccessMixin):
@@ -416,7 +416,7 @@ class VacanciesMixin:
         Returns:
             str | None: Строка с датой начала поиска или `None`.
         """
-        date_from: str = form_data.get("date_from", None)
+        date_from = form_data.get("date_from", None)
         date_from = utils.check_date_from(date_from)
         return date_from
 
@@ -436,7 +436,7 @@ class VacanciesMixin:
         Returns:
             str | None: Строка с датой конца поиска или `None`.
         """
-        date_to: str = form_data.get("date_to", None)
+        date_to = form_data.get("date_to", None)
         date_to = utils.check_date_to(date_to)
         return date_to
 
@@ -488,7 +488,7 @@ class VacanciesMixin:
         Returns:
             str | None: Строка с опытом работы или `None`.
         """
-        experience: str = form_data.get("experience", None)
+        experience = form_data.get("experience", None)
         if experience == ["Не имеет значения"]:
             experience = None
         return experience
@@ -509,7 +509,7 @@ class VacanciesMixin:
         Returns:
             bool | None: Булево значение флажка удаленной работы или `None`.
         """
-        remote: str = form_data.get("remote", None)
+        remote = form_data.get("remote", None)
         return bool(remote) if remote else None
 
     def get_job_board(self, form_data: dict) -> str | None:
@@ -533,7 +533,7 @@ class VacanciesMixin:
             job_board = None
         return job_board
 
-    def get_title_search(self, form_data: dict) -> str | None:
+    def get_title_search(self, form_data: dict) -> bool | None:
         """
         Метод для получения флажка поиска в заголовках вакансий из данных формы.
 

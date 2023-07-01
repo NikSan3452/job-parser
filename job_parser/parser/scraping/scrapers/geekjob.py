@@ -198,7 +198,7 @@ class GeekjobParser(Scraper):
             company = company_name.find("a").text.strip()
         return company
 
-    async def get_experience(self, soup: BeautifulSoup) -> str:
+    async def get_experience(self, soup: BeautifulSoup) -> str | None:
         """Извлекает требуемый опыт работы из объекта BeautifulSoup.
 
         Ищет тег `span` с классом `jobformat` на странице и анализирует его текстовое

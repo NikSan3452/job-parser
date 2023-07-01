@@ -183,7 +183,7 @@ class Scraper(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_experience(self, soup: BeautifulSoup) -> str:
+    async def get_experience(self, soup: BeautifulSoup) -> str | None:
         """Извлекает требуемый опыт работы со страницы вакансии.
 
         Args:
