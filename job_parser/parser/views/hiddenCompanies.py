@@ -7,7 +7,7 @@ from logger import logger, setup_logging
 
 from parser.mixins import AsyncLoginRequiredMixin
 from parser.models import HiddenCompanies
-from parser.parsing.utils import Utils
+from parser.utils import Utils
 
 # Логирование
 setup_logging()
