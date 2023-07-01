@@ -4,7 +4,7 @@ import re
 from logger import setup_logging
 
 from ..config import ParserConfig
-from ..utils import Utils
+from ...utils import Utils
 from .base import Parser
 
 # Логирование
