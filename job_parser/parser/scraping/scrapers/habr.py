@@ -3,6 +3,7 @@ import re
 from parser.scraping.configuration import Config
 from parser.scraping.fetching import Fetcher
 from parser.scraping.scrapers.base import Scraper
+from parser.utils import Utils
 
 import aiohttp
 from bs4 import BeautifulSoup
@@ -10,10 +11,12 @@ from logger import setup_logging
 
 setup_logging()
 
+utils = Utils()
+
 
 class HabrParser(Scraper):
-    """Класс HabrParser предназначен для извлечения информации о вакансиях с сайта 
-    career.habr.com. Наследуется от базового класса Scraper. 
+    """Класс HabrParser предназначен для извлечения информации о вакансиях с сайта
+    career.habr.com. Наследуется от базового класса Scraper.
 
     Args:
         config (Config): Объект класса Config, содержит настройки для парсера.
@@ -42,7 +45,7 @@ class HabrParser(Scraper):
     async def get_title(self, soup: BeautifulSoup) -> str:
         """Извлекает название вакансии из объекта BeautifulSoup.
 
-        Ищет тег `h1` с классом `page-title__title` на странице и возвращает его 
+        Ищет тег `h1` с классом `page-title__title` на странице и возвращает его
         текстовое содержимое. Если тег не найден, возвращает строку "Не указано".
 
         Args:
@@ -61,7 +64,7 @@ class HabrParser(Scraper):
     async def get_description(self, soup: BeautifulSoup) -> str:
         """Извлекает описание вакансии из объекта BeautifulSoup.
 
-        Ищет элемент с классом `vacancy-description__text` на странице и возвращает 
+        Ищет элемент с классом `vacancy-description__text` на странице и возвращает
         его HTML-код. Если элемент не найден, возвращает строку "Не указано".
 
         Args:
@@ -80,8 +83,8 @@ class HabrParser(Scraper):
     async def get_city(self, soup: BeautifulSoup) -> str:
         """Извлекает город вакансии из объекта BeautifulSoup.
 
-        Ищет тег `a` с атрибутом `href`, содержащим подстроку `/vacancies?city_id=` 
-        на странице и возвращает его текстовое содержимое. Если тег не найден, 
+        Ищет тег `a` с атрибутом `href`, содержащим подстроку `/vacancies?city_id=`
+        на странице и возвращает его текстовое содержимое. Если тег не найден,
         возвращает строку "Не указано".
 
         Args:
@@ -103,9 +106,9 @@ class HabrParser(Scraper):
     async def get_salary_from(self, soup: BeautifulSoup) -> int | None:
         """Извлекает минимальную зарплату из объекта BeautifulSoup.
 
-        Ищет тег `div` с классом `basic-salary basic-salary--appearance-vacancy-header` 
-        на странице и извлекает из его текстового содержимого минимальную зарплату с 
-        помощью регулярного выражения. Если тег не найден или информация о зарплате 
+        Ищет тег `div` с классом `basic-salary basic-salary--appearance-vacancy-header`
+        на странице и извлекает из его текстового содержимого минимальную зарплату с
+        помощью регулярного выражения. Если тег не найден или информация о зарплате
         отсутствует, возвращает None.
 
         Args:
@@ -131,9 +134,9 @@ class HabrParser(Scraper):
     async def get_salary_to(self, soup: BeautifulSoup) -> int | None:
         """Извлекает максимальную зарплату из объекта BeautifulSoup.
 
-        Ищет тег `div` с классом `basic-salary basic-salary--appearance-vacancy-header` 
-        на странице и извлекает из его текстового содержимого максимальную зарплату с 
-        помощью регулярного выражения. Если тег не найден или информация о зарплате 
+        Ищет тег `div` с классом `basic-salary basic-salary--appearance-vacancy-header`
+        на странице и извлекает из его текстового содержимого максимальную зарплату с
+        помощью регулярного выражения. Если тег не найден или информация о зарплате
         отсутствует, возвращает None.
 
         Args:
@@ -159,8 +162,8 @@ class HabrParser(Scraper):
     async def get_salary_currency(self, soup: BeautifulSoup) -> str | None:
         """Извлекает валюту зарплаты из объекта BeautifulSoup.
 
-        Ищет тег `div` с классом `basic-salary basic-salary--appearance-vacancy-header` 
-        на странице и извлекает из его текстового содержимого символ валюты. Если тег 
+        Ищет тег `div` с классом `basic-salary basic-salary--appearance-vacancy-header`
+        на странице и извлекает из его текстового содержимого символ валюты. Если тег
         не найден или информация о зарплате отсутствует, возвращает None.
 
         Args:
@@ -180,14 +183,15 @@ class HabrParser(Scraper):
             for symbol in ["₽", "€", "$", "₴", "₸"]:
                 if symbol in salary:
                     currency = symbol
+                    currency = utils.convert_currency(currency)
                     break
         return currency
 
     async def get_company(self, soup: BeautifulSoup) -> str:
         """Извлекает название компании из объекта BeautifulSoup.
 
-        Ищет тег `div` с классом `company_name` на странице и возвращает текстовое 
-        содержимое его дочернего тега `a`. Если тег не найден, возвращает строку 
+        Ищет тег `div` с классом `company_name` на странице и возвращает текстовое
+        содержимое его дочернего тега `a`. Если тег не найден, возвращает строку
         "Не указано".
 
         Args:
@@ -206,9 +210,9 @@ class HabrParser(Scraper):
     async def get_experience(self, soup: BeautifulSoup) -> str:
         """Извлекает требуемый опыт работы из объекта BeautifulSoup.
 
-        Ищет тег `a` с атрибутом `href`, содержащим подстроку `/vacancies?qid=` на 
-        странице и анализирует его текстовое содержимое. В зависимости от текста 
-        возвращает строку с требуемым опытом работы. Если тег не найден или информация 
+        Ищет тег `a` с атрибутом `href`, содержащим подстроку `/vacancies?qid=` на
+        странице и анализирует его текстовое содержимое. В зависимости от текста
+        возвращает строку с требуемым опытом работы. Если тег не найден или информация
         отсутствует, возвращает строку "Нет опыта".
 
         Args:
@@ -243,10 +247,10 @@ class HabrParser(Scraper):
     async def get_schedule(self, soup: BeautifulSoup) -> str:
         """Извлекает график работы из объекта BeautifulSoup.
 
-        Ищет все элементы текста на странице, содержащие подстроки 
-        "Полный рабочий день", "Неполный рабочий день" или "Можно удаленно", и 
-        объединяет их в строку с разделителем ", ". Возвращает полученную строку. 
-        Если элементы не найдены или информация отсутствует, возвращает строку 
+        Ищет все элементы текста на странице, содержащие подстроки
+        "Полный рабочий день", "Неполный рабочий день" или "Можно удаленно", и
+        объединяет их в строку с разделителем ", ". Возвращает полученную строку.
+        Если элементы не найдены или информация отсутствует, возвращает строку
         "Не указано".
 
         Args:
@@ -273,8 +277,8 @@ class HabrParser(Scraper):
     async def get_remote(self) -> bool:
         """Определяет, является ли вакансия удаленной.
 
-        Анализирует строку с графиком работы, полученную методом get_schedule. 
-        Если в строке присутствует подстрока "Можно удаленно", возвращает True. 
+        Анализирует строку с графиком работы, полученную методом get_schedule.
+        Если в строке присутствует подстрока "Можно удаленно", возвращает True.
         В противном случае возвращает False.
 
         Returns:
@@ -286,19 +290,18 @@ class HabrParser(Scraper):
                 return True
         return False
 
-
     async def get_published_at(self, soup: BeautifulSoup) -> datetime.date | None:
         """Извлекает дату публикации вакансии из объекта BeautifulSoup.
 
-        Ищет тег `time` на странице и анализирует значение его атрибута `datetime`. 
-        Преобразует значение атрибута в объект datetime.date и возвращает его. 
+        Ищет тег `time` на странице и анализирует значение его атрибута `datetime`.
+        Преобразует значение атрибута в объект datetime.date и возвращает его.
         Если тег не найден или информация отсутствует, возвращает None.
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
         Returns:
-            datetime.date | None: Дата публикации вакансии или None, если информация 
+            datetime.date | None: Дата публикации вакансии или None, если информация
             отсутствует.
 
         """

@@ -3,12 +3,15 @@ import re
 from parser.scraping.configuration import Config
 from parser.scraping.fetching import Fetcher
 from parser.scraping.scrapers.base import Scraper
+from parser.utils import Utils
 
 import aiohttp
 from bs4 import BeautifulSoup
 from logger import setup_logging
 
 setup_logging()
+
+utils = Utils()
 
 
 class GeekjobParser(Scraper):
@@ -170,7 +173,9 @@ class GeekjobParser(Scraper):
             for symbol in ["₽", "€", "$", "₴", "₸"]:
                 if symbol in salary:
                     currency = symbol
+                    currency = utils.convert_currency(currency)
                     break
+
         return currency
 
     async def get_company(self, soup: BeautifulSoup) -> str:
@@ -327,5 +332,7 @@ class GeekjobParser(Scraper):
                 en_date_str = f"{ru_date_str[0]} {months[ru_date_str[1]]} {datetime.datetime.today().year}"
 
         date_obj = datetime.datetime.strptime(en_date_str, "%d %B %Y").date()
+
+        return date_obj
 
         return date_obj
