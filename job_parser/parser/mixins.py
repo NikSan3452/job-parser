@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from parser.forms import SearchingForm
 from parser.models import BlackList, Favourite, HiddenCompanies, Vacancies
-from parser.parsing.utils import Utils
+from parser.utils import Utils
 from typing import Any, Awaitable
 
 from django.contrib.auth.mixins import AccessMixin
