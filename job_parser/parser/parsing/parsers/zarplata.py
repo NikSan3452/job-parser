@@ -1,7 +1,7 @@
 from logger import setup_logging
 
 from ..config import ParserConfig
-from ..utils import Utils
+from ...utils import Utils
 from .headhunter import Headhunter
 
 # Логирование
