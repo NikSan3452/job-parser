@@ -4,7 +4,7 @@ import re
 from logger import setup_logging
 
 from ..config import ParserConfig
-from ..utils import Utils
+from ...utils import Utils
 from .base import Parser
 
 # Логирование
@@ -114,7 +114,10 @@ class SuperJob(Parser):
         Returns:
             str | None: Валюта зарплаты по вакансии или None, если зарплата отсутствует.
         """
-        return vacancy.get("currency", None)
+        currency = vacancy.get("currency", None)
+        if currency:
+            currency = utils.convert_currency(currency)
+        return currency
 
     async def get_description(self, vacancy: dict) -> str:
         """
