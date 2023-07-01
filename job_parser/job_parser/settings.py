@@ -178,12 +178,6 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
-# Redis Cache
-REDIS_HOST = os.getenv("REDIS_HOST")
-REDIS_PORT = os.getenv("REDIS_PORT")
-
-CACHE = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=0)
-
 # Huey
 DOWNLOAD_DELAY = os.getenv("DOWNLOAD_DELAY", 5)
 GEEKJOB_PAGES_COUNT = os.getenv("GEEKJOB_PAGES_COUNT", 5)
