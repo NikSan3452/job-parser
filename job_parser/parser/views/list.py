@@ -29,7 +29,7 @@ class VacancyListView(ListView, VacanciesMixin):
         get_context_data: Метод для получения контекста шаблона.
     """
     model = Vacancies
-    template_name = "parser/list.html"
+    template_name = "parser/vacancies.html"
     paginate_by = 5
     vacancies = None
 
