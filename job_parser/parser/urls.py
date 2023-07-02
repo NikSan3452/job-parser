@@ -20,7 +20,7 @@ from .views.list import VacancyListView
 
 urlpatterns = [
     path("", HomePageView.as_view(), name="home"),
-    path("list/", VacancyListView.as_view(), name="list"),
+    path("vacancies/", VacancyListView.as_view(), name="vacancies"),
     path("favourite/", AddToFavouritesView.as_view(), name="favourite"),
     path(
         "delete-favourite/",

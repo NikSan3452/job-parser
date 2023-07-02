@@ -18,7 +18,7 @@
 
 <div class="row justify-content-center">
     <div class="col-md-3 my-2">
-        <form action="{% url 'list' %}" method="get">
+        <form action="{% url 'vacancies' %}" method="get">
                 {% csrf_token %}
                 {{ form|crispy }}
             <div class="row justify-content-center">
