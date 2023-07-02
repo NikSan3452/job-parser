@@ -53,8 +53,7 @@ class VacancyListView(ListView, VacanciesMixin):
             QuerySet: Объект класса `QuerySet` с вакансиями.
         """
         form = SearchingForm(self.request.GET)
-        form_data = self.get_form_data(form)
-        vacancies = self.get_vacancies(form_data)
+        vacancies = self.get_vacancies(form)
         if self.request.user.is_authenticated:
             hidden_list = self.check_hidden_list(vacancies, self.request)
             filtered_list = self.check_blacklist(hidden_list, self.request)
