@@ -678,7 +678,8 @@ class VacanciesMixin:
             request (HttpRequest): Объект класса `HttpRequest` с запросом.
 
         Returns:
-            QuerySet | list: Объект класса `QuerySet` или список с избранными вакансиями.
+            QuerySet | list: Объект класса `QuerySet` или список с избранными 
+            вакансиями.
         """
         list_favourite: list = []
         try:
