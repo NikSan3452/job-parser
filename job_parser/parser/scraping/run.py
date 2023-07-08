@@ -21,8 +21,8 @@ class StartScrapers:
 
     def __init__(self, config: Config) -> None:
         self.config = config
-        self.geekjob_scraper = GeekjobScraper(self.config)
-        self.habr_scraper = HabrScraper(self.config)
+        self.geekjob = GeekjobScraper(self.config)
+        self.habr= HabrScraper(self.config)
 
     async def run_scrapers(self) -> asyncio.Future[list]:
         """Запускает скраперы сайтов поиска работы.
@@ -36,8 +36,8 @@ class StartScrapers:
         """
         tasks: list[asyncio.Future] = []
 
-        task1 = asyncio.create_task(self.geekjob_scraper.save())
-        task2 = asyncio.create_task(self.habr_scraper.save())
+        task1 = asyncio.create_task(self.geekjob.save())
+        task2 = asyncio.create_task(self.habr.save())
 
         tasks.append(task1)
         tasks.append(task2)
