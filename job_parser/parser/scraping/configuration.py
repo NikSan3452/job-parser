@@ -1,26 +1,27 @@
 from dataclasses import dataclass
-from django.conf import settings
+import os
+
 from fake_useragent import UserAgent
 
 
 @dataclass
 class Config:
     """Класс описывает конфигурацию парсеров."""
-
-    GEEKJOB_DOMAIN: str = "https://geekjob.ru"
-    GEEKJOB_URI: str = "vacancies"
-    GEEKJOB_URL: str = f"{GEEKJOB_DOMAIN}/{GEEKJOB_URI}/"
+    # GEEKJOB
+    geekjob_domain: str = "https://geekjob.ru"
+    geekjob_uri: str = "vacancies"
+    geekjob_url: str = f"{geekjob_domain}/{geekjob_uri}/"
     geekjob_job_board: str = "Geekjob"
+    geekjob_pages_count: int = int(os.getenv("GEEKJOB_PAGES_COUNT", 5))
 
-    HABR_DOMAIN: str = "https://career.habr.com"
-    HABR_URI: str = "vacancies?sort=date&type=all&page="
-    HABR_URL: str = f"{HABR_DOMAIN}/{HABR_URI}"
+    #HABR
+    habr_domain: str = "https://career.habr.com"
+    habr_uri: str = "vacancies?sort=date&type=all&page="
+    habr_url: str = f"{habr_domain}/{habr_uri}"
     habr_job_board: str = "Habr"
+    habr_pages_count: int = int(os.getenv("HABR_PAGES_COUNT", 10))
 
-    DOWNLOAD_DELAY: int = int(settings.DOWNLOAD_DELAY)
-
-    GEEKJOB_PAGES_COUNT: int = int(settings.GEEKJOB_PAGES_COUNT)
-    HABR_PAGES_COUNT: int = int(settings.HABR_PAGES_COUNT)
+    download_delay: int = int(os.getenv("DOWNLOAD_DELAY", 5))
 
     ua: UserAgent = UserAgent()
     headers: dict | None = None
@@ -32,7 +33,7 @@ class Config:
     def update_headers(self) -> dict:
         """Обновляет заголовки запроса.
 
-        Метод обновляет значение атрибута `headers` объекта, устанавливая новое 
+        Метод обновляет значение атрибута `headers` объекта, устанавливая новое
         значение для ключа `User-Agent`. Возвращает обновленный словарь заголовков.
 
         Returns:
