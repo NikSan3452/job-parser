@@ -1,11 +1,12 @@
 import asyncio
 import time
-from parser.scraping.configuration import Config
-from parser.scraping.scrapers.geekjob import GeekjobScraper
-from parser.scraping.scrapers.habr import HabrScraper
 
 from logger import setup_logging
 from loguru import logger
+
+from parser.scraping.configuration import Config
+from parser.scraping.scrapers.geekjob import GeekjobScraper
+from parser.scraping.scrapers.habr import HabrScraper
 
 setup_logging()
 
@@ -22,7 +23,7 @@ class StartScrapers:
     def __init__(self, config: Config) -> None:
         self.config = config
         self.geekjob = GeekjobScraper(self.config)
-        self.habr= HabrScraper(self.config)
+        self.habr = HabrScraper(self.config)
 
     async def run_scrapers(self) -> asyncio.Future[list]:
         """Запускает скраперы сайтов поиска работы.
