@@ -1,15 +1,14 @@
 import asyncio
-import inspect
-from parser.scraping.configuration import Config
-from typing import AsyncGenerator
+from typing import TYPE_CHECKING, AsyncGenerator
 
 import aiohttp
 from bs4 import BeautifulSoup
 from logger import logger, setup_logging
 
-setup_logging()
+if TYPE_CHECKING:
+    from parser.scraping.configuration import Config
 
-config = Config()
+setup_logging()
 
 
 class Fetcher:
@@ -23,20 +22,9 @@ class Fetcher:
         pages (int): Количество страниц для получения
     """
 
-    def __init__(self, url: str, pages: int, session: aiohttp.ClientSession) -> None:
-        """
-        Инициализация класса Fetcher.
-
-        При инициализации класса сохраняются переданные аргументы
-        в соответствующие атрибуты класса.
-
-        Args:
-            url (str): URL-адрес для получения данных
-            session (aiohttp.ClientSession): Сессия aiohttp для выполнения запросов
-            pages (int): Количество страниц
-        """
+    def __init__(self, config: "Config", url: str, pages: int) -> None:
+        self.config = config
         self.url = url
-        self.session = session
         self.pages = pages
 
     async def fetch(
@@ -52,7 +40,7 @@ class Fetcher:
         параметрами и заголовками.
         Перед отправкой запроса заголовки обновляются рандомным фейковым user-agent
         с помощью вызова функции `config.update_headers()`.
-        Затем выполняется GET-запрос с использованием асинхронного
+        Далее создается сессия и выполняется GET-запрос с использованием асинхронного
         контекстного менеджера.
         После получения ответа в лог записывается информация о заголовках
         и коде состояния ответа.
@@ -73,11 +61,14 @@ class Fetcher:
             или None в случае ошибки.
         """
         try:
-            headers.update(config.update_headers())  # fake-user-agent
-            async with self.session.get(
-                url, params=params, headers=headers
-            ) as response:
-                return await response.text(), str(response.url)
+            headers.update(self.config.update_headers())  # fake-user-agent
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    url,
+                    params=params,
+                    headers=headers,
+                ) as response:
+                    return await response.text(), str(response.url)
         except Exception as exc:
             return logger.exception(exc)
 
@@ -108,29 +99,70 @@ class Fetcher:
             task = asyncio.create_task(self.fetch(page_url))
             tasks.append(task)
 
-        caller_name = inspect.stack()[2].function  # Получаем имя вызывающей функции
-        logger.debug(f"Вызывающая функция {caller_name} запустила: {len(tasks)} задач")
-
         return await asyncio.gather(*tasks)
 
-    async def fetch_vacancy_links(self, board: str) -> list[str]:
+    async def fetch_vacancy_pages(self, links: list[str]) -> AsyncGenerator:
+        """
+        Асинхронный метод для получения данных со всех страниц вакансий.
+
+        В этом методе создается пустой список задач.
+        Затем выполняется цикл по всем переданным ссылкам на вакансии.
+        Для каждой ссылки выполняется ожидание с задержкой, заданной в конфигурации
+        `config.DOWNLOAD_DELAY`, и создается задача на получение данных со страницы
+        вакансии с помощью вызова метода `self.fetch(link)`.
+        Созданная задача добавляется в список задач.
+
+        После завершения цикла выполняется цикл по всем задачам с использованием функции
+        `asyncio.as_completed(tasks)`.
+        Внутри цикла выполняется ожидание завершения текущей задачи
+        и получение результата выполнения задачи.
+        Если результат выполнения задачи является кортежем, то он разбивается
+        на текст ответа и URL-адрес.
+        Если текст ответа или URL-адрес равны None, то выполнение текущей итерации
+        цикла прерывается.
+        В конце каждой итерации цикла с помощью оператора `yield` возвращается
+        кортеж с текстом ответа и URL-адресом.
+
+        Args:
+            links (list[str]): Список ссылок на вакансии
+
+        Returns:
+            AsyncGenerator: Асинхронный генератор, который возвращает кортежи
+            с текстом ответа и URL-адресом для каждой страницы вакансии.
+        """
+        tasks: list[asyncio.Future] = []
+
+        for link in links:
+            await asyncio.sleep(self.config.download_delay)
+            task = asyncio.create_task(self.fetch(link))
+            tasks.append(task)
+
+        # Проверяем, что вернет задача, если None то пропускаем,
+        # таким образом избавляемся от пустых и некорректных значений в БД
+        for task_ in asyncio.as_completed(tasks):
+            try:
+                text, url = await task_
+            except Exception as exc:
+                logger.exception(exc)
+            if text is None or url is None:
+                continue
+            yield (text, url)
+
+    async def get_vacancy_links(self, selector: str, domain: str) -> list[str]:
         """
         Асинхронный метод для получения ссылок на вакансии с указанной площадки.
 
-        В этом методе сначала вызывается метод `self.fetch_pagination_pages()` 
-        для получения данных со всех страниц пагинации. 
+        В этом методе сначала вызывается метод `self.fetch_pagination_pages()`
+        для получения данных со всех страниц пагинации.
         Затем создается пустой список ссылок.
 
-        Далее выполняется цикл по всем полученным страницам пагинации. 
-        Для каждой страницы создается объект `BeautifulSoup` для парсинга 
-        HTML-кода страницы. 
-        Затем выполняется проверка значения аргумента `board` и в зависимости 
-        от его значения выполняется поиск ссылок на вакансии на странице 
-        с использованием метода `find_all` объекта `BeautifulSoup`. 
+        Далее выполняется цикл по всем полученным страницам пагинации.
+        Для каждой страницы создается объект `BeautifulSoup` для парсинга
+        HTML-кода страницы.
+        Затем выполняется поиск ссылок на вакансии на странице
+        с использованием метода `find_all` объекта `BeautifulSoup`.
         Найденные ссылки добавляются в список ссылок.
 
-        После завершения цикла в лог записывается информация о количестве 
-        собранных ссылок. 
         В конце метода возвращается список собранных ссылок.
 
         Args:
@@ -144,62 +176,6 @@ class Fetcher:
 
         for html in html_pages:
             soup = BeautifulSoup(html[0], "lxml")
-            match board:
-                case "Geekjob":
-                    page_links = soup.find_all("a", class_="title")
-                    links += [
-                        config.GEEKJOB_DOMAIN + link.get("href") for link in page_links
-                    ]
-                case "Habr":
-                    page_links = soup.find_all("a", class_="vacancy-card__title-link")
-                    links += [
-                        config.HABR_DOMAIN + link.get("href") for link in page_links
-                    ]
+            page_links = soup.find_all("a", class_=selector)
+            links += [domain + link.get("href") for link in page_links]
         return links
-
-    async def fetch_vacancy_pages(self, links: list[str]) -> AsyncGenerator:
-        """
-        Асинхронный метод для получения данных со всех страниц вакансий.
-
-        В этом методе создается пустой список задач. 
-        Затем выполняется цикл по всем переданным ссылкам на вакансии. 
-        Для каждой ссылки выполняется ожидание с задержкой, заданной в конфигурации 
-        `config.DOWNLOAD_DELAY`, и создается задача на получение данных со страницы 
-        вакансии с помощью вызова метода `self.fetch(link)`. 
-        Созданная задача добавляется в список задач.
-
-        После завершения цикла выполняется цикл по всем задачам с использованием функции
-        `asyncio.as_completed(tasks)`. 
-        Внутри цикла выполняется ожидание завершения текущей задачи 
-        и получение результата выполнения задачи. 
-        Если результат выполнения задачи является кортежем, то он разбивается 
-        на текст ответа и URL-адрес. 
-        Если текст ответа или URL-адрес равны None, то выполнение текущей итерации 
-        цикла прерывается. 
-        В конце каждой итерации цикла с помощью оператора `yield` возвращается 
-        кортеж с текстом ответа и URL-адресом.
-
-        Args:
-            links (list[str]): Список ссылок на вакансии
-
-        Returns:
-            AsyncGenerator: Асинхронный генератор, который возвращает кортежи 
-            с текстом ответа и URL-адресом для каждой страницы вакансии.
-        """
-        tasks: list[asyncio.Future] = []
-
-        for link in links:
-            await asyncio.sleep(config.DOWNLOAD_DELAY)
-            task = asyncio.create_task(self.fetch(link))
-            tasks.append(task)
-
-        # Проверяем, что вернет задача, если None то пропускаем,
-        # таким образом избавляемся от пустых и некорректных значений в БД
-        for task_ in asyncio.as_completed(tasks):
-            try:
-                text, url = await task_
-            except TypeError as exc:
-                logger.exception(exc)
-            if text is None or url is None:
-                continue
-            yield (text, url)
