@@ -21,7 +21,8 @@ class StartScrapers:
 
     def __init__(self, config: Config) -> None:
         self.config = config
-        
+        self.geekjob_scraper = GeekjobScraper(self.config)
+        self.habr_scraper = HabrScraper(self.config)
 
     async def run_scrapers(self) -> asyncio.Future[list]:
         """Запускает скраперы сайтов поиска работы.
