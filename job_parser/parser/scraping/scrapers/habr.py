@@ -1,46 +1,36 @@
 import datetime
 import re
-from parser.scraping.configuration import Config
-from parser.scraping.fetching import Fetcher
+from parser.scraping.db import Database
 from parser.scraping.scrapers.base import Scraper
-from parser.utils import Utils
-
-import aiohttp
+from parser.scraping.configuration import Config
 from bs4 import BeautifulSoup
 from logger import setup_logging
 
 setup_logging()
 
-utils = Utils()
 
-
-class HabrParser(Scraper):
+class HabrScraper(Scraper):
     """Класс HabrParser предназначен для извлечения информации о вакансиях с сайта
     career.habr.com. Наследуется от базового класса Scraper.
-
-    Args:
-        config (Config): Объект класса Config, содержит настройки для парсера.
-        session (aiohttp.ClientSession): Объект сессии aiohttp.
-
     """
 
-    def __init__(self, config: Config, session: aiohttp.ClientSession) -> None:
-        self.job_board = config.habr_job_board
+    def __init__(self, config: Config) -> None:
         self.config = config
-        self.session = session
-        self.fetcher = Fetcher(config.HABR_URL, config.HABR_PAGES_COUNT, self.session)
-        super().__init__(self.fetcher, self.config, self.job_board)
+        self.db = Database(self, self.config.habr_fetcher)
+        super().__init__(self.config.habr_job_board)
 
-    async def save_habr_data(self) -> int:
+    async def save(self) -> None:
         """Сохраняет информацию о вакансиях с сайта career.habr.com в базе данных.
 
-        Вызывает метод save_data базового класса Scraper.
-
-        Returns:
-            int: Количество сохраненных вакансий.
-
+        Вначале вызывается метод `get_vacancy_links` класса Fetcher, в который
+        передаются HTML-селектор и домен сайта, в ответ возвращается список
+        ссылок на вакансии. Затем вызывается метод `record` класса Database,
+        который на основе полученных ссылок производит запись в базу.
         """
-        return await super().save_data()
+        links = await self.config.habr_fetcher.get_vacancy_links(
+            "vacancy-card__title-link", self.config.habr_domain
+        )
+        await self.db.record(links)
 
     async def get_title(self, soup: BeautifulSoup) -> str:
         """Извлекает название вакансии из объекта BeautifulSoup.
@@ -183,7 +173,7 @@ class HabrParser(Scraper):
             for symbol in ["₽", "€", "$", "₴", "₸"]:
                 if symbol in salary:
                     currency = symbol
-                    currency = utils.convert_currency(currency)
+                    currency = self.config.utils.convert_currency(currency)
                     break
         return currency
 
