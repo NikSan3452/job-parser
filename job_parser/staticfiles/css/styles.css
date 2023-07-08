@@ -9,6 +9,11 @@ body {
     font-family: 'Ubuntu', sans-serif;
 }
 
+pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
 .header {
     background-color: rgb(15, 23, 36);
 }
@@ -113,7 +118,7 @@ body {
 }
 
 .heart:hover, .trash:hover {
-    color: red;
+    color: rgb(255, 161, 161);
 }
 
 .favourite-list:checked ~ .add-to-favourite .fa-solid {
@@ -124,9 +129,33 @@ body {
     color: red;
 }
 
+.hidden-companies {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
 .hidden-companies-name {
     padding: 0;
     margin: 0;
+}
+
+.wrap-button-submit {
+    display: flex;
+    justify-content: center;
+}
+
+.wrap-button-clear {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.btn {
+    height: 40px;
+    width: 120px;
+    border: none;
+    border-radius: 0;
 }
 
 .btn-wrap {
@@ -200,4 +229,23 @@ body {
     border-radius: 5px;
     color: white;
     font-size: 10px;
+}
+
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: start;
+}
+
+.form-experience .form-group {
+    width: 50%;
+}
+
+.form-salary {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: start;
 }
