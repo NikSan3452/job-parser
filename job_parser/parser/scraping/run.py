@@ -15,7 +15,6 @@ class StartScrapers:
     """Класс предназначен для запуска скраперов сайтов поиска работы.
 
     Args:
-        session (aiohttp.ClientSession): Объект сессии aiohttp.
         config (Config): Объект класса Config, содержит настройки для парсера.
 
     """
