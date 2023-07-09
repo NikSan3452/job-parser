@@ -5,8 +5,6 @@ from logger import setup_logging
 from loguru import logger
 
 from parser.scraping.configuration import Config
-from parser.scraping.scrapers.geekjob import GeekjobScraper
-from parser.scraping.scrapers.habr import HabrScraper
 
 setup_logging()
 
@@ -21,30 +19,24 @@ class StartScrapers:
 
     def __init__(self, config: Config) -> None:
         self.config = config
-        self.geekjob = GeekjobScraper(self.config)
-        self.habr = HabrScraper(self.config)
 
-    async def run_scrapers(self) -> asyncio.Future[list]:
+    async def start(self) -> list:
         """Запускает скраперы сайтов поиска работы.
 
         Создает задачи для сохранения данных с сайтов и ожидает их завершения.
         Возвращает список результатов выполнения задач.
 
         Returns:
-            asyncio.Future[list]: Список результатов выполнения задач.
+            list: Список результатов выполнения задач.
 
         """
-        tasks: list[asyncio.Future] = []
-
-        task1 = asyncio.create_task(self.geekjob.save())
-        task2 = asyncio.create_task(self.habr.save())
-
-        tasks.append(task1)
-        tasks.append(task2)
+        tasks = [
+            asyncio.create_task(scraper.save()) for scraper in self.config.scrapers
+        ]
         return await asyncio.gather(*tasks)
 
 
-async def run():
+async def main():
     """Запускает скрапер сайтов поиска работы.
 
     Создает объект класса Config со всеми необходимыми параметрами,
@@ -54,12 +46,12 @@ async def run():
 
     """
     config = Config()
-    parser = StartScrapers(config)
+    scrapers = StartScrapers(config)
 
     start_time = time.time()
     logger.info("Скрапер запущен")
 
-    await parser.run_scrapers()
+    await scrapers.start()
 
     logger.info("Работа скрапера завершена")
     finish_time = time.time() - start_time
@@ -67,4 +59,4 @@ async def run():
 
 
 if __name__ == "__main__":
-    asyncio.run(run())
+    asyncio.run(main())
