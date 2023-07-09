@@ -1,6 +1,6 @@
 import asyncio
 import datetime
-from parser.scraping.run import run
+from parser.scraping.main import main
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
@@ -193,7 +193,7 @@ def run_parsing() -> None:
     """
     Запуск парсера.
 
-    Эта функция запускает асинхронную функцию `run` для выполнения парсинга.
+    Эта функция запускает асинхронную функцию `start` для выполнения парсинга.
     Функция выполняется периодически с интервалом, указанным в настройках.
     """
     asyncio.run(start())
@@ -204,7 +204,7 @@ def run_scraping() -> None:
     """
     Запуск скрапера.
 
-    Эта функция запускает асинхронную функцию `run` для выполнения скрапинга.
+    Эта функция запускает асинхронную функцию `main` для выполнения скрапинга.
     Функция выполняется периодически с интервалом, указанным в настройках.
     """
-    asyncio.run(run())
+    asyncio.run(main())
