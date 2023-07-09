@@ -27,7 +27,7 @@ class Headhunter(Parser):
     def __init__(self, config: ParserConfig, parser: str = "hh") -> None:
         super().__init__(config, parser)
 
-    async def parsing_vacancy_headhunter(self) -> Vacancy | None:
+    async def parse(self) -> Vacancy | None:
         """
         Асинхронный метод для парсинга вакансий с сайта HeadHunter.
 

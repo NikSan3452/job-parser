@@ -24,7 +24,7 @@ class Zarplata(Headhunter):
     def __init__(self, config: ParserConfig) -> None:
         super().__init__(config, "zp")
 
-    async def parsing_vacancy_zarplata(self) -> Vacancy | None:
+    async def parse(self) -> Vacancy | None:
         """
         Асинхронный метод для парсинга вакансий с сайта Zarplata.
 
