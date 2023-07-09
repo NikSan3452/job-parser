@@ -158,6 +158,11 @@ class Parser(abc.ABC):
         return details
 
     async def add_vacancy_to_database(self, vacancy_data: Vacancy) -> None:
+        """Асинхронный метод добавления вакансий в базу данных.
+
+        Args:
+            vacancy_data (Vacancy): Данные вакансии.
+        """
         try:
             await Vacancies.objects.aget_or_create(**vacancy_data.__dict__)
         except Exception as exc:
