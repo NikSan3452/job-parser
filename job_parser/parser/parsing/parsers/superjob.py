@@ -27,7 +27,7 @@ class SuperJob(Parser):
     def __init__(self, config: ParserConfig) -> None:
         super().__init__(config, "sj")
 
-    async def parsing_vacancy_superjob(self) -> Vacancy | None:
+    async def parse(self) -> Vacancy | None:
         """
         Асинхронный метод для парсинга вакансий с сайта SuperJob.
 
