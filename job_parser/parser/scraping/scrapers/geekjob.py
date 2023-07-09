@@ -1,11 +1,15 @@
 import datetime
 import re
-from parser.scraping.db import Database
-from parser.scraping.scrapers.base import Scraper
-from parser.scraping.configuration import Config
+from typing import TYPE_CHECKING
 
 from bs4 import BeautifulSoup
 from logger import setup_logging
+
+from parser.scraping.db import Database
+from parser.scraping.scrapers.base import Scraper
+
+if TYPE_CHECKING:
+    from parser.scraping.configuration import Config
 
 setup_logging()
 
@@ -15,7 +19,7 @@ class GeekjobScraper(Scraper):
     с сайта geekjob.ru. Наследуется от базового класса Scraper.
     """
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: "Config") -> None:
         self.config = config
         self.db = Database(self, self.config.geekjob_fetcher)
         super().__init__(self.config.geekjob_job_board)

@@ -2,7 +2,11 @@ import datetime
 import re
 from parser.scraping.db import Database
 from parser.scraping.scrapers.base import Scraper
-from parser.scraping.configuration import Config
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from parser.scraping.configuration import Config
+
 from bs4 import BeautifulSoup
 from logger import setup_logging
 
@@ -14,7 +18,7 @@ class HabrScraper(Scraper):
     career.habr.com. Наследуется от базового класса Scraper.
     """
 
-    def __init__(self, config: Config) -> None:
+    def __init__(self, config: "Config") -> None:
         self.config = config
         self.db = Database(self, self.config.habr_fetcher)
         super().__init__(self.config.habr_job_board)
