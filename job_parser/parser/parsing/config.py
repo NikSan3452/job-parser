@@ -34,7 +34,7 @@ class ParserConfig:
 
     # SUPERJOB
     sj_domain: str = "https://api.superjob.ru"
-    sj_api_version: str = "2.0"
+    sj_api_version: str = "2.20"
     sj_api_path: str = "vacancies"
     sj_secret_key: str = os.getenv("SUPERJOB_SECRET_KEY1", "")
     sj_url: str = f"{sj_domain}/{sj_api_version}/{sj_api_path}/"
