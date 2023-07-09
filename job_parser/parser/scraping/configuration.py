@@ -2,6 +2,8 @@ import os
 from dataclasses import dataclass, field
 
 from fake_useragent import UserAgent
+from parser.scraping.scrapers.geekjob import GeekjobScraper
+from parser.scraping.scrapers.habr import HabrScraper
 
 from parser.scraping.fetching import Fetcher
 from parser.utils import Utils
@@ -46,6 +48,12 @@ class Config:
             self.habr_url,
             self.habr_pages_count,
         )
+
+        # Создание экземпляров классов скраперов.
+        # Всё, что необходимо для добавления нового
+        # скрапера - это создать модуль с кодом скрапера
+        # в каталоге scrapers и определить здесь его экземпляр.
+        self.scrapers = [GeekjobScraper(self), HabrScraper(self)]
 
     def update_headers(self) -> dict:
         """Обновляет заголовки запроса.
