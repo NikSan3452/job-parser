@@ -1,7 +1,6 @@
 import asyncio
 import datetime
 import os
-import random
 from dataclasses import dataclass, field
 
 from dotenv import load_dotenv
