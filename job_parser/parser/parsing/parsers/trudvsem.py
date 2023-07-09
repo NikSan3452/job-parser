@@ -4,13 +4,10 @@ import re
 from logger import setup_logging
 
 from ..config import ParserConfig
-from ...utils import Utils
 from .base import Parser, Vacancy
 
 # Логирование
 setup_logging()
-
-utils = Utils()
 
 
 class Trudvsem(Parser):
@@ -287,7 +284,9 @@ class Trudvsem(Parser):
                     for char in experience:
                         if char.isdigit():
                             experience = int(char)
-                converted_experience = utils.convert_experience(experience, "Trudvsem")
+                converted_experience = self.config.utils.convert_experience(
+                    experience, "Trudvsem"
+                )
         return converted_experience
 
     async def get_published_at(self, vacancy: dict) -> datetime.date:

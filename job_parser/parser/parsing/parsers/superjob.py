@@ -4,13 +4,10 @@ import re
 from logger import setup_logging
 
 from ..config import ParserConfig
-from ...utils import Utils
 from .base import Parser, Vacancy
 
 # Логирование
 setup_logging()
-
-utils = Utils()
 
 
 class SuperJob(Parser):
@@ -116,7 +113,7 @@ class SuperJob(Parser):
         """
         currency = vacancy.get("currency", None)
         if currency:
-            currency = utils.convert_currency(currency)
+            currency = self.config.utils.convert_currency(currency)
         return currency
 
     async def get_description(self, vacancy: dict) -> str:

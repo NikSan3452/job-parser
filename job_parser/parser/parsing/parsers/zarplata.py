@@ -1,14 +1,11 @@
 from logger import setup_logging
 
 from ..config import ParserConfig
-from ...utils import Utils
-from .headhunter import Headhunter
 from .base import Vacancy
+from .headhunter import Headhunter
 
 # Логирование
 setup_logging()
-
-utils = Utils()
 
 
 class Zarplata(Headhunter):

@@ -4,13 +4,10 @@ import re
 from logger import setup_logging
 
 from ..config import ParserConfig
-from ...utils import Utils
 from .base import Parser, Vacancy
 
 # Логирование
 setup_logging()
-
-utils = Utils()
 
 
 class Headhunter(Parser):

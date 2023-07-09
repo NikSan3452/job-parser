@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import os
 from dataclasses import dataclass, field
+from parser.utils import Utils
 
 from dotenv import load_dotenv
 from fake_useragent import UserAgent
@@ -54,6 +55,7 @@ class ParserConfig:
     # OTHERS
     ua: UserAgent = UserAgent()
     delay: float = 0.2
+    utils = Utils()
 
     def update_headers(self, url: str) -> dict:
         """
