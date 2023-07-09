@@ -12,8 +12,6 @@ from logger import logger, setup_logging
 # Логирование
 setup_logging()
 
-config = ParserConfig()
-
 
 class JobParser:
     """
@@ -24,40 +22,33 @@ class JobParser:
     и `Trudvsem`, которые используются для парсинга вакансий с соответствующих сайтов.
 
     Attributes:
-        hh (Headhunter): Объект класса `Headhunter` для парсинга вакансий с сайта
+        (Headhunter): Объект класса `Headhunter` для парсинга вакансий с сайта
         HeadHunter.
-        sj (SuperJob): Объект класса `SuperJob` для парсинга вакансий с сайта SuperJob.
-        zp (Zarplata): Объект класса `Zarplata` для парсинга вакансий с сайта Zarplata.
-        tv (Trudvsem): Объект класса `Trudvsem` для парсинга вакансий с сайта Trudvsem.
+        (SuperJob): Объект класса `SuperJob` для парсинга вакансий с сайта SuperJob.
+        (Zarplata): Объект класса `Zarplata` для парсинга вакансий с сайта Zarplata.
+        (Trudvsem): Объект класса `Trudvsem` для парсинга вакансий с сайта Trudvsem.
     """
 
-    def __init__(self) -> None:
-        self.hh = Headhunter(config)
-        self.zp = Zarplata(config)
-        self.sj = SuperJob(config)
-        self.tv = Trudvsem(config)
+    def __init__(self, config: ParserConfig) -> None:
+        self.config = config
+        self.parsers = [
+            Headhunter(self.config),
+            Zarplata(self.config),
+            SuperJob(self.config),
+            Trudvsem(self.config),
+        ]
 
     async def parse_vacancies(self) -> None:
         """
         Асинхронный метод для парсинга вакансий.
 
-        Метод запускает параллельно 4 задачи для парсинга вакансий с сайтов
-        HeadHunter, SuperJob, Zarplata и Trudvsem.
+        Метод запускает задачи для парсинга вакансий с сайтов поиску работы.
 
         Returns:
             None
         """
-        task1 = asyncio.create_task(self.hh.parsing_vacancy_headhunter())
-        task2 = asyncio.create_task(self.zp.parsing_vacancy_zarplata())
-        task3 = asyncio.create_task(self.sj.parsing_vacancy_superjob())
-        task4 = asyncio.create_task(self.tv.parsing_vacancy_trudvsem())
-
-        await asyncio.gather(
-            task1,
-            task2,
-            task3,
-            task4,
-        )
+        tasks = [asyncio.create_task(parser.parse()) for parser in self.parsers]
+        await asyncio.gather(*tasks)
 
 
 async def start() -> Any:
@@ -72,7 +63,9 @@ async def start() -> Any:
         Any
     """
     start = time.time()
-    parser = JobParser()
+    
+    config = ParserConfig()
+    parser = JobParser(config)
 
     await parser.parse_vacancies()
 
