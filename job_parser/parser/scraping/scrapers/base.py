@@ -13,14 +13,14 @@ class Vacancy:
     title: str
     city: str
     description: str
-    salary_from: int
-    salary_to: int
-    salary_currency: str
+    salary_from: int | None
+    salary_to: int | None
+    salary_currency: str | None
     company: str
-    experience: str
-    schedule: str
+    experience: str | None
+    schedule: str | None
     remote: bool
-    published_at: str
+    published_at: datetime.date | None
 
 
 class Scraper(abc.ABC):
