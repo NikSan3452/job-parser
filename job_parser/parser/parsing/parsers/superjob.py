@@ -256,7 +256,9 @@ class SuperJob(Parser):
         converted_experience = None
         if experience:
             experience_id = int(experience.get("id", None))
-            converted_experience = utils.convert_experience(experience_id, "SuperJob")
+            converted_experience = self.config.utils.convert_experience(
+                experience_id, "SuperJob"
+            )
         return converted_experience
 
     async def get_published_at(self, vacancy: dict) -> datetime.date | None:
