@@ -5,7 +5,9 @@ from django.db import models
 class Vacancies(models.Model):
     job_board = job_board = models.CharField(max_length=100, verbose_name="Площадка")
     url = models.URLField(null=False)
-    title = models.CharField(max_length=500, null=True, verbose_name="Вакансия")
+    title = models.CharField(
+        max_length=500, db_index=True, null=True, verbose_name="Вакансия"
+    )
     salary_from = models.IntegerField(null=True, blank=True, verbose_name="Зарплата от")
     salary_to = models.IntegerField(null=True, blank=True, verbose_name="Зарплата до")
     salary_currency = models.CharField(
@@ -31,7 +33,7 @@ class Vacancies(models.Model):
     )
     remote = models.BooleanField(default=False, null=True, blank=True)
     published_at = models.DateField(
-        null=True, blank=True, verbose_name="Дата публикации"
+        db_index=True, null=True, blank=True, verbose_name="Дата публикации"
     )
 
     class Meta:
