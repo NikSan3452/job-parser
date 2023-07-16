@@ -1,6 +1,7 @@
 import abc
 import datetime
 import json
+from copy import copy
 from dataclasses import dataclass
 
 from logger import logger, setup_logging
@@ -127,21 +128,22 @@ class Parser(abc.ABC):
         Returns:
             vacancy_data (Vacancy) Данные вакансии.
         """
+        updated_vacancy_data = copy(vacancy_data)
         if self.job_board in ("HeadHunter", "Zarplata"):
             details = await self.get_vacancy_details(vacancy)
             description = await self.get_description(details)
             schedule = await self.get_schedule(details)
             remote = await self.get_remote(schedule)
 
-            vacancy_data.description = description
-            vacancy_data.schedule = schedule
-            vacancy_data.remote = remote
+            updated_vacancy_data.description = description
+            updated_vacancy_data.schedule = schedule
+            updated_vacancy_data.remote = remote
 
         elif self.job_board in ("SuperJob", "Trudvsem"):
-            vacancy_data.description = await self.get_description(vacancy)
-            vacancy_data.schedule = await self.get_schedule(vacancy)
-            vacancy_data.remote = await self.get_remote(vacancy_data.schedule)
-        return vacancy_data
+            updated_vacancy_data.description = await self.get_description(vacancy)
+            updated_vacancy_data.schedule = await self.get_schedule(vacancy)
+            updated_vacancy_data.remote = await self.get_remote(vacancy_data.schedule)
+        return updated_vacancy_data
 
     async def get_vacancy_details(self, vacancy: dict) -> dict | None:
         """
