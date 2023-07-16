@@ -36,7 +36,7 @@ class Session:
         headers: dict = {}
         headers.update(config.update_headers(url))
 
-        async with httpx.AsyncClient(verify=False) as client:
+        async with httpx.AsyncClient() as client:
             response = await client.get(
                 url=url, headers=headers, params=params, timeout=10
             )
