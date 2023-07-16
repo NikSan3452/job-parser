@@ -1,15 +1,17 @@
 import abc
-from dataclasses import dataclass
 import datetime
 import json
+from dataclasses import dataclass
+
+from logger import logger, setup_logging
+
 from parser.models import Vacancies
 from parser.parsing.config import ParserConfig
 from parser.parsing.connection import Session
 
-from logger import logger, setup_logging
-
 # Логирование
 setup_logging()
+
 
 @dataclass
 class Vacancy:
@@ -27,6 +29,7 @@ class Vacancy:
     description: str = ""
     schedule: str | None = ""
     remote: bool = False
+
 
 class Parser(abc.ABC):
     """
@@ -60,13 +63,13 @@ class Parser(abc.ABC):
         """
         Асинхронный метод для парсинга вакансий.
 
-        Получает список вакансий с помощью метода `get_vacancies`, 
+        Получает список вакансий с помощью метода `get_vacancies`,
         затем для каждой вакансии из списка создает объект `Vacancy` с
         деталями конкретной вакансии.
-        Сформированный объект добавляется в базу данных с помощью 
-        метода `add_vacancy_to_database`. Для регулирования количества запросов в 
+        Сформированный объект добавляется в базу данных с помощью
+        метода `add_vacancy_to_database`. Для регулирования количества запросов в
         секунду устанавливается задержка с помощью метода `set_delay`.
-        В конце работы метода выводится сообщение о завершении сбора вакансий 
+        В конце работы метода выводится сообщение о завершении сбора вакансий
         с указанием источника.
 
         Returns:
@@ -86,33 +89,35 @@ class Parser(abc.ABC):
                 company=await self.get_company(vacancy),
                 employment=await self.get_employment(vacancy),
                 experience=await self.get_experience(vacancy),
-                published_at=await self.get_published_at(vacancy)
+                published_at=await self.get_published_at(vacancy),
             )
 
-            await self.update_vacancy_data(vacancy, vacancy_data)
-            await self.add_vacancy_to_database(vacancy_data)
+            updated_vacancy_data = await self.update_vacancy_data(vacancy, vacancy_data)
+            await self.add_vacancy_to_database(updated_vacancy_data)
             await self.config.set_delay()
 
         logger.debug(f"Сбор вакансий с {self.job_board} завершен")
 
         return vacancy_data
-    
-    async def update_vacancy_data(self, vacancy: dict, vacancy_data: Vacancy) -> None:
+
+    async def update_vacancy_data(
+        self, vacancy: dict, vacancy_data: Vacancy
+    ) -> Vacancy:
         """
         Асинхронный метод для обновления данных о вакансии.
 
-        Метод принимает на вход словарь `vacancy` и объект `Vacancy` с данными 
-        о вакансии. В зависимости от значения атрибута `job_board`, метод обновляет 
+        Метод принимает на вход словарь `vacancy` и объект `Vacancy` с данными
+        о вакансии. В зависимости от значения атрибута `job_board`, метод обновляет
         данные о разными способами. Если значение атрибута `job_board` равно
-        "HeadHunter" или "Zarplata", то метод получает детали вакансии с помощью метода 
-        `get_vacancy_details`, затем получает описание вакансии с помощью метода 
-        `get_description`, график работы с помощью метода `get_schedule`, а также 
-        удаленную работу с помощью метода `get_remote`. Полученные данные затем 
+        "HeadHunter" или "Zarplata", то метод получает детали вакансии с помощью метода
+        `get_vacancy_details`, затем получает описание вакансии с помощью метода
+        `get_description`, график работы с помощью метода `get_schedule`, а также
+        удаленную работу с помощью метода `get_remote`. Полученные данные затем
         сохраняются в соответствующие атрибуты объекта `Vacancy`. Если значение атрибута
-        `job_board` равно "SuperJob" или "Trudvsem", то метод получает описание 
-        вакансии, график работы и удаленную работу непосредственно из словаря с данными 
-        о вакансии с помощью методов `get_description`, `get_schedule` и `get_remote` 
-        соответственно. Полученные данные также сохраняются в соответствующие атрибуты 
+        `job_board` равно "SuperJob" или "Trudvsem", то метод получает описание
+        вакансии, график работы и удаленную работу непосредственно из словаря с данными
+        о вакансии с помощью методов `get_description`, `get_schedule` и `get_remote`
+        соответственно. Полученные данные также сохраняются в соответствующие атрибуты
         объекта `Vacancy`.
 
         Args:
@@ -120,7 +125,7 @@ class Parser(abc.ABC):
             vacancy_data (Vacancy): Объект с данными о вакансии.
 
         Returns:
-            None
+            vacancy_data (Vacancy) Данные вакансии.
         """
         if self.job_board in ("HeadHunter", "Zarplata"):
             details = await self.get_vacancy_details(vacancy)
@@ -136,16 +141,16 @@ class Parser(abc.ABC):
             vacancy_data.description = await self.get_description(vacancy)
             vacancy_data.schedule = await self.get_schedule(vacancy)
             vacancy_data.remote = await self.get_remote(vacancy_data.schedule)
-        return None
+        return vacancy_data
 
     async def get_vacancy_details(self, vacancy: dict) -> dict | None:
         """
         Асинхронный метод для получения деталей вакансии.
 
-        Метод принимает на вход словарь с данными о вакансии и возвращает словарь 
+        Метод принимает на вход словарь с данными о вакансии и возвращает словарь
         с деталями конкретной вакансии. Метод получает идентификатор вакансии из словаря
-        с данными с помощью метода `get_data`. Полученные данные возвращаются, 
-        как результат работы метода. 
+        с данными с помощью метода `get_data`. Полученные данные возвращаются,
+        как результат работы метода.
 
         Args:
             vacancy (dict): Словарь с данными о вакансии.
@@ -174,13 +179,13 @@ class Parser(abc.ABC):
         """
         Асинхронный метод для получения списка вакансий.
 
-        Метод возвращает список словарей с данными о вакансиях. Метод проходит по всем 
+        Метод возвращает список словарей с данными о вакансиях. Метод проходит по всем
         страницам с вакансиями (количество страниц задается атрибутом `pages`), получает
-        данные о вакансиях с помощью метода `get_data`, обрабатывает полученные данные 
-        с помощью метода `process_data` и добавляет их в список вакансий. 
-        Если обработанные данные равны `None`, то цикл прерывается. В конце каждой 
-        итерации цикла значение параметра `offset` или `page` 
-        (в зависимости от значения атрибута `items`) увеличивается на 1. 
+        данные о вакансиях с помощью метода `get_data`, обрабатывает полученные данные
+        с помощью метода `process_data` и добавляет их в список вакансий.
+        Если обработанные данные равны `None`, то цикл прерывается. В конце каждой
+        итерации цикла значение параметра `offset` или `page`
+        (в зависимости от значения атрибута `items`) увеличивается на 1.
         В конце работы метода возвращается список вакансий.
 
         Returns:
@@ -203,12 +208,12 @@ class Parser(abc.ABC):
         """
         Асинхронный метод для получения данных с указанного URL.
 
-        Метод принимает на вход URL-адрес и возвращает словарь с данными. 
+        Метод принимает на вход URL-адрес и возвращает словарь с данными.
         Создает соединение с помощью метода `create_client` объекта `session`, передавая
-        ему URL-адрес и параметры запроса (атрибут `params`). Затем метод получает 
-        содержимое ответа, декодирует его и преобразует в словарь с помощью модуля 
-        `json`. Полученный словарь возвращается как результат работы метода. Если во 
-        время работы метода возникает исключение, то оно логируется с помощью метода 
+        ему URL-адрес и параметры запроса (атрибут `params`). Затем метод получает
+        содержимое ответа, декодирует его и преобразует в словарь с помощью модуля
+        `json`. Полученный словарь возвращается как результат работы метода. Если во
+        время работы метода возникает исключение, то оно логируется с помощью метода
         `exception` объекта `logger`, а метод возвращает пустой словарь.
 
         Args:
@@ -242,13 +247,13 @@ class Parser(abc.ABC):
             list[dict] | None: Список словарей с информацией о вакансиях или None,
             если данные отсутствуют.
         """
-        processed_data = None
         data = json_data.get(self.items, None)
         if data is None or len(data) == 0:
-            processed_data = data
+            return None
         elif self.items == "results":
-            processed_data = json_data[self.items]["vacancies"]
-        return processed_data
+            return json_data[self.items]["vacancies"]
+        else:
+            return data
 
     @abc.abstractmethod
     async def get_url(self, vacancy: dict) -> str | None:
