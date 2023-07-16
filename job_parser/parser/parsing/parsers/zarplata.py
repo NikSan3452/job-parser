@@ -25,10 +25,10 @@ class Zarplata(Headhunter):
         """
         Асинхронный метод для парсинга вакансий с сайта Zarplata.
 
-        Метод вызывает метод vacancy_parsing родительского класса Parser
+        Метод вызывает метод parse родительского класса Parser
         с параметрами запроса.
 
         Returns:
             dict: Словарь с результатом выполнения метода.
         """
-        return await super().vacancy_parsing()
+        return await super().parse()

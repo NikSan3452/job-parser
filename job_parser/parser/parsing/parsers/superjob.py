@@ -28,12 +28,12 @@ class SuperJob(Parser):
         """
         Асинхронный метод для парсинга вакансий с сайта SuperJob.
 
-        Метод вызывает метод vacancy_parsing родительского класса Parser.
+        Метод вызывает метод parse родительского класса Parser.
 
         Returns:
             dict: Словарь с результатом выполнения метода.
         """
-        return await super().vacancy_parsing()
+        return await super().parse()
 
     async def get_url(self, vacancy: dict) -> str | None:
         """

@@ -56,7 +56,7 @@ class Parser(abc.ABC):
         self.pages = getattr(config, f"{parser}_pages")
         self.items = getattr(config, f"{parser}_items")
 
-    async def vacancy_parsing(self) -> Vacancy | None:
+    async def parse(self) -> Vacancy | None:
         """
         Асинхронный метод для парсинга вакансий.
 

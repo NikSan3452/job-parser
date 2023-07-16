@@ -34,13 +34,12 @@ class Trudvsem(Parser):
         """
         Асинхронный метод для парсинга вакансий с сайта Trudvsem.
 
-        Метод получает параметры запроса с помощью метода get_request_params и вызывает
-        метод vacancy_parsing родительского класса Parser.
+        метод parse родительского класса Parser.
 
         Returns:
             dict: Словарь с результатом выполнения метода.
         """
-        return await super().vacancy_parsing()
+        return await super().parse()
 
     async def get_url(self, vacancy: dict) -> str | None:
         """
