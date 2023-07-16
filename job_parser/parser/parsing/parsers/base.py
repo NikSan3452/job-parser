@@ -24,7 +24,7 @@ class Vacancy:
     employment: str | None
     experience: str | None
     published_at: datetime.date | None
-    description: str | None = ""
+    description: str = ""
     schedule: str | None = ""
     remote: bool = False
 
@@ -136,8 +136,9 @@ class Parser(abc.ABC):
             vacancy_data.description = await self.get_description(vacancy)
             vacancy_data.schedule = await self.get_schedule(vacancy)
             vacancy_data.remote = await self.get_remote(vacancy_data.schedule)
+        return None
 
-    async def get_vacancy_details(self, vacancy: dict) -> dict:
+    async def get_vacancy_details(self, vacancy: dict) -> dict | None:
         """
         Асинхронный метод для получения деталей вакансии.
 
@@ -152,6 +153,7 @@ class Parser(abc.ABC):
         Returns:
             details (dict): Словарь с деталями вакансии.
         """
+        details = None
         vacancy_id = vacancy.get("id", None)
         if vacancy_id:
             details = await self.get_data(f"{self.url}/{vacancy_id}")
@@ -240,13 +242,13 @@ class Parser(abc.ABC):
             list[dict] | None: Список словарей с информацией о вакансиях или None,
             если данные отсутствуют.
         """
+        processed_data = None
         data = json_data.get(self.items, None)
         if data is None or len(data) == 0:
-            return None
+            processed_data = data
         elif self.items == "results":
-            return json_data[self.items]["vacancies"]
-        else:
-            return data
+            processed_data = json_data[self.items]["vacancies"]
+        return processed_data
 
     @abc.abstractmethod
     async def get_url(self, vacancy: dict) -> str | None:
@@ -316,7 +318,7 @@ class Parser(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_description(self, vacancy: dict) -> str:
+    async def get_description(self, vacancy: dict | None) -> str:
         """
         Абстрактный асинхронный метод для получения описания вакансии.
 
@@ -370,7 +372,7 @@ class Parser(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_schedule(self, vacancy: dict) -> str | None:
+    async def get_schedule(self, vacancy: dict | None) -> str | None:
         """
         Абстрактный асинхронный метод для получения графика работы.
 
