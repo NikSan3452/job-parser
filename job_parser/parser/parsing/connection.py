@@ -5,7 +5,7 @@ import httpx
 config = ParserConfig()
 
 
-class Session:
+class WebClient:
     """Класс для создания запросов к API.
 
     Данный класс содержит в себе асинхронный метод для создания клиента и отправки

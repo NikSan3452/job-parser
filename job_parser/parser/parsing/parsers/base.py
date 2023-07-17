@@ -8,7 +8,7 @@ from logger import logger, setup_logging
 
 from parser.models import Vacancies
 from parser.parsing.config import ParserConfig
-from parser.parsing.connection import Session
+from parser.parsing.connection import WebClient
 
 # Логирование
 setup_logging()
@@ -48,7 +48,7 @@ class Parser(abc.ABC):
         соединения с API.
     """
 
-    session = Session()
+    client = WebClient()
 
     def __init__(self, config: ParserConfig, parser: str) -> None:
         self.config = config
@@ -225,7 +225,7 @@ class Parser(abc.ABC):
             dict: Словарь с данными.
         """
         try:
-            response = await self.session.create_client(url, self.params)
+            response = await self.client.create_client(url, self.params)
             data = response.content.decode()
             json_data = json.loads(data)
             return json_data
