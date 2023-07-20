@@ -32,7 +32,7 @@ class Headhunter(Parser):
         с параметрами запроса.
 
         Returns:
-            dict: Словарь с результатом выполнения метода.
+            Vacancy | None: Объект с результатом выполнения метода или None.
         """
         return await super().parse()
 
@@ -223,7 +223,7 @@ class Headhunter(Parser):
         Если подстрока найдена, то метод возвращает `True`, иначе - `False`.
 
         Args:
-            schedule (str): Строка с графиком работы.
+            schedule (str | None): Строка с графиком работы.
 
         Returns:
             bool: Булево значение, указывающее на то, является ли работа удаленной.
