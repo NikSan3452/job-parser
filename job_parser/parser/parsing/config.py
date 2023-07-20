@@ -2,11 +2,14 @@ import asyncio
 import datetime
 import os
 from dataclasses import dataclass, field
-from parser.utils import Utils
 
 from dotenv import load_dotenv
 from fake_useragent import UserAgent
 
+from parser.parsing.connection import WebClient
+from parser.parsing.fetcher import Fetcher
+from parser.utils import Utils
+from parser.parsing.db import Database
 load_dotenv()
 
 
@@ -18,7 +21,7 @@ class ParserConfig:
     hh_domain: str = "https://api.hh.ru"
     hh_api_path: str = "vacancies"
     hh_url: str = f"{hh_domain}/{hh_api_path}"
-    hh_pages: int = 20
+    hh_pages: int = 5
     hh_items: str = "items"
     hh_job_board: str = "HeadHunter"
     hh_params: dict = field(default_factory=dict)
@@ -120,6 +123,45 @@ class ParserConfig:
             "modifiedFrom": self.get_tv_date_from(),
             "modifiedTo": self.get_tv_date_to(),
         }
+
+        self.client = WebClient(self)
+        self.db = Database()
+
+        self.hh_fetcher = Fetcher(
+            self.hh_job_board,
+            self.hh_url,
+            self.hh_params,
+            self.hh_pages,
+            self.hh_items,
+            self.client,
+        )
+
+        self.zp_fetcher = Fetcher(
+            self.zp_job_board,
+            self.zp_url,
+            self.zp_params,
+            self.zp_pages,
+            self.zp_items,
+            self.client,
+        )
+
+        self.sj_fetcher = Fetcher(
+            self.sj_job_board,
+            self.sj_url,
+            self.sj_params,
+            self.sj_pages,
+            self.sj_items,
+            self.client,
+        )
+
+        self.tv_fetcher = Fetcher(
+            self.tv_job_board,
+            self.tv_url,
+            self.tv_params,
+            self.tv_pages,
+            self.tv_items,
+            self.client,
+        )
 
     def get_sj_date_from(self) -> int:
         """

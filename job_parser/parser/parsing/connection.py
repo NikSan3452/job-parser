@@ -1,8 +1,9 @@
-from parser.parsing.config import ParserConfig
+from typing import TYPE_CHECKING
 
 import httpx
 
-config = ParserConfig()
+if TYPE_CHECKING:
+    from parser.parsing.config import ParserConfig
 
 
 class WebClient:
@@ -11,6 +12,9 @@ class WebClient:
     Данный класс содержит в себе асинхронный метод для создания клиента и отправки
     запросов на указанный URL
     """
+
+    def __init__(self, config: "ParserConfig") -> None:
+        self.config = config
 
     async def create_client(
         self,
@@ -34,7 +38,7 @@ class WebClient:
             httpx.Response: Ответ сервера на запрос.
         """
         headers: dict = {}
-        headers.update(config.update_headers(url))
+        headers.update(self.config.update_headers(url))
 
         async with httpx.AsyncClient() as client:
             response = await client.get(

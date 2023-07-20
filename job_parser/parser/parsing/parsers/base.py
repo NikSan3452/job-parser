@@ -1,14 +1,10 @@
 import abc
 import datetime
-import json
 from copy import copy
 from dataclasses import dataclass
+from parser.parsing.config import ParserConfig
 
 from logger import logger, setup_logging
-
-from parser.models import Vacancies
-from parser.parsing.config import ParserConfig
-from parser.parsing.connection import WebClient
 
 # Логирование
 setup_logging()
@@ -48,17 +44,12 @@ class Parser(abc.ABC):
         соединения с API.
     """
 
-    client = WebClient()
-
     def __init__(self, config: ParserConfig, parser: str) -> None:
         self.config = config
         self.parser = parser
 
         self.job_board = getattr(config, f"{parser}_job_board")
-        self.url = getattr(config, f"{parser}_url")
-        self.params = getattr(config, f"{parser}_params")
-        self.pages = getattr(config, f"{parser}_pages")
-        self.items = getattr(config, f"{parser}_items")
+        self.fetcher = getattr(config, f"{parser}_fetcher")
 
     async def parse(self) -> Vacancy | None:
         """
@@ -76,7 +67,7 @@ class Parser(abc.ABC):
         Returns:
             vacancy_data (Vacancy): Объект с данными о вакансии.
         """
-        vacancy_list: list[dict] = await self.get_vacancies()
+        vacancy_list: list[dict] = await self.fetcher.get_vacancies()
         vacancy_data = None
         for vacancy in vacancy_list:
             vacancy_data = Vacancy(
@@ -94,7 +85,7 @@ class Parser(abc.ABC):
             )
 
             updated_vacancy_data = await self.update_vacancy_data(vacancy, vacancy_data)
-            await self.add_vacancy_to_database(updated_vacancy_data)
+            await self.config.db.add_vacancy_to_database(updated_vacancy_data)
             await self.config.set_delay()
 
         logger.debug(f"Сбор вакансий с {self.job_board} завершен")
@@ -130,7 +121,7 @@ class Parser(abc.ABC):
         """
         updated_vacancy_data = copy(vacancy_data)
         if self.job_board in ("HeadHunter", "Zarplata"):
-            details = await self.get_vacancy_details(vacancy)
+            details = await self.fetcher.get_vacancy_details(vacancy)
             description = await self.get_description(details)
             schedule = await self.get_schedule(details)
             remote = await self.get_remote(schedule)
@@ -144,118 +135,6 @@ class Parser(abc.ABC):
             updated_vacancy_data.schedule = await self.get_schedule(vacancy)
             updated_vacancy_data.remote = await self.get_remote(vacancy_data.schedule)
         return updated_vacancy_data
-
-    async def get_vacancy_details(self, vacancy: dict) -> dict | None:
-        """
-        Асинхронный метод для получения деталей вакансии.
-
-        Метод принимает на вход словарь с данными о вакансии и возвращает словарь
-        с деталями конкретной вакансии. Метод получает идентификатор вакансии из словаря
-        с данными с помощью метода `get_data`. Полученные данные возвращаются,
-        как результат работы метода.
-
-        Args:
-            vacancy (dict): Словарь с данными о вакансии.
-
-        Returns:
-            details (dict): Словарь с деталями вакансии.
-        """
-        details = None
-        vacancy_id = vacancy.get("id", None)
-        if vacancy_id:
-            details = await self.get_data(f"{self.url}/{vacancy_id}")
-        return details
-
-    async def add_vacancy_to_database(self, vacancy_data: Vacancy) -> None:
-        """Асинхронный метод добавления вакансий в базу данных.
-
-        Args:
-            vacancy_data (Vacancy): Данные вакансии.
-        """
-        try:
-            await Vacancies.objects.aget_or_create(**vacancy_data.__dict__)
-        except Exception as exc:
-            logger.exception(exc)
-
-    async def get_vacancies(self) -> list[dict]:
-        """
-        Асинхронный метод для получения списка вакансий.
-
-        Метод возвращает список словарей с данными о вакансиях. Метод проходит по всем
-        страницам с вакансиями (количество страниц задается атрибутом `pages`), получает
-        данные о вакансиях с помощью метода `get_data`, обрабатывает полученные данные
-        с помощью метода `process_data` и добавляет их в список вакансий.
-        Если обработанные данные равны `None`, то цикл прерывается. В конце каждой
-        итерации цикла значение параметра `offset` или `page`
-        (в зависимости от значения атрибута `items`) увеличивается на 1.
-        В конце работы метода возвращается список вакансий.
-
-        Returns:
-            vacancy_list(list[dict]): Список словарей с данными о вакансиях.
-        """
-        vacancy_list: list[dict] = []
-
-        for page in range(self.pages):
-            json_data = await self.get_data(self.url)
-            vacancies = await self.process_data(json_data)
-            if vacancies is None:
-                break
-            else:
-                vacancy_list.extend(vacancies)
-            page += 1
-            self.params["offset" if self.items == "results" else "page"] = page
-        return vacancy_list
-
-    async def get_data(self, url: str) -> dict:
-        """
-        Асинхронный метод для получения данных с указанного URL.
-
-        Метод принимает на вход URL-адрес и возвращает словарь с данными.
-        Создает соединение с помощью метода `create_client` объекта `session`, передавая
-        ему URL-адрес и параметры запроса (атрибут `params`). Затем метод получает
-        содержимое ответа, декодирует его и преобразует в словарь с помощью модуля
-        `json`. Полученный словарь возвращается как результат работы метода. Если во
-        время работы метода возникает исключение, то оно логируется с помощью метода
-        `exception` объекта `logger`, а метод возвращает пустой словарь.
-
-        Args:
-            url (str): URL для получения данных.
-
-        Returns:
-            dict: Словарь с данными.
-        """
-        try:
-            response = await self.client.create_client(url, self.params)
-            data = response.content.decode()
-            json_data = json.loads(data)
-            return json_data
-        except Exception as exc:
-            logger.exception(exc)
-            return {}
-
-    async def process_data(self, json_data: dict) -> list[dict] | None:
-        """
-        Асинхронный метод для обработки данных, полученных с указанного URL.
-
-        Метод проверяет значение параметра items. Если items равен None, вернется None.
-        Если items равен 'results', то попытается получить вакансии по ключу
-        'vacancies'.
-        Иначе вернет данные по ключу 'items'.
-        Args:
-            json_data (dict): Словарь с данными для обработки.
-            items (str | None): Ключ для получения данных из словаря json_data.
-
-        Returns:
-            list[dict] | None: Список словарей с информацией о вакансиях или None,
-            если данные отсутствуют.
-        """
-        data = json_data.get(self.items, None)
-        if data is None or len(data) == 0:
-            return None
-        elif self.items == "results":
-            return json_data[self.items]["vacancies"]
-        else:
-            return data
 
     @abc.abstractmethod
     async def get_url(self, vacancy: dict) -> str | None:

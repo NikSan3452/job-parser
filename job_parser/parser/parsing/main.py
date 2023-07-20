@@ -1,5 +1,6 @@
 import asyncio
 import time
+from parser.parsing.parsers.base import Parser
 from parser.parsing.config import ParserConfig
 from parser.parsing.parsers.headhunter import Headhunter
 from parser.parsing.parsers.superjob import SuperJob
@@ -31,7 +32,7 @@ class JobParser:
 
     def __init__(self, config: ParserConfig) -> None:
         self.config = config
-        self.parsers = [
+        self.parsers: list[Parser] = [
             Headhunter(self.config),
             Zarplata(self.config),
             SuperJob(self.config),
