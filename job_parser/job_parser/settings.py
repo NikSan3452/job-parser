@@ -183,7 +183,7 @@ SENDING_EMAILS_HOURS = os.getenv("SENDING_EMAILS_HOURS", 14)
 
 SCRAPING_SCHEDULE_MINUTES = os.getenv("SCRAPING_SCHEDULE_MINUTES", 60)
 PARSING_SCHEDULE_MINUTES = os.getenv("PARSING_SCHEDULE_MINUTES", 1)
-DELETE_OLD_VACANCIES_HOURS = os.getenv("DELETE_OLD_VACANCIES", 0)
+DELETE_OLD_VACANCIES = os.getenv("DELETE_OLD_VACANCIES", 0)
 
 settings_dir = os.path.dirname(os.path.abspath(__file__))
 job_parser_dir = os.path.join(settings_dir, "..")
