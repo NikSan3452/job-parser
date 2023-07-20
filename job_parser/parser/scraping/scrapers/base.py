@@ -28,9 +28,6 @@ class Scraper(abc.ABC):
     поиска работы.
 
     Args:
-        fetcher (Fetcher): Объект класса Fetcher, который используется для получения
-        данных с сайтов поиска работы.
-        config (Config): Объект класса Config, который содержит настройки для парсера.
         job_board (str): Название сайта поиска работы.
     """
 
@@ -52,7 +49,7 @@ class Scraper(abc.ABC):
             и URL-адреса.
 
         Yields:
-            dict: Словарь с информацией о вакансии.
+            AsyncGenerator[dict, None]: Словарь с информацией о вакансии.
 
         """
         html, url = page
