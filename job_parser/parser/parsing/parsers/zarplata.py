@@ -29,6 +29,6 @@ class Zarplata(Headhunter):
         с параметрами запроса.
 
         Returns:
-            dict: Словарь с результатом выполнения метода.
+            Vacancy | None: Объект с результатом выполнения метода или None.
         """
         return await super().parse()

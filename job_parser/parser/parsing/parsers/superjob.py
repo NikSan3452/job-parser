@@ -31,7 +31,7 @@ class SuperJob(Parser):
         Метод вызывает метод parse родительского класса Parser.
 
         Returns:
-            dict: Словарь с результатом выполнения метода.
+            Vacancy | None: Объект с результатом выполнения метода или None.
         """
         return await super().parse()
 
