@@ -17,7 +17,7 @@ class Utils:
             умолчанию.
         """
         if not date_from or date_from == "":
-            new_date_from = datetime.date.today() - datetime.timedelta(days=1)
+            new_date_from = datetime.date.today()
         elif isinstance(date_from, str):
             new_date_from = datetime.datetime.strptime(date_from, "%Y-%m-%d").date()
         else:
