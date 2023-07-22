@@ -48,7 +48,7 @@ class SearchingForm(forms.Form):
 
     title = forms.CharField(
         label="Что ищем ?",
-        required=False,
+        required=True,
         max_length=250,
         widget=forms.TextInput(attrs={"placeholder": "Поиск"}),
     )
