@@ -175,6 +175,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # debug-toolbar
 INTERNAL_IPS = [
+    os.getenv("DEBUG_TOOLBAR_IPS"),
     "127.0.0.1",
 ]
 
