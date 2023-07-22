@@ -6,15 +6,14 @@ from typing import TYPE_CHECKING
 
 from dotenv import load_dotenv
 from fake_useragent import UserAgent
-from parser.parsing.parsers.headhunter import Headhunter
 
 from parser.parsing.connection import WebClient
 from parser.parsing.db import Database
 from parser.parsing.fetcher import Fetcher
+from parser.parsing.parsers.headhunter import Headhunter
 
 if TYPE_CHECKING:
     from parser.parsing.parsers.base import Parser
-from parser.parsing.parsers.zarplata import Zarplata
 from parser.utils import Utils
 
 load_dotenv()
@@ -66,41 +65,6 @@ class ParserConfig:
     ua: UserAgent = UserAgent()
     delay: float = 0.2
     utils = Utils()
-
-    def update_headers(self, url: str) -> dict:
-        """
-        Метод для обновления заголовков запроса.
-
-        Метод принимает на вход URL и возвращает словарь с заголовками запроса.
-        Метод создает пустой словарь `headers`, затем проверяет, равен ли переданный URL
-        значению атрибута `sj_url`. Если это так, то в словарь `headers` добавляется
-        пара ключ-значение, где ключ равен "x-api-app-id", а значение выбирается
-        случайным образом из списка секретных ключей (атрибут `sj_secret_keys_list`).
-        В конце работы метода возвращается словарь с заголовками запроса.
-
-        Args:
-            url (str): URL для обновления заголовков запроса.
-
-        Returns:
-            dict: Словарь с заголовками запроса.
-        """
-        headers = {}
-        # headers.update({"User-Agent": self.ua.random})
-        if url == self.sj_url:
-            headers.update({"x-api-app-id": self.sj_secret_key})
-        return headers
-
-    async def set_delay(self) -> None:
-        """
-        Асинхронный метод для установки задержки между запросами.
-
-        Метод устанавливает задержку между запросами на время, равное значению атрибута
-        `delay`, с помощью функции `sleep` модуля `asyncio`.
-
-        Returns:
-            None
-        """
-        await asyncio.sleep(self.delay)
 
     def __post_init__(self) -> None:
         self.hh_params.update(
@@ -250,3 +214,38 @@ class ParserConfig:
         now = datetime.datetime.now()
         date_to = now.strftime("%Y-%m-%dT%H:%M:%SZ")
         return date_to
+
+    def update_headers(self, url: str) -> dict:
+        """
+        Метод для обновления заголовков запроса.
+
+        Метод принимает на вход URL и возвращает словарь с заголовками запроса.
+        Метод создает пустой словарь `headers`, затем проверяет, равен ли переданный URL
+        значению атрибута `sj_url`. Если это так, то в словарь `headers` добавляется
+        пара ключ-значение, где ключ равен "x-api-app-id", а значение выбирается
+        случайным образом из списка секретных ключей (атрибут `sj_secret_keys_list`).
+        В конце работы метода возвращается словарь с заголовками запроса.
+
+        Args:
+            url (str): URL для обновления заголовков запроса.
+
+        Returns:
+            dict: Словарь с заголовками запроса.
+        """
+        headers = {}
+        # headers.update({"User-Agent": self.ua.random})
+        if url == self.sj_url:
+            headers.update({"x-api-app-id": self.sj_secret_key})
+        return headers
+
+    async def set_delay(self) -> None:
+        """
+        Асинхронный метод для установки задержки между запросами.
+
+        Метод устанавливает задержку между запросами на время, равное значению атрибута
+        `delay`, с помощью функции `sleep` модуля `asyncio`.
+
+        Returns:
+            None
+        """
+        await asyncio.sleep(self.delay)
