@@ -1,19 +1,21 @@
-import asyncio
 import datetime
 import os
 from dataclasses import dataclass, field
+from parser.parsing.connection import WebClient
+from parser.parsing.db import Database
+from parser.parsing.fetcher import Fetcher
+from parser.parsing.parsers.headhunter import Headhunter
+from parser.parsing.parsers.superjob import SuperJob
+from parser.parsing.parsers.trudvsem import Trudvsem
+from parser.parsing.parsers.zarplata import Zarplata
 from typing import TYPE_CHECKING
 
 from dotenv import load_dotenv
 from fake_useragent import UserAgent
 
-from parser.parsing.connection import WebClient
-from parser.parsing.db import Database
-from parser.parsing.fetcher import Fetcher
-from parser.parsing.parsers.headhunter import Headhunter
-
 if TYPE_CHECKING:
     from parser.parsing.parsers.base import Parser
+
 from parser.utils import Utils
 
 load_dotenv()
@@ -27,7 +29,7 @@ class ParserConfig:
     hh_domain: str = "https://api.hh.ru"
     hh_api_path: str = "vacancies"
     hh_url: str = f"{hh_domain}/{hh_api_path}"
-    hh_pages: int = 5
+    hh_pages: int = 20
     hh_items: str = "items"
     hh_job_board: str = "HeadHunter"
     hh_params: dict = field(default_factory=dict)
@@ -64,9 +66,12 @@ class ParserConfig:
     # OTHERS
     ua: UserAgent = UserAgent()
     delay: float = 0.2
-    utils = Utils()
 
     def __post_init__(self) -> None:
+        self.client = WebClient(self)
+        self.db = Database()
+        self.utils = Utils()
+
         self.hh_params.update(
             {
                 "per_page": 100,
@@ -84,19 +89,16 @@ class ParserConfig:
         self.sj_params.update(
             {
                 "count": 100,
-                "date_published_from": self.get_sj_date_from(),
-                "date_published_to": self.get_sj_date_to(),
+                "date_published_from": self.utils.get_sj_date_from(),
+                "date_published_to": self.utils.get_sj_date_to(),
             }
         )
         self.tv_params = {
             "limit": 100,
             "offset": 0,
-            "modifiedFrom": self.get_tv_date_from(),
-            "modifiedTo": self.get_tv_date_to(),
+            "modifiedFrom": self.utils.get_tv_date_from(),
+            "modifiedTo": self.utils.get_tv_date_to(),
         }
-
-        self.client = WebClient(self)
-        self.db = Database()
 
         self.hh_fetcher = Fetcher(
             self.hh_job_board,
@@ -135,85 +137,16 @@ class ParserConfig:
         )
 
         self.hh_parser = Headhunter(self)
-        # self.zp_parser = Zarplata(self)
-        # # self.sj_parser = SuperJob(self)
-        # # self.tv_parser = Trudvsem(self)
+        self.zp_parser = Zarplata(self)
+        self.sj_parser = SuperJob(self)
+        self.tv_parser = Trudvsem(self)
 
         self.parsers: list["Parser"] = [
             self.hh_parser,
-            # self.zp_parser,
-            # self.sj_parser,
-            # self.tv_parser,
+            self.zp_parser,
+            self.sj_parser,
+            self.tv_parser,
         ]
-
-    def get_sj_date_from(self) -> int:
-        """
-        Метод для получения начальной даты для SuperJob.
-
-        Получает текущую дату с помощью метода `today` класса `date` модуля `datetime`,
-        затем создает объект `datetime` с началом текущего дня с помощью метода
-        `combine` класса `datetime`. Затем метод получает timestamp начала текущего дня
-        с помощью метода `timestamp` и преобразует его в целое число.
-        Полученное значение возвращается как результат работы метода.
-
-        Returns:
-            int: Начальная дата в формате timestamp.
-        """
-        today = datetime.date.today()
-        start_time = datetime.datetime.combine(today, datetime.datetime.min.time())
-        start_timestamp = start_time.timestamp()
-        date_from = int(start_timestamp)
-        return date_from
-
-    def get_sj_date_to(self) -> int:
-        """
-        Метод для получения конечной даты для SuperJob.
-
-        Метод создает объект `datetime` с текущим временем с помощью метода `now`
-        класса `datetime` модуля `datetime`, затем получает timestamp текущего времени
-        с помощью метода `timestamp` и преобразует его в целое число.
-        Полученное значение возвращается как результат работы метода.
-
-        Returns:
-            int: Конечная дата в формате timestamp.
-        """
-        end_timestamp = datetime.datetime.now().timestamp()
-        date_to = int(end_timestamp)
-        return date_to
-
-    def get_tv_date_from(self) -> str:
-        """
-        Метод для получения начальной даты для Trudvsem.
-
-        Метод получает текущую дату, вычитает из нее 1 день с помощью метода `timedelta`
-        класса `timedelta` модуля `datetime`, затем создает объект `datetime` с началом
-        предыдущего дня с помощью метода `combine`. Затем метод преобразует объект
-        `datetime` в строку в формате "YYYY-MM-DDTHH:MM:SSZ" с помощью метода
-        `strftime`. Полученная строка возвращается как результат работы метода.
-
-        Returns:
-            str: Начальная дата в строковом формате.
-        """
-        today = datetime.date.today() - datetime.timedelta(days=1)
-        today = datetime.datetime.combine(today, datetime.datetime.min.time())
-        date_from = today.strftime("%Y-%m-%dT%H:%M:%SZ")
-        return date_from
-
-    def get_tv_date_to(self) -> str:
-        """
-        Метод для получения конечной даты для Trudvsem.
-
-        Метод создает объект `datetime` с текущим временем с помощью метода `now`
-        класса `datetime` модуля `datetime`, затем преобразует его в строку в формате
-        "YYYY-MM-DDTHH:MM:SSZ" с помощью метода `strftime`.
-        Полученная строка возвращается как результат работы метода.
-
-        Returns:
-            str: Конечная дата в строковом формате.
-        """
-        now = datetime.datetime.now()
-        date_to = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-        return date_to
 
     def update_headers(self, url: str) -> dict:
         """
@@ -237,15 +170,3 @@ class ParserConfig:
         if url == self.sj_url:
             headers.update({"x-api-app-id": self.sj_secret_key})
         return headers
-
-    async def set_delay(self) -> None:
-        """
-        Асинхронный метод для установки задержки между запросами.
-
-        Метод устанавливает задержку между запросами на время, равное значению атрибута
-        `delay`, с помощью функции `sleep` модуля `asyncio`.
-
-        Returns:
-            None
-        """
-        await asyncio.sleep(self.delay)
