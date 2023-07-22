@@ -74,6 +74,7 @@ class Fetcher:
         try:
             response = await self.client.create_client(url, self.params)
             data = response.content.decode()
+            print(response, data)
             json_data = json.loads(data)
             return json_data
         except Exception as exc:

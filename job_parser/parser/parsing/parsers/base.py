@@ -89,7 +89,7 @@ class Parser(abc.ABC):
 
             updated_vacancy_data = await self.update_vacancy_data(vacancy, vacancy_data)
             await self.config.db.add_vacancy_to_database(updated_vacancy_data)
-            await self.config.set_delay()
+            await self.config.utils.set_delay(self.config.delay)
 
         logger.debug(f"Сбор вакансий с {self.job_board} завершен")
 

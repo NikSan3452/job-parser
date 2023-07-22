@@ -6,6 +6,7 @@ from logger import setup_logging
 
 if TYPE_CHECKING:
     from ..config import ParserConfig
+
 from .base import Parser, Vacancy
 
 # Логирование
