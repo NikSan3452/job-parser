@@ -1,11 +1,6 @@
 import asyncio
 import time
-from parser.parsing.parsers.base import Parser
 from parser.parsing.config import ParserConfig
-from parser.parsing.parsers.headhunter import Headhunter
-from parser.parsing.parsers.superjob import SuperJob
-from parser.parsing.parsers.trudvsem import Trudvsem
-from parser.parsing.parsers.zarplata import Zarplata
 from typing import Any
 
 from logger import logger, setup_logging
@@ -32,12 +27,6 @@ class JobParser:
 
     def __init__(self, config: ParserConfig) -> None:
         self.config = config
-        self.parsers: list[Parser] = [
-            Headhunter(self.config),
-            Zarplata(self.config),
-            SuperJob(self.config),
-            Trudvsem(self.config),
-        ]
 
     async def parse_vacancies(self) -> None:
         """
@@ -48,7 +37,7 @@ class JobParser:
         Returns:
             None
         """
-        tasks = [asyncio.create_task(parser.parse()) for parser in self.parsers]
+        tasks = [asyncio.create_task(parser.parse()) for parser in self.config.parsers]
         await asyncio.gather(*tasks)
 
 
@@ -64,7 +53,7 @@ async def start() -> Any:
         Any
     """
     start = time.time()
-    
+
     config = ParserConfig()
     parser = JobParser(config)
 

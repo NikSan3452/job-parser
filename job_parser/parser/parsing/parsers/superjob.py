@@ -1,9 +1,11 @@
 import datetime
 import re
+from typing import TYPE_CHECKING
 
 from logger import setup_logging
 
-from ..config import ParserConfig
+if TYPE_CHECKING:
+    from ..config import ParserConfig
 from .base import Parser, Vacancy
 
 # Логирование
@@ -21,7 +23,7 @@ class SuperJob(Parser):
     API сайта SuperJob.
     """
 
-    def __init__(self, config: ParserConfig) -> None:
+    def __init__(self, config: "ParserConfig") -> None:
         super().__init__(config, "sj")
 
     async def parse(self) -> Vacancy | None:

@@ -1,6 +1,10 @@
+from typing import TYPE_CHECKING
+
 from logger import setup_logging
 
-from ..config import ParserConfig
+if TYPE_CHECKING:
+    from ..config import ParserConfig
+
 from .base import Vacancy
 from .headhunter import Headhunter
 
@@ -18,7 +22,7 @@ class Zarplata(Headhunter):
     Остальные методы наследуются от родительского класса Headhunter.
     """
 
-    def __init__(self, config: ParserConfig) -> None:
+    def __init__(self, config: "ParserConfig") -> None:
         super().__init__(config, "zp")
 
     async def parse(self) -> Vacancy | None:

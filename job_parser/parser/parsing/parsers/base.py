@@ -2,7 +2,10 @@ import abc
 import datetime
 from copy import copy
 from dataclasses import dataclass
-from parser.parsing.config import ParserConfig
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from parser.parsing.config import ParserConfig
 
 from logger import logger, setup_logging
 
@@ -44,7 +47,7 @@ class Parser(abc.ABC):
         соединения с API.
     """
 
-    def __init__(self, config: ParserConfig, parser: str) -> None:
+    def __init__(self, config: "ParserConfig", parser: str) -> None:
         self.config = config
         self.parser = parser
 

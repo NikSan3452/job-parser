@@ -117,7 +117,7 @@ class Fetcher:
             vacancy (dict): Словарь с данными о вакансии.
 
         Returns:
-            details (dict): Словарь с деталями вакансии.
+            details (dict | None): Словарь с деталями вакансии.
         """
         details = None
         vacancy_id = vacancy.get("id", None)

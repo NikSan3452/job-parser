@@ -2,14 +2,21 @@ import asyncio
 import datetime
 import os
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from dotenv import load_dotenv
 from fake_useragent import UserAgent
+from parser.parsing.parsers.headhunter import Headhunter
 
 from parser.parsing.connection import WebClient
-from parser.parsing.fetcher import Fetcher
-from parser.utils import Utils
 from parser.parsing.db import Database
+from parser.parsing.fetcher import Fetcher
+
+if TYPE_CHECKING:
+    from parser.parsing.parsers.base import Parser
+from parser.parsing.parsers.zarplata import Zarplata
+from parser.utils import Utils
+
 load_dotenv()
 
 
@@ -162,6 +169,18 @@ class ParserConfig:
             self.tv_items,
             self.client,
         )
+
+        self.hh_parser = Headhunter(self)
+        # self.zp_parser = Zarplata(self)
+        # # self.sj_parser = SuperJob(self)
+        # # self.tv_parser = Trudvsem(self)
+
+        self.parsers: list["Parser"] = [
+            self.hh_parser,
+            # self.zp_parser,
+            # self.sj_parser,
+            # self.tv_parser,
+        ]
 
     def get_sj_date_from(self) -> int:
         """
