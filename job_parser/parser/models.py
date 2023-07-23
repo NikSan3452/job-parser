@@ -4,7 +4,7 @@ from django.db import models
 
 class Vacancies(models.Model):
     job_board = job_board = models.CharField(max_length=100, verbose_name="Площадка")
-    url = models.URLField(null=False)
+    url = models.URLField(null=False, unique=True)
     title = models.CharField(
         max_length=500, db_index=True, null=True, verbose_name="Вакансия"
     )
