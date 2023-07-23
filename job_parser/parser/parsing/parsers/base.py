@@ -54,24 +54,26 @@ class Parser(abc.ABC):
         self.job_board = getattr(config, f"{parser}_job_board")
         self.fetcher = getattr(config, f"{parser}_fetcher")
 
-    async def parse(self) -> Vacancy | None:
+    async def parse(self) -> None:
         """
         Асинхронный метод для парсинга вакансий.
 
         Получает список вакансий с помощью метода `get_vacancies`,
         затем для каждой вакансии из списка создает объект `Vacancy` с
-        деталями конкретной вакансии.
-        Сформированный объект добавляется в базу данных с помощью
-        метода `add_vacancy_to_database`. Для регулирования количества запросов в
-        секунду устанавливается задержка с помощью метода `set_delay`.
+        деталями конкретной вакансии. Далее вызывается метод `update_vacancy_data`,
+        в котором реализуется получение дополнительных деталей вакансии.
+        Сформированные объект добавляются в список `parsed_vacancy_list`,
+        а затем при помощи метода `record` записываются в базу данных .
         В конце работы метода выводится сообщение о завершении сбора вакансий
-        с указанием источника.
+        с указанием источника и количества собранных вакансий.
 
-        Returns:
-            vacancy_data (Vacancy): Объект с данными о вакансии.
+        Returns: None
         """
         vacancy_list: list[dict] = await self.fetcher.get_vacancies()
-        vacancy_data = None
+        parsed_vacancy_list: list[dict] = []
+        vacancy_data: Vacancy | None = None
+        vacancy_count: int = 0
+
         for vacancy in vacancy_list:
             vacancy_data = Vacancy(
                 job_board=self.job_board,
@@ -88,12 +90,16 @@ class Parser(abc.ABC):
             )
 
             updated_vacancy_data = await self.update_vacancy_data(vacancy, vacancy_data)
-            await self.config.db.add_vacancy_to_database(updated_vacancy_data)
-            await self.config.utils.set_delay(self.config.delay)
+            parsed_vacancy_list.append(updated_vacancy_data)
+            vacancy_count += 1
 
-        logger.debug(f"Сбор вакансий с {self.job_board} завершен")
+        await self.config.db.record(parsed_vacancy_list)
 
-        return vacancy_data
+        logger.debug(
+            f"Сбор вакансий с {self.job_board} завершен. Собрано вакансий: {vacancy_count}"
+        )
+
+        return None
 
     async def update_vacancy_data(
         self, vacancy: dict, vacancy_data: Vacancy
@@ -103,27 +109,19 @@ class Parser(abc.ABC):
 
         Метод принимает на вход словарь `vacancy` и объект `Vacancy` с данными
         о вакансии. В зависимости от значения атрибута `job_board`, метод обновляет
-        данные о разными способами. Если значение атрибута `job_board` равно
-        "HeadHunter" или "Zarplata", то метод получает детали вакансии с помощью метода
-        `get_vacancy_details`, затем получает описание вакансии с помощью метода
-        `get_description`, график работы с помощью метода `get_schedule`, а также
-        удаленную работу с помощью метода `get_remote`. Полученные данные затем
-        сохраняются в соответствующие атрибуты объекта `Vacancy`. Если значение атрибута
-        `job_board` равно "SuperJob" или "Trudvsem", то метод получает описание
-        вакансии, график работы и удаленную работу непосредственно из словаря с данными
-        о вакансии с помощью методов `get_description`, `get_schedule` и `get_remote`
-        соответственно. Полученные данные также сохраняются в соответствующие атрибуты
-        объекта `Vacancy`.
+        данные разными способами, а также устанавливает необходимый интервал
+        между запросами. Полученные результаты сохраняются в соответствующие
+        атрибуты объекта `Vacancy`.
 
         Args:
             vacancy (dict): Словарь с данными о вакансии.
             vacancy_data (Vacancy): Объект с данными о вакансии.
 
         Returns:
-            vacancy_data (Vacancy) Данные вакансии.
+            vacancy_data (Vacancy) Обновленные данные вакансии.
         """
         updated_vacancy_data = copy(vacancy_data)
-        if self.job_board in ("HeadHunter", "Zarplata"):
+        if self.job_board == "HeadHunter":
             details = await self.fetcher.get_vacancy_details(vacancy)
             description = await self.get_description(details)
             schedule = await self.get_schedule(details)
@@ -132,11 +130,30 @@ class Parser(abc.ABC):
             updated_vacancy_data.description = description
             updated_vacancy_data.schedule = schedule
             updated_vacancy_data.remote = remote
+            await self.config.utils.set_delay(self.config.hh_delay)
 
-        elif self.job_board in ("SuperJob", "Trudvsem"):
+        if self.job_board == "Zarplata":
+            details = await self.fetcher.get_vacancy_details(vacancy)
+            description = await self.get_description(details)
+            schedule = await self.get_schedule(details)
+            remote = await self.get_remote(schedule)
+
+            updated_vacancy_data.description = description
+            updated_vacancy_data.schedule = schedule
+            updated_vacancy_data.remote = remote
+            await self.config.utils.set_delay(self.config.zp_delay)
+
+        if self.job_board == "SuperJob" "Trudvsem":
             updated_vacancy_data.description = await self.get_description(vacancy)
             updated_vacancy_data.schedule = await self.get_schedule(vacancy)
             updated_vacancy_data.remote = await self.get_remote(vacancy_data.schedule)
+            await self.config.utils.set_delay(self.config.sj_delay)
+
+        if self.job_board == "Trudvsem":
+            updated_vacancy_data.description = await self.get_description(vacancy)
+            updated_vacancy_data.schedule = await self.get_schedule(vacancy)
+            updated_vacancy_data.remote = await self.get_remote(vacancy_data.schedule)
+
         return updated_vacancy_data
 
     @abc.abstractmethod
