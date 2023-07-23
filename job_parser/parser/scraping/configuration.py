@@ -1,12 +1,12 @@
 import os
 from dataclasses import dataclass, field
-
-from fake_useragent import UserAgent
+from parser.scraping.db import Database
+from parser.scraping.fetching import Fetcher
 from parser.scraping.scrapers.geekjob import GeekjobScraper
 from parser.scraping.scrapers.habr import HabrScraper
-
-from parser.scraping.fetching import Fetcher
 from parser.utils import Utils
+
+from fake_useragent import UserAgent
 
 
 @dataclass
@@ -36,8 +36,8 @@ class Config:
     def __post_init__(self) -> None:
         self.headers = {"User-Agent": self.ua.random}
 
-        # Создание экземпляров класса Fetcher с отдельными
-        # параметрами для каждого скрапера
+        self.db = Database()
+
         self.geekjob_fetcher = Fetcher(
             self,
             self.geekjob_url,
@@ -49,11 +49,10 @@ class Config:
             self.habr_pages_count,
         )
 
-        # Создание экземпляров классов скраперов.
-        # Всё, что необходимо для добавления нового
-        # скрапера - это создать модуль с кодом скрапера
-        # в каталоге scrapers и определить здесь его экземпляр.
-        self.scrapers = [GeekjobScraper(self), HabrScraper(self)]
+        self.geekjob_scraper = GeekjobScraper(self)
+        self.habr_scraper = HabrScraper(self)
+
+        self.scrapers = [self.geekjob_scraper, self.habr_scraper]
 
     def update_headers(self) -> dict:
         """Обновляет заголовки запроса.

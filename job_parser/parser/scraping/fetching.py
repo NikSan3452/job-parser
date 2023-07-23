@@ -1,5 +1,5 @@
 import asyncio
-from typing import TYPE_CHECKING, AsyncGenerator
+from typing import TYPE_CHECKING
 
 import aiohttp
 from bs4 import BeautifulSoup
@@ -100,44 +100,29 @@ class Fetcher:
 
         return await asyncio.gather(*tasks)
 
-    async def fetch_vacancy_pages(self, links: list[str]) -> AsyncGenerator:
+    async def fetch_vacancy_pages(self, links: list[str]) -> list[tuple[str, str]]:
         """
-        Асинхронный метод для получения данных со всех страниц вакансий.
+        Асинхронный метод для получения страниц вакансий.
 
-        В этом методе создается пустой список задач.
-        Затем выполняется цикл по всем переданным ссылкам на вакансии.
-        Для каждой ссылки выполняется ожидание с задержкой, заданной в конфигурации
-        `config.DOWNLOAD_DELAY`, и создается задача на получение данных со страницы
-        вакансии с помощью вызова метода `self.fetch(link)`.
-        Созданная задача добавляется в список задач.
+        В этом методе создается список задач для асинхронного скачивания страниц
+        вакансий по указанным ссылкам. Затем выполняется ожидание завершения всех
+        задач и сбор результатов.
 
-        После завершения цикла выполняется цикл по всем задачам с использованием функции
-        `asyncio.as_completed(tasks)`.
-        Внутри цикла выполняется ожидание завершения текущей задачи
-        и получение результата выполнения задачи.
-        Если результат выполнения задачи является кортежем, то он разбивается
-        на текст ответа и URL-адрес.
-        Если текст ответа или URL-адрес равны None, то выполнение текущей итерации
-        цикла прерывается.
-        В конце каждой итерации цикла с помощью оператора `yield` возвращается
-        кортеж с текстом ответа и URL-адресом.
+        В случае возникновения исключения при выполнении задачи, оно логируется,
+        а результат игнорируется.
 
         Args:
-            links (list[str]): Список ссылок на вакансии
-
+            links (list[str]): Список ссылок на страницы вакансий.
         Returns:
-            AsyncGenerator: Асинхронный генератор, который возвращает кортежи
-            с текстом ответа и URL-адресом для каждой страницы вакансии.
+            list[tuple[str, str]]: Список кортежей с HTML-кодом страницы и URL-адресом.
         """
         tasks: list[asyncio.Future] = []
+        results: list[tuple[str, str]] = []
 
         for link in links:
             await asyncio.sleep(self.config.download_delay)
             task = asyncio.create_task(self.fetch(link))
             tasks.append(task)
-
-        # Проверяем, что вернет задача, если None то пропускаем,
-        # таким образом избавляемся от пустых и некорректных значений в БД
         for task_ in asyncio.as_completed(tasks):
             try:
                 text, url = await task_
@@ -145,7 +130,8 @@ class Fetcher:
                 logger.exception(exc)
             if text is None or url is None:
                 continue
-            yield (text, url)
+            results.append((text, url))
+        return results
 
     async def get_vacancy_links(self, selector: str, domain: str) -> list[str]:
         """

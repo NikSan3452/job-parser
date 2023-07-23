@@ -1,31 +1,26 @@
-from parser.scraping.scrapers.base import Scraper
-from parser.scraping.fetching import Fetcher
-from parser.models import Vacancies
 from logger import setup_logging
 from loguru import logger
+
+from parser.models import Vacancies
 
 setup_logging()
 
 
 class Database:
-    """Класс для записи полученных вакансий в базу данных
     """
-    def __init__(self, scraper: Scraper, fetcher: Fetcher) -> None:
-        self.scraper = scraper
-        self.fetcher = fetcher
-        
-    async def record(self, links: list = []) -> None:
-        """Сохраняет информацию о вакансиях в базе данных.
+    Класс для записи вакансий в базу данных.
+    """
 
-        Метод использует объект fetcher для получения ссылок на вакансии 
-        и страницы вакансий. Затем он использует метод get_vacancy_details для 
-        извлечения информации о вакансиях и сохраняет ее в базе данных с помощью 
-        модели Vacancies.
+    async def record(self, vacancy_data: Vacancies) -> None:
+        """Асинхронный метод добавления вакансий в базу данных.
+
+        Args:
+            vacancy_data (Vacancy): Данные вакансии.
         """
-        async for page in self.fetcher.fetch_vacancy_pages(links):
-            async for vacancy in self.scraper.get_vacancy_details(page):
-                try:
-                    await Vacancies.objects.aget_or_create(**vacancy)
-                except Exception as exc:
-                    logger.exception(exc)
-        return None
+        try:
+            await Vacancies.objects.abulk_create(
+                [Vacancies(**data) for data in vacancy_data],
+                ignore_conflicts=True,
+            )
+        except Exception as exc:
+            logger.exception(exc)

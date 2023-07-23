@@ -1,8 +1,7 @@
 import asyncio
 import time
 
-from logger import setup_logging
-from loguru import logger
+from logger import setup_logging, logger
 
 from parser.scraping.configuration import Config
 
@@ -20,20 +19,15 @@ class StartScrapers:
     def __init__(self, config: Config) -> None:
         self.config = config
 
-    async def start(self) -> list:
+    async def start(self) -> None:
         """Запускает скраперы сайтов поиска работы.
 
         Создает задачи для сохранения данных с сайтов и ожидает их завершения.
-        Возвращает список результатов выполнения задач.
 
-        Returns:
-            list: Список результатов выполнения задач.
-
+        Returns: None
         """
-        tasks = [
-            asyncio.create_task(scraper.save()) for scraper in self.config.scrapers
-        ]
-        return await asyncio.gather(*tasks)
+        tasks = [asyncio.create_task(scraper.scrape()) for scraper in self.config.scrapers]
+        await asyncio.gather(*tasks)
 
 
 async def main():

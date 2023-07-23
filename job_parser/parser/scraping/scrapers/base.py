@@ -1,9 +1,16 @@
 import abc
 import datetime
 from dataclasses import asdict, dataclass
-from typing import AsyncGenerator
+from typing import TYPE_CHECKING
 
 from bs4 import BeautifulSoup
+
+if TYPE_CHECKING:
+    from parser.scraping.configuration import Config
+
+from logger import logger, setup_logging
+
+setup_logging()
 
 
 @dataclass
@@ -31,47 +38,65 @@ class Scraper(abc.ABC):
         job_board (str): Название сайта поиска работы.
     """
 
-    def __init__(self, job_board: str) -> None:
-        self.job_board = job_board
+    def __init__(self, config: "Config", parser: str) -> None:
+        self.config = config
+        self.parser = parser
 
-    async def get_vacancy_details(
-        self, page: tuple[str, str]
-    ) -> AsyncGenerator[dict, None]:
-        """Извлекает информацию о вакансии со страницы вакансии.
+        self.job_board = getattr(config, f"{parser}_job_board")
+        self.fetcher = getattr(config, f"{parser}_fetcher")
 
-        Метод принимает кортеж из двух элементов: HTML-кода страницы и URL-адреса.
-        Затем он создает объект BeautifulSoup из HTML-кода и использует абстрактные
-        методы для извлечения информации о вакансии. Полученная информация сохраняется
-        в экземпляре класса Vacancy и возвращается как результат генератора.
+    async def scrape(self, selector: str, domain: str) -> None:
+        """
+        Асинхронный метод для сбора данных о вакансиях с указанной площадки.
+
+        Сначала вызывается метод `get_vacancy_links` для получения
+        списка ссылок на вакансии с указанного домена. Затем вызывается метод
+        `fetch_vacancy_pages` для получения страниц вакансий.
+
+        Далее создается объект `BeautifulSoup` для парсинга HTML-кода страницы.
+        Затем вызываются различные методы для извлечения информации с использованием
+        объекта `BeautifulSoup`. Эта информация используется для создания объекта
+        `Vacancy`, который затем добавляется в список обработанных вакансий.
+
+        В конце метода список обработанных вакансий записывается в базу данных
+        с помощью метода `record`.
 
         Args:
-            page (tuple[str, str]): Кортеж из двух элементов: HTML-кода страницы 
-            и URL-адреса.
-
-        Yields:
-            AsyncGenerator[dict, None]: Словарь с информацией о вакансии.
-
+            selector (str): Название html-класса, по которому будет осуществлен поиск.
+            domain (str): Домен сайта площадки.
+        Returns:
+            None
         """
-        html, url = page
-        soup = BeautifulSoup(html, "lxml")
+        parsed_vacancy_list: list[dict] = []
+        links: list[str] = await self.fetcher.get_vacancy_links(selector, domain)
+        vacancy_list: list[dict] = await self.fetcher.fetch_vacancy_pages(links)
+        vacancy_count: int = 0
 
-        vacancy = Vacancy(
-            job_board=self.job_board,
-            url=url,
-            title=await self.get_title(soup),
-            city=await self.get_city(soup),
-            description=await self.get_description(soup),
-            salary_from=await self.get_salary_from(soup),
-            salary_to=await self.get_salary_to(soup),
-            salary_currency=await self.get_salary_currency(soup),
-            company=await self.get_company(soup),
-            experience=await self.get_experience(soup),
-            schedule=await self.get_schedule(soup),
-            remote=await self.get_remote(),
-            published_at=await self.get_published_at(soup),
+        for page in vacancy_list:
+            html, url = page
+            soup = BeautifulSoup(html, "lxml")
+            vacancy = Vacancy(
+                job_board=self.job_board,
+                url=url,
+                title=await self.get_title(soup),
+                city=await self.get_city(soup),
+                description=await self.get_description(soup),
+                salary_from=await self.get_salary_from(soup),
+                salary_to=await self.get_salary_to(soup),
+                salary_currency=await self.get_salary_currency(soup),
+                company=await self.get_company(soup),
+                experience=await self.get_experience(soup),
+                schedule=await self.get_schedule(soup),
+                remote=await self.get_remote(),
+                published_at=await self.get_published_at(soup),
+            )
+            parsed_vacancy_list.append(asdict(vacancy))
+            vacancy_count += 1
+
+        logger.debug(
+            f"Сбор вакансий с площадки {self.job_board} завершен. Собрано вакансий: {vacancy_count}"
         )
-
-        yield asdict(vacancy)
+        await self.config.db.record(parsed_vacancy_list)
 
     @abc.abstractmethod
     async def get_title(self, soup: BeautifulSoup) -> str:

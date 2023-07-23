@@ -1,12 +1,10 @@
 import datetime
 import re
+from parser.scraping.scrapers.base import Scraper
 from typing import TYPE_CHECKING
 
 from bs4 import BeautifulSoup
 from logger import setup_logging
-
-from parser.scraping.db import Database
-from parser.scraping.scrapers.base import Scraper
 
 if TYPE_CHECKING:
     from parser.scraping.configuration import Config
@@ -21,21 +19,20 @@ class GeekjobScraper(Scraper):
 
     def __init__(self, config: "Config") -> None:
         self.config = config
-        self.db = Database(self, self.config.geekjob_fetcher)
-        super().__init__(self.config.geekjob_job_board)
+        self.selector = "title"
+        super().__init__(config, "geekjob")
 
-    async def save(self) -> None:
-        """Сохраняет информацию о вакансиях с сайта geekjob.ru в базе данных.
-
-        Вначале вызывается метод `get_vacancy_links` класса Fetcher, в который
-        передаются HTML - селектор и домен сайта, в ответ возвращается список
-        ссылок на вакансии. Затем вызывается метод `record` класса Database,
-        который на основе полученных ссылок производит запись в базу.
+    async def scrape(self) -> None:
         """
-        links = await self.config.geekjob_fetcher.get_vacancy_links(
-            "title", self.config.geekjob_domain
-        )
-        await self.db.record(links)
+        Асинхронный метод для сбора данных о вакансиях с указанной площадки.
+
+        В этом методе вызывается родительский метод `scrape` с передачей ему аргументов
+        в виде HTML-класса и домена сайта.
+
+        Returns:
+            None
+        """
+        return await super().scrape(self.selector, self.config.geekjob_domain)
 
     async def get_title(self, soup: BeautifulSoup) -> str:
         """Извлекает название вакансии из объекта BeautifulSoup.
