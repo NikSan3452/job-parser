@@ -9,7 +9,6 @@
 <div class="row">
     <div class="col-md-6 my-2 mx-auto">
         <form action="{% url 'vacancies' %}" method="get">
-            {% csrf_token %}
             {{ form.title|as_crispy_field }}
             {{ form.city|as_crispy_field }}
             {{ form.date_from|as_crispy_field }}
