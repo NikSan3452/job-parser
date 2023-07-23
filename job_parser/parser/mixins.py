@@ -347,14 +347,16 @@ class VacancyFetcher:
             QuerySet: Набор результатов запроса, содержащий отфильтрованные вакансии.
         """
         q_objects = Q()
-        q_objects = self.filter_by_title(q_objects, params)
-        q_objects = self.filter_by_city(q_objects, params)
-        q_objects = self.filter_by_date(q_objects, params)
-        q_objects = self.filter_by_salary(q_objects, params)
-        q_objects = self.filter_by_experience(q_objects, params)
-        q_objects = self.filter_by_job_board(q_objects, params)
-        q_objects = self.filter_by_remote(q_objects, params)
-        vacancies = Vacancies.objects.filter(q_objects)
+        vacancies = []
+        if params.title:
+            q_objects = self.filter_by_title(q_objects, params)
+            q_objects = self.filter_by_city(q_objects, params)
+            q_objects = self.filter_by_date(q_objects, params)
+            q_objects = self.filter_by_salary(q_objects, params)
+            q_objects = self.filter_by_experience(q_objects, params)
+            q_objects = self.filter_by_job_board(q_objects, params)
+            q_objects = self.filter_by_remote(q_objects, params)
+            vacancies = Vacancies.objects.filter(q_objects)
         return vacancies
 
     def filter_by_title(self, q_objects: Q, params: RequestParams) -> Q:
