@@ -16,7 +16,7 @@ from .views.hiddenCompanies import (
     HideCompanyView,
 )
 from .views.home import HomePageView
-from .views.list import VacancyListView
+from .views.vacancies import VacancyListView
 
 urlpatterns = [
     path("", HomePageView.as_view(), name="home"),
