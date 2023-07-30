@@ -11,11 +11,11 @@ class Database:
     Класс для записи вакансий в базу данных.
     """
 
-    async def record(self, vacancy_data: Vacancies) -> None:
+    async def record(self, vacancy_data: list[dict]) -> None:
         """Асинхронный метод добавления вакансий в базу данных.
 
         Args:
-            vacancy_data (Vacancy): Данные вакансии.
+            vacancy_data (list[dict]): Данные вакансии.
         """
         try:
             await Vacancies.objects.abulk_create(

@@ -13,7 +13,7 @@ class Database:
         """Асинхронный метод добавления вакансий в базу данных.
 
         Args:
-            vacancy_data (Vacancy): Данные вакансии.
+            vacancy_data (list[Vacancy]): Данные вакансии.
         """
         try:
             await Vacancies.objects.abulk_create(
