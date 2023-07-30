@@ -1,15 +1,15 @@
 from dataclasses import dataclass
-from parser.forms import SearchingForm
-from parser.models import BlackList, Favourite, HiddenCompanies, Vacancies
-from parser.utils import Utils
 from typing import Any, Awaitable
 
 from django.contrib.auth.mixins import AccessMixin
-from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q, QuerySet
 from django.http import HttpRequest, HttpResponse
 from logger import setup_logging
 from loguru import logger
+
+from parser.forms import SearchingForm
+from parser.models import UserVacancies, Vacancies
+from parser.utils import Utils
 
 # Логирование
 setup_logging()
@@ -334,7 +334,7 @@ class VacancyFetcher:
     городу, дате и другим параметрам.
     """
 
-    def fetch(self, params: RequestParams) -> QuerySet:
+    async def fetch(self, params: RequestParams) -> QuerySet:
         """Метод извлечения вакансий.
 
         Этот метод извлекает вакансии из базы данных с использованием
@@ -349,17 +349,17 @@ class VacancyFetcher:
         q_objects = Q()
         vacancies = []
         if params.title:
-            q_objects = self.filter_by_title(q_objects, params)
-            q_objects = self.filter_by_city(q_objects, params)
-            q_objects = self.filter_by_date(q_objects, params)
-            q_objects = self.filter_by_salary(q_objects, params)
-            q_objects = self.filter_by_experience(q_objects, params)
-            q_objects = self.filter_by_job_board(q_objects, params)
-            q_objects = self.filter_by_remote(q_objects, params)
+            q_objects = await self.filter_by_title(q_objects, params)
+            q_objects = await self.filter_by_city(q_objects, params)
+            q_objects = await self.filter_by_date(q_objects, params)
+            q_objects = await self.filter_by_salary(q_objects, params)
+            q_objects = await self.filter_by_experience(q_objects, params)
+            q_objects = await self.filter_by_job_board(q_objects, params)
+            q_objects = await self.filter_by_remote(q_objects, params)
             vacancies = Vacancies.objects.filter(q_objects)
         return vacancies
 
-    def filter_by_title(self, q_objects: Q, params: RequestParams) -> Q:
+    async def filter_by_title(self, q_objects: Q, params: RequestParams) -> Q:
         """Метод фильтрации по названию.
 
         Этот метод добавляет условия фильтрации по названию вакансии к объекту Q.
@@ -380,7 +380,7 @@ class VacancyFetcher:
                 )
         return q_objects
 
-    def filter_by_city(self, q_objects: Q, params: RequestParams) -> Q:
+    async def filter_by_city(self, q_objects: Q, params: RequestParams) -> Q:
         """Метод фильтрации по городу.
 
         Этот метод добавляет условия фильтрации по городу к объекту Q.
@@ -396,7 +396,7 @@ class VacancyFetcher:
             q_objects &= Q(city__icontains=params.city)
         return q_objects
 
-    def filter_by_date(self, q_objects: Q, params: RequestParams) -> Q:
+    async def filter_by_date(self, q_objects: Q, params: RequestParams) -> Q:
         """Метод фильтрации по дате.
 
         Этот метод добавляет условия фильтрации по дате публикации вакансии к объекту Q.
@@ -415,7 +415,7 @@ class VacancyFetcher:
             q_objects &= Q(published_at__lte=params.date_to)
         return q_objects
 
-    def filter_by_salary(self, q_objects: Q, params: RequestParams) -> Q:
+    async def filter_by_salary(self, q_objects: Q, params: RequestParams) -> Q:
         """Метод фильтрации по зарплате.
 
         Этот метод добавляет условия фильтрации по зарплате к объекту Q.
@@ -437,7 +437,7 @@ class VacancyFetcher:
             q_objects &= Q(salary_to__lte=params.salary_to)
         return q_objects
 
-    def filter_by_experience(self, q_objects: Q, params: RequestParams) -> Q:
+    async def filter_by_experience(self, q_objects: Q, params: RequestParams) -> Q:
         """Метод фильтрации по опыту работы.
 
         Этот метод добавляет условия фильтрации по опыту работы к объекту Q.
@@ -453,7 +453,7 @@ class VacancyFetcher:
             q_objects &= Q(experience__in=params.experience)
         return q_objects
 
-    def filter_by_job_board(self, q_objects: Q, params: RequestParams) -> Q:
+    async def filter_by_job_board(self, q_objects: Q, params: RequestParams) -> Q:
         """Метод фильтрации по площадке поиска вакансий.
 
         Этот метод добавляет условия фильтрации по площадке поиска вакансий
@@ -470,7 +470,7 @@ class VacancyFetcher:
             q_objects &= Q(job_board__in=params.job_board)
         return q_objects
 
-    def filter_by_remote(self, q_objects: Q, params: RequestParams) -> Q:
+    async def filter_by_remote(self, q_objects: Q, params: RequestParams) -> Q:
         """Метод фильтрации по удаленной работе.
 
         Этот метод добавляет условия фильтрации по удаленной работе к объекту Q.
@@ -547,7 +547,7 @@ class VacanciesMixin:
         """
         return FormDataParser()
 
-    def get_vacancies(self, form: dict) -> QuerySet:
+    async def get_vacancies(self, form: SearchingForm) -> QuerySet:
         """
         Метод для получения списка вакансий.
 
@@ -567,127 +567,183 @@ class VacanciesMixin:
         """
         form_data = self.parser.get_form_data(form)
         params = self.parser.get_request_params(form_data)
-        vacancies = self.fetcher.fetch(params)
+        vacancies = await self.fetcher.fetch(params)
         return vacancies
 
-    def check_blacklist(self, vacancies: QuerySet, request: HttpRequest) -> QuerySet:
+    def check_vacancies(
+        self, vacancies: QuerySet, request: HttpRequest
+    ) -> tuple[QuerySet, QuerySet]:
         """
-        Метод для проверки вакансии в черном списке.
+        Метод для проверки вакансий на соответствие черному и скрытому спискам.
 
-        Метод принимает на вход объект класса `QuerySet` с вакансиями и объект класса
-        `HttpRequest` с запросом и возвращает объект класса `QuerySet` с
-        отфильтрованными вакансиями.
-        Метод получает пользователя из атрибута `user`
-        объекта `request`. Если пользователь является анонимным, то метод возвращает
-        исходный объект класса `QuerySet`. В противном случае метод создает множество
-        с URL-адресами вакансий из черного списка пользователя с помощью менеджера
-        модели `BlackList`. Затем метод создает список с отфильтрованными вакансиями,
-        исключая вакансии с URL-адресами из черного списка.
-        В конце работы метода возвращается список с отфильтрованными вакансиями.
+        Метод принимает на вход объекты класса `QuerySet` с вакансиями и объект
+        класса `HttpRequest` с запросом. Метод проверяет, является ли пользователь
+        анонимным. Если пользователь анонимный, то метод возвращает список вакансий
+        без изменений и пустой список избранных вакансий.
+
+        Если пользователь не анонимный, то метод получает список пользовательских
+        вакансий и вызывает методы `get_blacklist_urls`, `get_favourite_urls` и
+        `get_hidden_companies` для получения соответствующих списков URL-адресов и
+        компаний. Затем метод вызывает методы `get_filtered_vacancies` и
+        `get_favourite_vacancies` для получения соответствующих списков вакансий.
+        Возвращает кортеж из двух списков: отфильтрованных вакансий и избранных
+        вакансий.
 
         Args:
             vacancies (QuerySet): Объект класса `QuerySet` с вакансиями.
             request (HttpRequest): Объект класса `HttpRequest` с запросом.
 
         Returns:
-            QuerySet: Объект класса `QuerySet` с отфильтрованными вакансиями.
+            tuple[QuerySet, QuerySet]: Кортеж из двух списков: отфильтрованных
+            вакансий и избранных вакансий.
         """
-        filtered_vacancies: list[dict] = []
         try:
             user = request.user
-            # Если пользователь анонимный, то просто возвращаем изначальный список
             if user.is_anonymous:
-                return vacancies
+                return vacancies, []
 
-            # Получаем url из черного списка
-            blacklist_urls = {job.url for job in BlackList.objects.filter(user=user)}
+            user_vacancies = UserVacancies.objects.filter(user=user)
 
-            # Проверяем наличие url вакансии в черном списке
-            # и получаем отфильтрованный список
-            filtered_vacancies = [
-                vacancy for vacancy in vacancies if vacancy.url not in blacklist_urls
-            ]
+            blacklist_urls = self.get_blacklist_urls(vacancies, user_vacancies)
+            favourite_urls = self.get_favourite_urls(vacancies, user_vacancies)
+            hidden_companies = self.get_hidden_companies(vacancies, user_vacancies)
 
-            # Если url вакансии был в списке избранных, то удаляем его от туда
-            Favourite.objects.filter(user=user, url__in=blacklist_urls).delete()
+            filtered_vacancies = self.get_filtered_vacancies(
+                vacancies, blacklist_urls, hidden_companies
+            )
+            favourite_vacancies = self.get_favourite_vacancies(
+                vacancies, favourite_urls, hidden_companies
+            )
 
         except Exception as exc:
             logger.exception(exc)
             filtered_vacancies = vacancies
+            favourite_vacancies = []
 
-        return filtered_vacancies
+        return filtered_vacancies, favourite_vacancies
 
-    def check_hidden_list(self, vacancies: QuerySet, request: HttpRequest) -> QuerySet:
+    def get_blacklist_urls(self, vacancies: QuerySet, user_vacancies: QuerySet) -> set:
         """
-        Метод для проверки компании в списке скрытых.
+        Метод для получения списка URL-адресов вакансий из черного списка.
 
-        Метод принимает на вход объект класса `QuerySet` с вакансиями и объект класса
-        `HttpRequest` с запросом и возвращает объект класса `QuerySet` с
-        отфильтрованными вакансиями.
-        Метод получает пользователя из атрибута `user`
-        объекта `request`. Если пользователь является анонимным, то метод возвращает
-        исходный объект класса `QuerySet`. В противном случае метод создает множество
-        с названиями компаний из скрытого списка пользователя с помощью менеджера
-        модели `HiddenCompanies`. Затем метод создает список с отфильтрованными
-        вакансиями, исключая вакансии с названиями компаний из скрытого списка.
-        В конце работы метода возвращается список с отфильтрованными вакансиями.
+        Метод принимает на вход объекты класса `QuerySet` с вакансиями и
+        пользовательскими вакансиями и возвращает множество URL-адресов вакансий,
+        которые находятся в черном списке пользователя.
 
         Args:
             vacancies (QuerySet): Объект класса `QuerySet` с вакансиями.
-            request (HttpRequest): Объект класса `HttpRequest` с запросом.
-
-        Returns:
-            QuerySet: Объект класса `QuerySet` с отфильтрованными вакансиями.
-        """
-        mixin_logger = logger.bind(request=request)
-        try:
-            user = request.user
-            # Если пользователь анонимный, то просто возвращаем изначальный список
-            if user.is_anonymous:
-                return vacancies
-
-            # Получаем компании из списка скрытых
-            hidden_companies = {
-                company.name for company in HiddenCompanies.objects.filter(user=user)
-            }
-
-            # Проверяем наличие компании в списке скрытых
-            # и получаем отфильтрованный список
-            filtered_vacancies = [
-                vacancy
-                for vacancy in vacancies
-                if vacancy.company not in hidden_companies
-            ]
-
-        except Exception as exc:
-            mixin_logger.exception(exc)
-            filtered_vacancies = vacancies
-
-        return filtered_vacancies
-
-    def get_favourite(self, request: HttpRequest) -> QuerySet | list:
-        """
-        Метод для получения списка избранных вакансий.
-
-        Метод принимает на вход объект класса `HttpRequest` с запросом и возвращает
-        объект класса `QuerySet` или список с избранными вакансиями.
-        Метод получает пользователя из атрибута `user` объекта `request`.
-        Если пользователь является анонимным, то метод возвращает пустой список.
-        В противном случае вызывает метод `filter` менеджера модели `Favourite` с
-        передачей ему аргумента `user` и возвращает полученный объект класса `QuerySet`.
-
-        Args:
-            request (HttpRequest): Объект класса `HttpRequest` с запросом.
-
-        Returns:
-            QuerySet | list: Объект класса `QuerySet` или список с избранными 
+            user_vacancies (QuerySet): Объект класса `QuerySet` с пользовательскими
             вакансиями.
+
+        Returns:
+            set: Множество URL-адресов вакансий из черного списка.
         """
-        list_favourite: list = []
-        try:
-            user = request.user
-            if not isinstance(user, AnonymousUser):
-                list_favourite = Favourite.objects.filter(user=user).all()
-        except Exception as exc:
-            logger.exception(exc)
-        return list_favourite
+        blacklist_urls = set(
+            user_vacancy.url
+            for user_vacancy in user_vacancies
+            if user_vacancy.is_blacklist
+        )
+        return blacklist_urls.intersection(vacancy.url for vacancy in vacancies)
+
+    def get_favourite_urls(self, vacancies: QuerySet, user_vacancies: QuerySet) -> set:
+        """
+        Метод для получения списка URL-адресов избранных вакансий.
+
+        Метод принимает на вход объекты класса `QuerySet` с вакансиями и
+        пользовательскими вакансиями и возвращает множество URL-адресов избранных
+        вакансий пользователя.
+
+        Args:
+            vacancies (QuerySet): Объект класса `QuerySet` с вакансиями.
+            user_vacancies (QuerySet): Объект класса `QuerySet` с пользовательскими
+            вакансиями.
+
+        Returns:
+            set: Множество URL-адресов избранных вакансий.
+        """
+        favourite_urls = set(
+            user_vacancy.url
+            for user_vacancy in user_vacancies
+            if user_vacancy.is_favourite and not user_vacancy.is_blacklist
+        )
+        return favourite_urls.intersection(vacancy.url for vacancy in vacancies)
+
+    def get_hidden_companies(
+        self, vacancies: QuerySet, user_vacancies: QuerySet
+    ) -> set:
+        """
+        Метод для получения списка скрытых компаний.
+
+        Метод принимает на вход объекты класса `QuerySet` с вакансиями и
+        пользовательскими вакансиями и возвращает множество названий компаний,
+        которые пользователь скрыл.
+
+        Args:
+            vacancies (QuerySet): Объект класса `QuerySet` с вакансиями.
+            user_vacancies (QuerySet): Объект класса `QuerySet` с пользовательскими
+            вакансиями.
+
+        Returns:
+            set: Множество названий скрытых компаний.
+        """
+        hidden_companies = set()
+        for vacancy in vacancies:
+            for user_vacancy in user_vacancies:
+                if vacancy.company == user_vacancy.hidden_company:
+                    hidden_companies.add(user_vacancy.hidden_company)
+        return hidden_companies
+
+    def get_filtered_vacancies(
+        self, vacancies: QuerySet, blacklist_urls: set, hidden_companies: set
+    ) -> list:
+        """
+        Метод для получения множества отфильтрованных вакансий.
+
+        Метод принимает на вход объект класса `QuerySet` с вакансиями,
+        множество URL-адресов из черного списка и множество названий скрытых компаний.
+        Метод фильтрует список вакансий и удаляет из него те, которые находятся
+        в черном списке или принадлежат скрытым компаниям. Возвращает список
+        отфильтрованных вакансий.
+
+        Args:
+            vacancies (QuerySet): Объект класса `QuerySet` с вакансиями.
+            blacklist_urls (set): Множество URL-адресов из черного списка.
+            hidden_companies (set): Множество названий скрытых компаний.
+
+        Returns:
+            list: Список отфильтрованных вакансий.
+        """
+        filtered_vacancies = [
+            vacancy
+            for vacancy in vacancies
+            if vacancy.url not in blacklist_urls
+            and vacancy.company not in hidden_companies
+        ]
+        return filtered_vacancies
+
+    def get_favourite_vacancies(
+        self, vacancies: QuerySet, favourite_urls: set, hidden_companies: set
+    ) -> list:
+        """
+        Метод для получения множества избранных вакансий.
+
+        Метод принимает на вход объект класса `QuerySet` с вакансиями,
+        множество URL-адресов избранных вакансий и множество названий скрытых компаний.
+        Метод фильтрует список вакансий и оставляет в нем только те, которые находятся
+        в списке избранных и не принадлежат скрытым компаниям. Возвращает список
+        избранных вакансий.
+
+        Args:
+            vacancies (QuerySet): Объект класса `QuerySet` с вакансиями.
+            favourite_urls (set): Множество URL-адресов избранных вакансий.
+            hidden_companies (set): Множество названий скрытых компаний.
+
+        Returns:
+            list: Список избранных вакансий.
+        """
+        favourite_vacancies = [
+            vacancy
+            for vacancy in vacancies
+            if vacancy.url in favourite_urls and vacancy.company not in hidden_companies
+        ]
+        return favourite_vacancies
