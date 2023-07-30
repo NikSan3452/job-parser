@@ -1,12 +1,11 @@
-import json
+from parser.mixins import AsyncLoginRequiredMixin
+from parser.models import UserVacancies
+from parser.utils import Utils
 
-from django.db import DatabaseError, IntegrityError
+from django.db import DatabaseError
 from django.http import HttpRequest, JsonResponse
 from django.views import View
 from logger import logger, setup_logging
-
-from parser.mixins import AsyncLoginRequiredMixin
-from parser.models import Favourite
 
 # Логирование
 setup_logging()
@@ -21,66 +20,48 @@ class AddToFavouritesView(AsyncLoginRequiredMixin, View):
     """
 
     async def post(self, request: HttpRequest) -> JsonResponse:
-        """Метод обработки POST-запроса на добавление вакансии в избранное.
-        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
-
-        Внутри метода создается логгер с привязкой к данным запроса.
-        Данные из запроса  десериализуются в блоке try/except и случае успеха
-        загружаются в переменную `data`, из которой извлекается URL
-        и название вакансии. В противном случае будет вызвано исключение JSONDecodeError
-        с последующей отправкой соответствующего ответа JsonResponse со статусом 400.
-        Если URL и название вакансии вакансии отсутствуют будет возвращен
-        соответствующий JsonResponse со статусом 400.
-        Затем метод пытается создать или получить объект `Favourite`
-        с указанными данными пользователя, URL и названием вакансии.
-        Если все прошло успешно, в лог записывается информация об успешном добавлении
-        вакансии в избранное.
-        В случае возникновения исключения IntegrityError или DatabaseError они 
-        записываются в лог и будет возвращен соответствующий JsonResponse 
-        со статусом 400 или 500.
-        В конце метода возвращается JSON-ответ с информацией об успешном добавлении
-        вакансии в избранное.
+        """Метод обработки POST-запроса на добавление вакансии в список избранных.
 
         Args:
             request (HttpRequest): Объект запроса.
 
         Returns:
-            JsonResponse: JSON-ответ с информацией об
-            успешном добавлении вакансии в избранное.
+            JsonResponse: JSON-ответ с информацией об успешном добавлении вакансии
+            в список избранного.
         """
-        view_logger = logger.bind(request=request.POST)
-
-        try:
-            data = json.load(request)
-        except json.JSONDecodeError as exc:
-            view_logger.exception(exc)
+        data = Utils.get_data(request)
+        url = data.get("url", None)
+        title = data.get("title", None)
+        if not url or not title:
             return JsonResponse({"Ошибка": "Невалидный JSON"}, status=400)
 
-        vacancy_url = data.get("url")
-        vacancy_title = data.get("title")
-        if not vacancy_url or not vacancy_title:
-            return JsonResponse({"Ошибка": "Отсутствуют обязательные поля"}, status=400)
+        await self.add_to_favourite(request, url, title)
+        return JsonResponse({"status": f"Вакансия {url} добавлена в избранное"})
 
+    async def add_to_favourite(
+        self, request: HttpRequest, url: str, title: str
+    ) -> None:
+        """Асинхронный метод добавления вакансии в базу данных.
+
+        Args:
+            request (HttpRequest): Объект запроса.
+            url (str): URL вакансии.
+            title (str): Название вакансии.
+
+        Returns: None
+        """
         try:
-            await Favourite.objects.aget_or_create(
-                user=request.user, url=vacancy_url, title=vacancy_title
+            vacancy, created = await UserVacancies.objects.aget_or_create(
+                user=request.user, url=url, title=title
             )
-            view_logger.info(f"Вакансия {vacancy_title} добавлена в избранное")
-        except IntegrityError as exc:
-            view_logger.exception(exc)
-            return JsonResponse(
-                {"Ошибка": "Такая вакансия уже есть в избранном"}, status=400
-            )
-        except DatabaseError as exc:
-            view_logger.exception(exc)
-            return JsonResponse(
-                {"Ошибка": "Произошла ошибка базы данных"},
-                status=500,
-            )
+            if not vacancy.is_blacklist or not vacancy.hidden_company:
+                vacancy.is_favourite = True
+                vacancy.save()
 
-        return JsonResponse(
-            {"status": f"Вакансия {vacancy_title} добавлена в избранное"}
-        )
+            logger.info(f"Вакансия {url} добавлена в избранное")
+
+        except Exception as exc:
+            logger.exception(exc)
 
 
 class DeleteFromFavouritesView(AsyncLoginRequiredMixin, View):
@@ -92,58 +73,45 @@ class DeleteFromFavouritesView(AsyncLoginRequiredMixin, View):
     """
 
     async def post(self, request: HttpRequest) -> JsonResponse:
-        """Метод обработки POST-запроса на удаление вакансии из избранного.
-        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
-
-        Внутри метода создается логгер с привязкой к данным запроса.
-        Данные из запроса десериализуются в блоке try/except и в случае успеха
-        загружаются в переменную `data`, из которой извлекается URL вакансии.
-        В противном случае будет вызвано исключение JSONDecodeError с последующей
-        отправкой соответствующего ответа JsonResponse со статусом 400.
-        Если URL вакансии отсутствует, будет возвращен соответствующий JsonResponse
-        со статусом 400.
-        Затем метод пытается получить объект `Favourite` с указанными данными
-        пользователя и URL вакансии. Если объект существует, он удаляется, и в лог
-        записывается информация об успешном удалении вакансии из избранного.
-        В случае возникновения исключения DatabaseError оно записывается в лог и
-        будет возвращен соответствующий JsonResponse со статусом 500.
-        В конце метода возвращается JSON-ответ с информацией об успешном удалении
-        вакансии из избранного.
+        """Метод обработки POST-запроса на удаление вакансии из списка избранных.
 
         Args:
             request (HttpRequest): Объект запроса.
 
         Returns:
-            JsonResponse: JSON-ответ с информацией об успешном удалении
-            вакансии из избранного.
+            JsonResponse: JSON-ответ с информацией об успешном удалении вакансии
+            из списка избранного.
         """
-        view_logger = logger.bind(request=request.POST)
-
-        try:
-            data = json.load(request)
-        except json.JSONDecodeError as exc:
-            view_logger.exception(exc)
+        data = Utils.get_data(request)
+        url = data.get("url", None)
+        if not url:
             return JsonResponse({"Ошибка": "Невалидный JSON"}, status=400)
 
-        vacancy_url = data.get("url")
-        if not vacancy_url:
-            return JsonResponse({"Ошибка": "Отсутствуют обязательные поля"}, status=400)
+        await self.delete_from_favourite(request, url)
+        return JsonResponse({"status": f"Вакансия {url} удалена из избранного"})
 
+    async def delete_from_favourite(self, request: HttpRequest, url: str) -> None:
+        """Асинхронный метод удаления вакансии из базы данных.
+
+        Args:
+            request (HttpRequest): Объект запроса.
+            url (str): URL вакансии.
+
+        Returns: None
+        """
         try:
-            obj = await Favourite.objects.filter(
-                user=request.user, url=vacancy_url
+            vacancy = await UserVacancies.objects.filter(
+                user=request.user, url=url
             ).afirst()
-            if not obj:
-                return JsonResponse(
-                    {"Ошибка": f"Вакансия {vacancy_url} не найдена"}, status=404
-                )
+            if not vacancy:
+                pass
+            elif vacancy.is_blacklist or vacancy.hidden_company:
+                vacancy.is_favourite = False
             else:
-                obj.delete()
-                view_logger.info(f"Вакансия {vacancy_url} удалена из избранного")
-        except DatabaseError as exc:
-            view_logger.exception(exc)
-            return JsonResponse({"Ошибка": "Произошла ошибка базы данных"}, status=500)
-        return JsonResponse({"status": f"Вакансия {vacancy_url} удалена из избранного"})
+                vacancy.delete()
+                logger.info(f"Вакансия {url} удалена из избранного")
+        except Exception as exc:
+            logger.exception(exc)
 
 
 class ClearFavouriteList(AsyncLoginRequiredMixin, View):
@@ -156,18 +124,6 @@ class ClearFavouriteList(AsyncLoginRequiredMixin, View):
 
     async def post(self, request: HttpRequest) -> JsonResponse:
         """Метод обработки POST-запроса на очистку списка избранных вакансий.
-        Этот метод принимает объект запроса `request` и обрабатывает его асинхронно.
-
-        Внутри метода создается логгер с привязкой к данным запроса.
-        Затем метод пытается удалить все объекты `Favourite` для
-        конкретного пользователя.
-        Если все прошло успешно, в лог записывается информация об успешной очистке
-        списка избранного.
-        В случае возникновения исключения DatabaseError они
-        записываются в лог и будет возвращен соответствующий JsonResponse со
-        статусом 500.
-        В конце метода возвращается JSON-ответ с информацией об успешной очистке
-        списка избранного.
 
         Args:
             request (HttpRequest): Объект запроса.
@@ -176,15 +132,17 @@ class ClearFavouriteList(AsyncLoginRequiredMixin, View):
             JsonResponse: JSON-ответ с информацией об
             успешной очистке списка избранного.
         """
-        view_logger = logger.bind(request=request.POST)
         try:
-            await Favourite.objects.filter(user=request.user).adelete()
-            view_logger.info("Список избранных вакансий успешно очищен")
+            vacancies = UserVacancies.objects.filter(user=request.user)
+            for vacancy in vacancies:
+                if vacancy.is_blacklist or vacancy.hidden_company:
+                    vacancy.is_favourite = False
+                    vacancy.save()
+                else:
+                    vacancy.delete()
+            logger.info("Список избранных вакансий успешно очищен")
         except DatabaseError as exc:
-            view_logger.exception(exc)
-            return JsonResponse(
-                {"Ошибка": "Произошла ошибка базы данных"},
-                status=500,
-            )
+            logger.exception(exc)
+            return JsonResponse({"Ошибка": "Произошла ошибка базы данных"}, status=500)
 
         return JsonResponse({"status": "Список избранных вакансий успешно очищен"})
