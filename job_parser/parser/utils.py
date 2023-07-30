@@ -1,5 +1,12 @@
 import asyncio
 import datetime
+import json
+from typing import Any
+
+from django.http import HttpRequest
+from logger import logger, setup_logging
+
+setup_logging()
 
 
 class Utils:
@@ -217,3 +224,19 @@ class Utils:
             None
         """
         await asyncio.sleep(delay)
+
+    @staticmethod
+    def get_data(request: HttpRequest) -> dict:
+        """Метод получения данных из запроса.
+
+        Args:
+            request (HttpRequest): Объект запроса.
+
+        Returns:
+            Any | None: Данные.
+        """
+        try:
+            data = json.load(request)
+        except json.JSONDecodeError as exc:
+            logger.exception(exc)
+        return data
