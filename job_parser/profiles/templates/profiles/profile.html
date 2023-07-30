@@ -125,7 +125,7 @@
                             <div class="row hidden-companies">
                                 <div class="col-10">
                                     <h5 class="card-header bg-primary bg-opacity-10">
-                                        <p class="hidden-companies-name">{{ company.name }}</p>
+                                        <p class="hidden-companies-name">{{ company.hidden_company }}</p>
                                     </h5>
                                 </div>
                                 <div class="col-2 text-center my-auto">
@@ -135,7 +135,7 @@
                                         class="btn-check hidden-companies"
                                         id="hidden-companies-{{forloop.counter}}"
                                         autocomplete="off"
-                                        onchange="removeCompanyFromHiddenList('{{forloop.counter}}', '{{ company.name }}')">
+                                        onchange="removeCompanyFromHiddenList('{{forloop.counter}}', '{{ company.hidden_company }}')">
 
                                         <label class="btn btn-outline-primary add-to-black-list" for="hidden-companies-{{forloop.counter}}">
                                             <i class="fa-solid fa-trash-can trash" style="color:red"></i>

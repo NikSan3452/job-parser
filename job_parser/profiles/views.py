@@ -1,4 +1,4 @@
-from parser.models import Favourite, HiddenCompanies, BlackList
+from parser.models import UserVacancies
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -69,9 +69,9 @@ class ProfileView(LoginRequiredMixin, FormView):
         Метод для получения контекста данных для шаблона.
 
         Этот метод вызывается при отображении шаблона и возвращает словарь
-        с данными контекста. В блоке try/except пытается получить вакансии из 
-        избранного, вакансии из черного списка и скрытые компании. 
-        В случае успеха данные передаются в контекст, а иначе вызывается исключение 
+        с данными контекста. В блоке try/except пытается получить вакансии из
+        избранного, вакансии из черного списка и скрытые компании.
+        В случае успеха данные передаются в контекст, а иначе вызывается исключение
         ObjectDoesNotExist, либо Exception с соответствующей записью в лог.
         Данные контекста включают информацию о пользователе, избранных вакансиях,
         черном списке вакансий и скрытых компаниях.
@@ -89,9 +89,14 @@ class ProfileView(LoginRequiredMixin, FormView):
         black_list = None
         hidden_companies = None
         try:
-            favourite_vacancy = Favourite.objects.filter(user=user).all()
-            black_list = BlackList.objects.filter(user=user).all()
-            hidden_companies = HiddenCompanies.objects.filter(user=user).all()
+            vacancies = UserVacancies.objects.filter(user=user)
+            favourite_vacancy = {
+                vacancy for vacancy in vacancies if vacancy.is_favourite
+            }
+            black_list = {vacancy for vacancy in vacancies if vacancy.is_blacklist}
+            hidden_companies = {
+                company for company in vacancies if company.hidden_company
+            }
         except ObjectDoesNotExist as exc:
             logger.exception(f"Ошибка: {exc} объект не существует")
             raise ObjectDoesNotExist()
