@@ -26,14 +26,13 @@ class SuperJob(Parser):
     def __init__(self, config: "ParserConfig") -> None:
         super().__init__(config, "sj")
 
-    async def parse(self) -> Vacancy | None:
+    async def parse(self) -> None:
         """
         Асинхронный метод для парсинга вакансий с сайта SuperJob.
 
         Метод вызывает метод parse родительского класса Parser.
 
-        Returns:
-            Vacancy | None: Объект с результатом выполнения метода или None.
+        Returns: None
         """
         return await super().parse()
 

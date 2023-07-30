@@ -27,15 +27,14 @@ class Headhunter(Parser):
     def __init__(self, config: "ParserConfig", parser: str = "hh") -> None:
         super().__init__(config, parser)
 
-    async def parse(self) -> Vacancy | None:
+    async def parse(self) -> None:
         """
         Асинхронный метод для парсинга вакансий с сайта HeadHunter.
 
         Метод вызывает метод parse родительского класса Parser
         с параметрами запроса.
 
-        Returns:
-            Vacancy | None: Объект с результатом выполнения метода или None.
+        Returns: None
         """
         return await super().parse()
 

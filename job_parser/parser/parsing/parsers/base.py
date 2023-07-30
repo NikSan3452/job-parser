@@ -70,7 +70,7 @@ class Parser(abc.ABC):
         Returns: None
         """
         vacancy_list: list[dict] = await self.fetcher.get_vacancies()
-        parsed_vacancy_list: list[dict] = []
+        parsed_vacancy_list: list[Vacancy] = []
         vacancy_data: Vacancy | None = None
         vacancy_count: int = 0
 
@@ -224,7 +224,7 @@ class Parser(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_description(self, vacancy: dict | None) -> str:
+    async def get_description(self, vacancy: dict) -> str:
         """
         Абстрактный асинхронный метод для получения описания вакансии.
 
@@ -278,7 +278,7 @@ class Parser(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_schedule(self, vacancy: dict | None) -> str | None:
+    async def get_schedule(self, vacancy: dict) -> str | None:
         """
         Абстрактный асинхронный метод для получения графика работы.
 
