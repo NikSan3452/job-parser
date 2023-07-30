@@ -1,7 +1,7 @@
 import asyncio
 import time
 
-from logger import setup_logging, logger
+from logger import logger, setup_logging
 
 from parser.scraping.configuration import Config
 
@@ -26,7 +26,9 @@ class StartScrapers:
 
         Returns: None
         """
-        tasks = [asyncio.create_task(scraper.scrape()) for scraper in self.config.scrapers]
+        tasks = [
+            asyncio.create_task(scraper.scrape()) for scraper in self.config.scrapers
+        ]
         await asyncio.gather(*tasks)
 
 
