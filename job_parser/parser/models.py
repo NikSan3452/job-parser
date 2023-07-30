@@ -6,7 +6,10 @@ class Vacancies(models.Model):
     job_board = job_board = models.CharField(max_length=100, verbose_name="Площадка")
     url = models.URLField(null=False, unique=True)
     title = models.CharField(
-        max_length=500, db_index=True, null=True, verbose_name="Вакансия"
+        max_length=255,
+        db_index=True,
+        null=True,
+        verbose_name="Вакансия",
     )
     salary_from = models.IntegerField(null=True, blank=True, verbose_name="Зарплата от")
     salary_to = models.IntegerField(null=True, blank=True, verbose_name="Зарплата до")
@@ -16,9 +19,7 @@ class Vacancies(models.Model):
     description = models.TextField(
         max_length=10000, null=True, blank=True, verbose_name="Описание вакансии"
     )
-    city = models.TextField(
-        max_length=5000, null=True, blank=True, verbose_name="Город"
-    )
+    city = models.TextField(max_length=500, null=True, blank=True, verbose_name="Город")
     company = models.CharField(
         max_length=500, null=True, blank=True, verbose_name="Компания"
     )
@@ -31,7 +32,9 @@ class Vacancies(models.Model):
     experience = models.CharField(
         max_length=100, null=True, blank=True, verbose_name="Опыт работы"
     )
-    remote = models.BooleanField(default=False, null=True, blank=True)
+    remote = models.BooleanField(
+        default=False, null=True, blank=True, verbose_name="Удаленная компания"
+    )
     published_at = models.DateField(
         db_index=True, null=True, blank=True, verbose_name="Дата публикации"
     )
@@ -45,45 +48,28 @@ class Vacancies(models.Model):
         return self.title
 
 
-class Favourite(models.Model):
+class UserVacancies(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, verbose_name="Пользователь"
     )
-    url = models.URLField(null=False, unique=True)
-    title = models.CharField(max_length=250, verbose_name="Вакансия")
-
-    class Meta:
-        verbose_name = "Избранная вакансия"
-        verbose_name_plural = "Избранные вакансии"
-
-    def __str__(self) -> str:
-        return self.title
-
-
-class BlackList(models.Model):
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, verbose_name="Пользователь"
+    vacancy = models.ForeignKey(
+        Vacancies,
+        on_delete=models.CASCADE,
+        verbose_name="Вакансия",
+        null=True,
+        blank=True,
     )
-    url = models.URLField(null=False, unique=True)
-    title = models.CharField(max_length=250, null=True, verbose_name="Вакансия")
-
-    class Meta:
-        verbose_name = "Вакансия в черном списке"
-        verbose_name_plural = "Вакансии в черном списке"
-
-    def __str__(self) -> str:
-        return self.url
-
-
-class HiddenCompanies(models.Model):
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, verbose_name="Пользователь"
+    url = models.URLField(verbose_name="url")
+    title = title = models.CharField(max_length=255, verbose_name="Вакансия")
+    is_favourite = models.BooleanField(default=False, verbose_name="В избранном")
+    is_blacklist = models.BooleanField(default=False, verbose_name="В черном списке")
+    hidden_company = models.CharField(
+        max_length=255, null=True, verbose_name="Компания скрыта"
     )
-    name = models.CharField(max_length=255, verbose_name="Компания")
 
     class Meta:
-        verbose_name = "Скрытая компания"
-        verbose_name_plural = "Скрытые компании"
+        verbose_name = "Вакансия пользователя"
+        verbose_name_plural = "Вакансии пользователя"
 
-    def __str__(self) -> str:
-        return self.name
+    def __str__(self):
+        return f"{self.user.username} - {self.vacancy.title if self.vacancy else self.hidden_company}"

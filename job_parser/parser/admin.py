@@ -1,6 +1,6 @@
-from parser.models import Favourite, HiddenCompanies, Vacancies, BlackList
-
 from django.contrib import admin
+
+from parser.models import UserVacancies, Vacancies
 
 
 @admin.register(Vacancies)
@@ -23,16 +23,6 @@ class VacanciesAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(Favourite)
-class FavouriteAdmin(admin.ModelAdmin):
-    fields = ("user", "url", "title")
-
-
-@admin.register(BlackList)
-class VacancyBlackListAdmin(admin.ModelAdmin):
-    fields = ("user", "url", "title")
-
-
-@admin.register(HiddenCompanies)
-class HiddenCompaniesAdmin(admin.ModelAdmin):
-    fields = ("user", "name")
+@admin.register(UserVacancies)
+class UserVacanciesAdmin(admin.ModelAdmin):
+    fields = ("user", "url", "title, is_favourite, is_blacklist, hidden_company")
