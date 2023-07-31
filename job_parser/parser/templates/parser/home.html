@@ -19,14 +19,12 @@
                 {{ form.remote|as_crispy_field }}
             </div>
             <div class="form-row">
-                <div class="form-experience">
-                    {{ form.salary_from|as_crispy_field }}
-                    {{ form.experience|as_crispy_field }}
-                </div>
-                <div class="form-job_board">
-                    {{ form.salary_to|as_crispy_field }}
-                    {{ form.job_board|as_crispy_field }}
-                </div>
+                {{ form.salary_from|as_crispy_field }}
+                {{ form.salary_to|as_crispy_field }}
+            </div>
+            <div class="form-row">
+                {{ form.experience|as_crispy_field }}
+                {{ form.job_board|as_crispy_field }}
             </div>
             <div class="row my-2">
                 <div class="col text-center">
