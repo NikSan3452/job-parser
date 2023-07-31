@@ -1,4 +1,7 @@
 from dataclasses import dataclass
+from parser.forms import SearchingForm
+from parser.models import UserVacancies, Vacancies
+from parser.utils import Utils
 from typing import Any, Awaitable
 
 from django.contrib.auth.mixins import AccessMixin
@@ -6,10 +9,6 @@ from django.db.models import Q, QuerySet
 from django.http import HttpRequest, HttpResponse
 from logger import setup_logging
 from loguru import logger
-
-from parser.forms import SearchingForm
-from parser.models import UserVacancies, Vacancies
-from parser.utils import Utils
 
 # Логирование
 setup_logging()
@@ -42,6 +41,7 @@ class RequestParams:
     city: str | None
     date_from: str | None
     date_to: str | None
+    company: str | None
     salary_from: int | None
     salary_to: int | None
     experience: str | None
@@ -83,6 +83,7 @@ class FormDataParser:
                 "title",
                 "date_from",
                 "date_to",
+                'company',
                 "salary_from",
                 "salary_to",
                 "title_search",
@@ -120,6 +121,7 @@ class FormDataParser:
             city=self.get_city(form_data),
             date_from=self.get_date_from(form_data),
             date_to=self.get_date_to(form_data),
+            company=self.get_company(form_data),
             salary_from=self.get_salary_from(form_data),
             salary_to=self.get_salary_to(form_data),
             experience=self.get_experience(form_data),
@@ -167,7 +169,7 @@ class FormDataParser:
             str | None: Строка с городом или `None`.
         """
         city = form_data.get("city", None)
-        return city.lower().strip() if city else None
+        return city.strip() if city else None
 
     def get_date_from(self, form_data: dict) -> str | None:
         """
@@ -208,6 +210,22 @@ class FormDataParser:
         date_to = form_data.get("date_to", None)
         date_to = utils.check_date_to(date_to)
         return date_to
+
+    def get_company(self, form_data: dict) -> str | None:
+        """
+        Метод для получения компании из данных формы.
+
+        Метод принимает на вход словарь с данными из формы и возвращает строку
+        с компанией или `None`.
+        Метод получает значение ключа "company" из словаря с данными из формы.
+        Args:
+            form_data (dict): Словарь с данными из формы.
+
+        Returns:
+            str | None: Строка с компанией или `None`.
+        """
+        company = form_data.get("company", None)
+        return company.strip() if company else None
 
     def get_salary_from(self, form_data: dict) -> int:
         """
@@ -352,6 +370,7 @@ class VacancyFetcher:
             q_objects = await self.filter_by_title(q_objects, params)
             q_objects = await self.filter_by_city(q_objects, params)
             q_objects = await self.filter_by_date(q_objects, params)
+            q_objects = await self.filter_by_company(q_objects, params)
             q_objects = await self.filter_by_salary(q_objects, params)
             q_objects = await self.filter_by_experience(q_objects, params)
             q_objects = await self.filter_by_job_board(q_objects, params)
@@ -413,6 +432,22 @@ class VacancyFetcher:
 
         if params.date_to:
             q_objects &= Q(published_at__lte=params.date_to)
+        return q_objects
+    
+    async def filter_by_company(self, q_objects: Q, params: RequestParams) -> Q:
+        """Метод фильтрации по компании.
+
+        Этот метод добавляет условия фильтрации по компании к объекту Q.
+
+        Args:
+            q_objects (Q): Объект Q, содержащий текущие условия фильтрации.
+            params (RequestParams): Объект параметров запроса.
+
+        Returns:
+            Q: Обновленный объект Q с добавленными условиями фильтрации.
+        """
+        if params.company:
+            q_objects &= Q(company__icontains=params.company)
         return q_objects
 
     async def filter_by_salary(self, q_objects: Q, params: RequestParams) -> Q:

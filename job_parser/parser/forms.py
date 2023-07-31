@@ -1,5 +1,5 @@
 from django import forms
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 class SearchingForm(forms.Form):
@@ -67,6 +67,12 @@ class SearchingForm(forms.Form):
         label="Дата до",
         required=False,
         widget=forms.DateInput(format="%d/%m/%Y", attrs={"type": "date"}),
+    )
+    company = forms.CharField(
+        label="Компания",
+        required=False,
+        max_length=250,
+        widget=forms.TextInput(attrs={"placeholder": "Поиск по компании"}),
     )
     salary_from = forms.IntegerField(
         label="Зарплата от:",
