@@ -59,13 +59,11 @@ class UserVacancies(models.Model):
         null=True,
         blank=True,
     )
-    url = models.URLField(verbose_name="url")
-    title = title = models.CharField(max_length=255, verbose_name="Вакансия")
-    is_favourite = models.BooleanField(default=False, verbose_name="В избранном")
-    is_blacklist = models.BooleanField(default=False, verbose_name="В черном списке")
     hidden_company = models.CharField(
         max_length=255, null=True, verbose_name="Компания скрыта"
     )
+    is_favourite = models.BooleanField(default=False, verbose_name="В избранном")
+    is_blacklist = models.BooleanField(default=False, verbose_name="В черном списке")
 
     class Meta:
         verbose_name = "Вакансия пользователя"
