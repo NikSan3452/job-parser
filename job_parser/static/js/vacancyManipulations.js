@@ -1,10 +1,9 @@
 /**
  * Добавляет или удаляет вакансию из избранного при клике на соответствующую кнопку.
  * @param {number} index - Индекс кнопки на странице.
- * @param {string} vacancyUrl - URL вакансии.
- * @param {string} vacancyTitle - Заголовок вакансии.
+ * @param {string} pk - primary key вакансии.
  */
-function addToFavourite(index, vacancyUrl, vacancyTitle) {
+function addToFavourite(index, pk) {
     let checkbox = document.getElementById(`btn-check-outlined-${index}`);
 
     if (checkbox.checked == true) {
@@ -15,7 +14,7 @@ function addToFavourite(index, vacancyUrl, vacancyTitle) {
                 "X-Requested-With": "XMLHttpRequest",
                 "X-CSRFToken": getCookie("csrftoken"),
             },
-            body: JSON.stringify({ url: vacancyUrl, title: vacancyTitle }),
+            body: JSON.stringify({ pk: pk }),
         })
             .then((response) => response.json())
             .then((data) => {
@@ -29,7 +28,8 @@ function addToFavourite(index, vacancyUrl, vacancyTitle) {
                 "X-Requested-With": "XMLHttpRequest",
                 "X-CSRFToken": getCookie("csrftoken"),
             },
-            body: JSON.stringify({ url: vacancyUrl }),
+            body: JSON.stringify({ pk: pk }),
+            
         })
             .then((response) => response.json())
             .then((data) => {
@@ -41,10 +41,9 @@ function addToFavourite(index, vacancyUrl, vacancyTitle) {
 /**
  * Удаляет вакансию из списка на странице и добавляет ее в черный список при клике на соответствующую кнопку.
  * @param {number} index - Индекс кнопки на странице.
- * @param {string} vacancyUrl - URL вакансии.
- * @param {string} vacancyTitle - Заголовок вакансии.
+ * @param {string} pk - primary key вакансии.
  */
-function addVacancyToBlackList(index, vacancyUrl, vacancyTitle) {
+function addVacancyToBlackList(index, pk) {
     let vacancy = document.getElementById(`delete-vacancy-${index}`);
     vacancy.remove();
     // Получить текущее значение total_vacancies
@@ -63,7 +62,7 @@ function addVacancyToBlackList(index, vacancyUrl, vacancyTitle) {
             "X-Requested-With": "XMLHttpRequest",
             "X-CSRFToken": getCookie("csrftoken"),
         },
-        body: JSON.stringify({ url: vacancyUrl, title: vacancyTitle }),
+        body: JSON.stringify({ pk: pk }),
     })
         .then((response) => response.json())
         .then((data) => {
@@ -74,9 +73,9 @@ function addVacancyToBlackList(index, vacancyUrl, vacancyTitle) {
 /**
  * Удаляет вакансию из черного списка при клике на соответствующую кнопку.
  * @param {number} index - Индекс кнопки на странице.
- * @param {string} vacancyUrl - URL вакансии.
+ * @param {string} pk - primary key вакансии.
  */
-function removeVacancyFromBlackList(index, vacancyUrl) {
+function removeVacancyFromBlackList(index, pk) {
     const vacancy = document.getElementById(
         `btn-delete-from-black-list-${index}`
     );
@@ -89,7 +88,7 @@ function removeVacancyFromBlackList(index, vacancyUrl) {
             "X-Requested-With": "XMLHttpRequest",
             "X-CSRFToken": getCookie("csrftoken"),
         },
-        body: JSON.stringify({ url: vacancyUrl }),
+        body: JSON.stringify({ pk: pk }),
     }).then((response) => response.json());
 }
 
@@ -118,11 +117,12 @@ function removeCompanyFromHiddenList(index, company) {
 /**
  * Удаляет вакансию из избранного на странице профиля пользователя при клике на соответствующую кнопку.
  * @param {number} index - Индекс блока вакансии на странице.
- * @param {string} vacancyUrl - URL вакансии.
+ * @param {string} pk - primary key вакансии.
  */
-function removeFavouriteFromProfile(index, vacancyUrl) {
+function removeFavouriteFromProfile(index, pk) {
     const vacancy = document.getElementById(`favourite-block-${index}`);
     vacancy.remove();
+    console.log(pk)
     fetch("/delete-favourite/", {
         method: "POST",
         credentials: "same-origin",
@@ -130,11 +130,11 @@ function removeFavouriteFromProfile(index, vacancyUrl) {
             "X-Requested-With": "XMLHttpRequest",
             "X-CSRFToken": getCookie("csrftoken"),
         },
-        body: JSON.stringify({ url: vacancyUrl }),
+        body: JSON.stringify({ pk: pk }),
     })
         .then((response) => response.json())
         .then((data) => {
-            console.log(vacancyUrl);
+            console.log(data);
         });
 }
 

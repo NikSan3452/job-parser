@@ -1,11 +1,11 @@
-from parser.mixins import AsyncLoginRequiredMixin
-from parser.models import UserVacancies
-from parser.utils import Utils
-
 from django.db import DatabaseError
 from django.http import HttpRequest, JsonResponse
 from django.views import View
 from logger import logger, setup_logging
+
+from parser.mixins import AsyncLoginRequiredMixin
+from parser.models import UserVacancies, Vacancies
+from parser.utils import Utils
 
 # Логирование
 setup_logging()
@@ -26,20 +26,17 @@ class AddToBlackListView(AsyncLoginRequiredMixin, View):
             request (HttpRequest): Объект запроса.
 
         Returns:
-            JsonResponse: JSON-ответ с информацией об успешном добавлении вакансии 
+            JsonResponse: JSON-ответ с информацией об успешном добавлении вакансии
             в черный список.
         """
         data = Utils.get_data(request)
-        url = data.get("url", None)
-        title = data.get("title", None)
-        if not url or not title:
+        pk = data.get("pk", None)
+        if not pk:
             return JsonResponse({"Ошибка": "Невалидный JSON"}, status=400)
-        await self.add_to_blacklist(request, url, title)
-        return JsonResponse({"status": f"Вакансия {url} добавлена в черный список"})
+        await self.add_to_blacklist(request, pk)
+        return JsonResponse({"status": f"Вакансия {pk} добавлена в черный список"})
 
-    async def add_to_blacklist(
-        self, request: HttpRequest, url: str, title: str
-    ) -> None:
+    async def add_to_blacklist(self, request: HttpRequest, pk: str) -> None:
         """Асинхронный метод добавления вакансии в черный список.
 
         Args:
@@ -51,16 +48,17 @@ class AddToBlackListView(AsyncLoginRequiredMixin, View):
             None
         """
         try:
-            vacancy, created = await UserVacancies.objects.aget_or_create(
-                user=request.user, url=url, title=title
+            vacancy = await Vacancies.objects.aget(pk=pk)
+            user_vacancy, created = await UserVacancies.objects.aget_or_create(
+                user=request.user, vacancy=vacancy
             )
-            vacancy.is_blacklist = True
-            vacancy.save()
+            user_vacancy.is_blacklist = True
+            user_vacancy.save()
 
-            vacancy.is_favourite = False
-            vacancy.save()
+            user_vacancy.is_favourite = False
+            user_vacancy.save()
 
-            logger.info(f"Вакансия {url} добавлена в черный список")
+            logger.info(f"Вакансия {pk} добавлена в черный список")
         except Exception as exc:
             logger.exception(exc)
 
@@ -80,17 +78,17 @@ class DeleteFromBlacklistView(AsyncLoginRequiredMixin, View):
             request (HttpRequest): Объект запроса.
 
         Returns:
-            JsonResponse: JSON-ответ с информацией об успешном удалении вакансии 
+            JsonResponse: JSON-ответ с информацией об успешном удалении вакансии
             из черного списка.
         """
         data = Utils.get_data(request)
-        url = data.get("url", None)
-        if not url:
+        pk = data.get("pk", None)
+        if not pk:
             return JsonResponse({"Ошибка": "Невалидный JSON"}, status=400)
-        await self.delete_from_blacklist(request, url)
-        return JsonResponse({"status": f"Вакансия {url} удалена из черного списка"})
+        await self.delete_from_blacklist(request, pk)
+        return JsonResponse({"status": f"Вакансия {pk} удалена из черного списка"})
 
-    async def delete_from_blacklist(self, request: HttpRequest, url: str) -> None:
+    async def delete_from_blacklist(self, request: HttpRequest, pk: str) -> None:
         """Асинхронный метод удаления вакансии из черного списка.
 
         Args:
@@ -101,22 +99,23 @@ class DeleteFromBlacklistView(AsyncLoginRequiredMixin, View):
             None
         """
         try:
-            vacancy = await UserVacancies.objects.filter(
-                user=request.user, url=url
+            vacancy = await Vacancies.objects.aget(pk=pk)
+            user_vacancy = await UserVacancies.objects.filter(
+                user=request.user, vacancy=vacancy
             ).afirst()
-            if not vacancy:
+            if not user_vacancy:
                 pass
             elif (
-                vacancy.is_blacklist
-                and not vacancy.is_favourite
-                and not vacancy.hidden_company
+                user_vacancy.is_blacklist
+                and not user_vacancy.is_favourite
+                and not user_vacancy.hidden_company
             ):
-                vacancy.delete()
+                user_vacancy.delete()
             else:
-                vacancy.is_blacklist = True
-                vacancy.save()
+                user_vacancy.is_blacklist = True
+                user_vacancy.save()
 
-            logger.info(f"Вакансия {url} удалена из черного списка")
+            logger.info(f"Вакансия {pk} удалена из черного списка")
 
         except Exception as exc:
             logger.exception(exc)

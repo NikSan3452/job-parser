@@ -1,5 +1,5 @@
 from parser.mixins import AsyncLoginRequiredMixin
-from parser.models import UserVacancies
+from parser.models import UserVacancies, Vacancies
 from parser.utils import Utils
 
 from django.db import DatabaseError
@@ -30,17 +30,14 @@ class AddToFavouritesView(AsyncLoginRequiredMixin, View):
             в список избранного.
         """
         data = Utils.get_data(request)
-        url = data.get("url", None)
-        title = data.get("title", None)
-        if not url or not title:
+        pk = data.get("pk", None)
+        if not pk:
             return JsonResponse({"Ошибка": "Невалидный JSON"}, status=400)
 
-        await self.add_to_favourite(request, url, title)
-        return JsonResponse({"status": f"Вакансия {url} добавлена в избранное"})
+        await self.add_to_favourite(request, pk)
+        return JsonResponse({"status": f"Вакансия {pk} добавлена в избранное"})
 
-    async def add_to_favourite(
-        self, request: HttpRequest, url: str, title: str
-    ) -> None:
+    async def add_to_favourite(self, request: HttpRequest, pk: str) -> None:
         """Асинхронный метод добавления вакансии в базу данных.
 
         Args:
@@ -51,14 +48,15 @@ class AddToFavouritesView(AsyncLoginRequiredMixin, View):
         Returns: None
         """
         try:
-            vacancy, created = await UserVacancies.objects.aget_or_create(
-                user=request.user, url=url, title=title
+            vacancy = await Vacancies.objects.aget(pk=pk)
+            user_vacancy, created = await UserVacancies.objects.aget_or_create(
+                user=request.user, vacancy=vacancy
             )
-            if not vacancy.is_blacklist or not vacancy.hidden_company:
-                vacancy.is_favourite = True
-                vacancy.save()
+            if not user_vacancy.is_blacklist or not user_vacancy.hidden_company:
+                user_vacancy.is_favourite = True
+                user_vacancy.save()
 
-            logger.info(f"Вакансия {url} добавлена в избранное")
+            logger.info(f"Вакансия {pk} добавлена в избранное")
 
         except Exception as exc:
             logger.exception(exc)
@@ -83,14 +81,14 @@ class DeleteFromFavouritesView(AsyncLoginRequiredMixin, View):
             из списка избранного.
         """
         data = Utils.get_data(request)
-        url = data.get("url", None)
-        if not url:
+        pk = data.get("pk", None)
+        if not pk:
             return JsonResponse({"Ошибка": "Невалидный JSON"}, status=400)
 
-        await self.delete_from_favourite(request, url)
-        return JsonResponse({"status": f"Вакансия {url} удалена из избранного"})
+        await self.delete_from_favourite(request, pk)
+        return JsonResponse({"status": f"Вакансия {pk} удалена из избранного"})
 
-    async def delete_from_favourite(self, request: HttpRequest, url: str) -> None:
+    async def delete_from_favourite(self, request: HttpRequest, pk: str) -> None:
         """Асинхронный метод удаления вакансии из базы данных.
 
         Args:
@@ -100,16 +98,17 @@ class DeleteFromFavouritesView(AsyncLoginRequiredMixin, View):
         Returns: None
         """
         try:
-            vacancy = await UserVacancies.objects.filter(
-                user=request.user, url=url
+            vacancy = await Vacancies.objects.aget(pk=pk)
+            user_vacancy = await UserVacancies.objects.filter(
+                user=request.user, vacancy=vacancy
             ).afirst()
-            if not vacancy:
+            if not user_vacancy:
                 pass
-            elif vacancy.is_blacklist or vacancy.hidden_company:
-                vacancy.is_favourite = False
+            elif user_vacancy.is_blacklist or user_vacancy.hidden_company:
+                user_vacancy.is_favourite = False
             else:
-                vacancy.delete()
-                logger.info(f"Вакансия {url} удалена из избранного")
+                user_vacancy.delete()
+                logger.info(f"Вакансия {pk} удалена из избранного")
         except Exception as exc:
             logger.exception(exc)
 
