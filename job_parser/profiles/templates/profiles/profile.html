@@ -37,19 +37,19 @@
     <!-- Избранное -->
       <div class="tab-content" id="nav-tabContent">
         <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab" tabindex="0">
-            {% if favourite_vacancy|length > 0 %}
+            {% if favourite_vacancies|length > 0 %}
             <div class="wrap-button-clear">
                 <button type="submit" class="btn btn-primary button-clear" onclick="clearProfileFavouriteList()">Очистить</button>
             </div>
             {% endif %}
             <div class="row justify-content-center" id="wrap-favourite">
                 <div class="col-12">
-                    {% for vacancy in favourite_vacancy %}
+                    {% for vacancy in favourite_vacancies %}
                         <div class="card" id="favourite-block-{{forloop.counter}}">
                             <div class="row favourite">
                                 <div class="col-10">
                                     <h5 class="card-header bg-primary bg-opacity-10">
-                                        <a class="text-decoration-none" href="{{ vacancy.url }}"> {{ vacancy.title }}</a>
+                                        <a class="text-decoration-none" href="{{ vacancy.vacancy.url }}"> {{ vacancy.vacancy.title }}</a>
                                     </h5>
                                 </div>
                                 <div class="col-2 text-center my-auto">
@@ -62,7 +62,7 @@
                                         class="btn-check favourite-list"
                                         id="btn-check-outlined-{{forloop.counter}}"
                                         autocomplete="off"
-                                        onclick="removeFavouriteFromProfile('{{ forloop.counter }}', '{{ vacancy.url }}')">
+                                        onclick="removeFavouriteFromProfile('{{ forloop.counter }}', '{{ vacancy.vacancy.pk }}')">
                                         <label class="btn btn-outline-primary add-to-favourite my-auto" for="btn-check-outlined-{{forloop.counter}}">
                                             <i class="fa-solid fa-trash-can trash" style="color:red"></i>
                                         </label>
@@ -88,7 +88,7 @@
                             <div class="row blacklist">
                                 <div class="col-10">
                                     <h5 class="card-header bg-primary bg-opacity-10">
-                                        <a class="text-decoration-none" href="{{ vacancy.url }}"> {{ vacancy.title }}</a>
+                                        <a class="text-decoration-none" href="{{ vacancy.vacancy.url }}"> {{ vacancy.vacancy.title }}</a>
                                     </h5>
                                 </div>
                                 <div class="col-2 text-center my-auto">
@@ -98,7 +98,7 @@
                                         class="btn-check black-list"
                                         id="btn-check-delete-{{forloop.counter}}"
                                         autocomplete="off"
-                                        onchange="removeVacancyFromBlackList('{{forloop.counter}}', '{{ vacancy.url }}', '{{ vacancy.title }}')">
+                                        onchange="removeVacancyFromBlackList('{{forloop.counter}}', '{{ vacancy.vacancy.pk }}')">
 
                                         <label class="btn btn-outline-primary add-to-black-list" for="btn-check-delete-{{forloop.counter}}">
                                             <i class="fa-solid fa-trash-can trash" style="color:red"></i>

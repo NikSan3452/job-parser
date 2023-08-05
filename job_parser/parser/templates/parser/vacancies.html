@@ -94,7 +94,7 @@
                             class="btn-check black-list"
                             id="btn-check-delete-{{forloop.counter}}"
                             autocomplete="off"
-                            onchange="addVacancyToBlackList('{{forloop.counter}}', '{{ obj.url }}', '{{ obj.title }}')">
+                            onchange="addVacancyToBlackList('{{forloop.counter}}', '{{ obj.pk }}')">
 
                             <label class="btn btn-outline-primary add-to-black-list" for="btn-check-delete-{{forloop.counter}}">
                                 <i class="fa-solid fa-trash-can trash"></i>
@@ -108,7 +108,7 @@
                             class="btn-check favourite-list"
                             id="btn-check-outlined-{{forloop.counter}}"
                             autocomplete="off"
-                            onchange="addToFavourite('{{forloop.counter}}', '{{ obj.url }}', '{{ obj.title }}')">
+                            onchange="addToFavourite('{{forloop.counter}}', '{{ obj.pk }}')">
 
                             <label class="btn btn-outline-primary add-to-favourite" for="btn-check-outlined-{{forloop.counter}}">
                                 <i class="fa-solid fa-heart heart"></i>
