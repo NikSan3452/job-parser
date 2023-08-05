@@ -674,11 +674,11 @@ class VacanciesMixin:
             set: Множество URL-адресов вакансий из черного списка.
         """
         blacklist_urls = set(
-            user_vacancy.url
+            user_vacancy.vacancy_id
             for user_vacancy in user_vacancies
             if user_vacancy.is_blacklist
         )
-        return blacklist_urls.intersection(vacancy.url for vacancy in vacancies)
+        return blacklist_urls.intersection(vacancy.pk for vacancy in vacancies)
 
     def get_favourite_urls(self, vacancies: QuerySet, user_vacancies: QuerySet) -> set:
         """
@@ -697,11 +697,11 @@ class VacanciesMixin:
             set: Множество URL-адресов избранных вакансий.
         """
         favourite_urls = set(
-            user_vacancy.url
+            user_vacancy.vacancy_id
             for user_vacancy in user_vacancies
             if user_vacancy.is_favourite and not user_vacancy.is_blacklist
         )
-        return favourite_urls.intersection(vacancy.url for vacancy in vacancies)
+        return favourite_urls.intersection(vacancy.pk for vacancy in vacancies)
 
     def get_hidden_companies(
         self, vacancies: QuerySet, user_vacancies: QuerySet
@@ -751,7 +751,7 @@ class VacanciesMixin:
         filtered_vacancies = [
             vacancy
             for vacancy in vacancies
-            if vacancy.url not in blacklist_urls
+            if vacancy.pk not in blacklist_urls
             and vacancy.company not in hidden_companies
         ]
         return filtered_vacancies
@@ -779,6 +779,6 @@ class VacanciesMixin:
         favourite_vacancies = [
             vacancy
             for vacancy in vacancies
-            if vacancy.url in favourite_urls and vacancy.company not in hidden_companies
+            if vacancy.pk in favourite_urls and vacancy.company not in hidden_companies
         ]
         return favourite_vacancies
