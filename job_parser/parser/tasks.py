@@ -3,6 +3,7 @@ import datetime
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
+from django.db.models import Q
 from huey import crontab
 from huey.contrib.djhuey import periodic_task
 from logger import logger, setup_logging
@@ -50,8 +51,8 @@ class EmailSender:
             profile: Профиль пользователя.
         """
         self.vacancy_list = Vacancies.objects.filter(
-            title=profile.job,
-            city=profile.city,
+            Q(title__icontains=profile.job) | Q(description__icontains=profile.job),
+            city__icontains=profile.city,
             published_at=datetime.date.today(),
         )
         logger.debug("Вакансии со скрапера получены")
