@@ -134,7 +134,7 @@ class Fetcher:
         if self.items == 'items' and self.job_board == 'HeadHunter':
                 await Utils.set_delay(0.25)
         if self.items == 'items' and self.job_board == 'Zarplata':
-                await Utils.set_delay(0.2)
+                await Utils.set_delay(0.20)
         elif self.items == 'objects':
             await Utils.set_delay(3)
         elif self.items == 'results':
