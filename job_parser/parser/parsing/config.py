@@ -65,9 +65,6 @@ class ParserConfig:
 
     # OTHERS
     ua: UserAgent = UserAgent()
-    hh_delay: float = 0.2
-    zp_delay: float = 0.2
-    sj_delay: float = 1
 
     def __post_init__(self) -> None:
         self.client = WebClient(self)
