@@ -1,29 +1,23 @@
 import asyncio
 import datetime
-from parser.scraping.main import main
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
-from django.forms.models import model_to_dict
 from huey import crontab
 from huey.contrib.djhuey import periodic_task
 from logger import logger, setup_logging
 from profiles.models import Profile
 
-from .parsing.main import start
+from parser.scraping.main import StartScrapers
+
 from .models import Vacancies
+from .parsing.main import JobParser
 
 setup_logging()
 
 
 class EmailSender:
-    """
-    Класс для отправки электронных писем с вакансиями.
-
-    Этот класс содержит несколько методов для получения профилей,
-    вакансий со скрапера и API, объединения списков вакансий и отправки
-    электронных писем с вакансиями.
-    """
+    """Класс для отправки электронных писем с вакансиями."""
 
     def __init__(self) -> None:
         """
@@ -31,10 +25,8 @@ class EmailSender:
 
         Создает пустые списки для хранения профилей и вакансий.
         """
-        self.profiles: list = []
-        self.job_list_from_scraper: list = []
-        self.job_list_from_api: list = []
-        self.shared_job_list: list = []
+        self.profiles: list[Profile] = []
+        self.vacancy_list: list = []
 
     def get_profiles(self) -> None:
         """
@@ -46,7 +38,7 @@ class EmailSender:
         self.profiles = Profile.objects.filter(subscribe=True)
         logger.debug("Профили получены")
 
-    def get_jobs_from_scraper(self, profile) -> None:
+    def get_vacancies(self, profile: Profile) -> None:
         """
         Получение списка вакансий со скрапера.
 
@@ -57,45 +49,14 @@ class EmailSender:
         Args:
             profile: Профиль пользователя.
         """
-        self.job_list_from_scraper = VacancyScraper.objects.filter(
+        self.vacancy_list = Vacancies.objects.filter(
             title=profile.job,
             city=profile.city,
             published_at=datetime.date.today(),
         )
         logger.debug("Вакансии со скрапера получены")
 
-    def get_jobs_from_api(self, profile) -> None:
-        """
-        Получение списка вакансий со скрапера.
-
-        Этот метод принимает аргумент `profile` и получает список вакансий
-        из модели `VacancyScraper`, у которых значения полей `title`, `city`
-        и `published_at` соответствуют значениям этих полей в переданном профиле.
-
-        Args:
-            profile: Профиль пользователя.
-        """
-        params = model_to_dict(profile)
-        city_from_db = City.objects.filter(city=profile.city).first()
-        params.update(
-            date_from=datetime.date.today(),
-            date_to=datetime.date.today(),
-            city_from_db=city_from_db.city_id,
-        )
-        self.job_list_from_api = asyncio.run(main.run(params))
-        logger.debug("Вакансии с api получены")
-
-    def get_shared_job_list(self) -> None:
-        """
-        Получение объединенного списка вакансий.
-
-        Этот метод объединяет списки `job_list_from_api` и `job_list_from_scraper`
-        в один список `shared_job_list`.
-        """
-        self.job_list_from_api.extend(self.job_list_from_scraper)
-        self.shared_job_list = self.job_list_from_api
-
-    def send_email(self, profile) -> None:
+    def send_email(self, profile: Profile) -> None:
         """
         Отправка электронного письма с вакансиями.
 
@@ -116,12 +77,10 @@ class EmailSender:
         html = ""
         empty = "<h2>К сожалению на сегодня вакансий нет.</h2>"
 
-        for vacancy in self.shared_job_list:
-            html += (
-                f'<h5><a href="{vacancy.get("url")}">{vacancy.get("title")}</a></h5>'
-            )
-            html += f'<p>{vacancy.get("company")}</p>'
-            html += f'<p>Город: {vacancy.get("city")} | Дата публикации: {vacancy.get("published_at")}</p>'
+        for vacancy in self.vacancy_list:
+            html += f'<h5><a href="{vacancy.url}">{vacancy.title}</a></h5>'
+            html += f"<p>{vacancy.company}</p>"
+            html += f"<p>Город: {vacancy.city} | Дата публикации: {vacancy.published_at}</p>"
 
         _html = html if html else empty
 
@@ -137,74 +96,96 @@ class EmailSender:
     def sending_emails(self) -> None:
         """
         Отправка электронных писем с вакансиями.
-
-        Этот метод вызывает другие методы этого класса для получения профилей,
-        вакансий со скрапера и API, объединения списков вакансий и отправки
-        электронных писем с вакансиями. Если во время выполнения возникает
-        исключение, оно записывается в журнал.
         """
         try:
             self.get_profiles()
             for profile in self.profiles:
-                self.get_jobs_from_scraper(profile)
-                self.get_jobs_from_api(profile)
-                self.get_shared_job_list()
+                self.get_vacancies(profile)
                 self.send_email(profile)
         except Exception as exc:
             logger.exception(exc)
 
 
-
-
-# TODO Раскомментировать
-# @periodic_task(crontab(hour=settings.SENDING_EMAILS_HOURS))
-# def start_sending_emails() -> None:
-#     """
-#     Отправка электронных писем с вакансиями.
-
-#     Эта функция создает экземпляр класса `EmailSender` и вызывает его метод
-#     `sending_emails` для отправки электронных писем с вакансиями.
-#     Функция выполняется периодически с интервалом, указанным в настройках.
-#     """
-#     sender = EmailSender()
-#     sender.sending_emails()
-
-
-# @periodic_task(crontab(hour=settings.DELETE_OLD_VACANCIES_HOURS))
-# def delete_old_vacancies() -> None:
-#     """
-#     Удаление устаревших вакансий.
-
-#     Эта функция удаляет объекты модели `VacancyScraper`, у которых значение поля
-#     `published_at` меньше или равно текущей дате минус 10 дней.
-#     Если во время выполнения возникает исключение, оно записывается в журнал.
-#     Функция выполняется периодически с интервалом, указанным в настройках.
-#     """
-#     min_date = datetime.datetime.today() - datetime.timedelta(days=10)
-#     try:
-#         Vacancies.objects.filter(published_at__lte=min_date).delete()
-#     except Exception as exc:
-#         logger.exception(exc)
-#     logger.debug("Устаревшие вакансии удалены")
-
-
-@periodic_task(crontab(minute=f"*/{settings.PARSING_SCHEDULE_MINUTES}"))
-def run_parsing() -> None:
+@periodic_task(crontab(minute=f"*/{settings.SENDING_EMAILS_HOURS}"))
+def start_sending_emails() -> None:
     """
-    Запуск парсера.
+    Отправка электронных писем с вакансиями.
 
-    Эта функция запускает асинхронную функцию `start` для выполнения парсинга.
+    Эта функция создает экземпляр класса `EmailSender` и вызывает его метод
+    `sending_emails` для отправки электронных писем с вакансиями.
     Функция выполняется периодически с интервалом, указанным в настройках.
     """
-    asyncio.run(start())
+    sender = EmailSender()
+    sender.sending_emails()
 
 
-@periodic_task(crontab(minute=f"*/{settings.SCRAPING_SCHEDULE_MINUTES}"))
-def run_scraping() -> None:
+@periodic_task(crontab(minute=f"*/{settings.DELETE_OLD_VACANCIES}"))
+def delete_old_vacancies() -> None:
     """
-    Запуск скрапера.
+    Удаление устаревших вакансий.
 
-    Эта функция запускает асинхронную функцию `main` для выполнения скрапинга.
+    Эта функция удаляет объекты модели `VacancyScraper`, у которых значение поля
+    `published_at` меньше или равно текущей дате минус 10 дней.
+    Если во время выполнения возникает исключение, оно записывается в журнал.
     Функция выполняется периодически с интервалом, указанным в настройках.
     """
-    asyncio.run(main())
+    min_date = datetime.datetime.today() - datetime.timedelta(days=10)
+    try:
+        Vacancies.objects.filter(published_at__lte=min_date).delete()
+    except Exception as exc:
+        logger.exception(exc)
+    logger.debug("Устаревшие вакансии удалены")
+
+
+@periodic_task(crontab(minute=f"*/{settings.SCRAPE_HABR}"))
+def scrape_habr_task() -> None:
+    """
+    Запуск скрапера habr.
+    """
+    parser = StartScrapers()
+    asyncio.run(parser.scrape_habr())
+
+
+@periodic_task(crontab(minute=f"*/{settings.SCRAPE_GEEKJOB}"))
+def scrape_geekjob_task() -> None:
+    """
+    Запуск скрапера geekjob.
+    """
+    parser = StartScrapers()
+    asyncio.run(parser.scrape_geekjob())
+
+
+@periodic_task(crontab(minute=f"*/{settings.PARSE_HEADHUNTER}"))
+def parse_headhunter_task() -> None:
+    """
+    Запуск парсера headhunter.
+    """
+    parser = JobParser()
+    asyncio.run(parser.parse_headhunter())
+
+
+@periodic_task(crontab(minute=f"*/{settings.PARSE_ZARPLATA}"))
+def parse_zarplata_task() -> None:
+    """
+    Запуск парсера zarplata.
+    """
+    parser = JobParser()
+    asyncio.run(parser.parse_zarplata())
+
+
+@periodic_task(crontab(minute=f"*/{settings.PARSE_SUPERJOB}"))
+def pars_superjob_task() -> None:
+    """
+    Запуск парсера superjob.
+    """
+    parser = JobParser()
+    asyncio.run(parser.parse_superjob())
+
+
+@periodic_task(crontab(minute=f"*/{settings.PARSE_TRUDVSEM}"))
+def parse_trudvsem_task() -> None:
+    """
+    Запуск парсера trudvsem.
+    """
+    parser = JobParser()
+    asyncio.run(parser.parse_trudvsem())
