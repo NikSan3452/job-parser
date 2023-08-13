@@ -1,12 +1,11 @@
-import asyncio
-import time
 from parser.parsing.config import ParserConfig
-from typing import Any
 
-from logger import logger, setup_logging
+from logger import setup_logging
 
 # Логирование
 setup_logging()
+
+config = ParserConfig()
 
 
 class JobParser:
@@ -24,40 +23,42 @@ class JobParser:
         (Zarplata): Объект класса `Zarplata` для парсинга вакансий с сайта Zarplata.
         (Trudvsem): Объект класса `Trudvsem` для парсинга вакансий с сайта Trudvsem.
     """
-
-    def __init__(self, config: ParserConfig) -> None:
-        self.config = config
-
-    async def parse_vacancies(self) -> None:
+    @config.utils.timeit
+    async def parse_headhunter(self) -> None:
         """
-        Асинхронный метод для парсинга вакансий.
-
-        Метод запускает задачи для парсинга вакансий с сайтов поиску работы.
+        Асинхронный метод для парсинга вакансий с сайта headhunter.
 
         Returns:
             None
         """
-        tasks = [asyncio.create_task(parser.parse()) for parser in self.config.parsers]
-        await asyncio.gather(*tasks)
+        await config.hh_parser.parse()
 
+    @config.utils.timeit
+    async def parse_zarplata(self) -> None:
+        """
+        Асинхронный метод для парсинга вакансий с сайта zarplata.
 
-async def start() -> Any:
-    """
-    Асинхронная функция для запуска парсинга вакансий.
+        Returns:
+            None
+        """
+        await config.zp_parser.parse()
 
-    Функция создает объект класса `JobParser`, затем вызывает его метод
-    `parse_vacancies` для парсинга. В конце работы функции выводится сообщение с
-    информацией о времени, затраченном на работу парсера.
+    @config.utils.timeit
+    async def parse_superjob(self) -> None:
+        """
+        Асинхронный метод для парсинга вакансий с сайта superjob.
 
-    Returns:
-        Any
-    """
-    start = time.time()
+        Returns:
+            None
+        """
+        await config.sj_parser.parse()
 
-    config = ParserConfig()
-    parser = JobParser(config)
+    @config.utils.timeit
+    async def parse_trudvsem(self) -> None:
+        """
+        Асинхронный метод для парсинга вакансий с сайта trudvsem.
 
-    await parser.parse_vacancies()
-
-    end = time.time() - start
-    logger.debug(f"Затраченное на работу парсера время: {round(end, 2)}")
+        Returns:
+            None
+        """
+        await config.tv_parser.parse()
