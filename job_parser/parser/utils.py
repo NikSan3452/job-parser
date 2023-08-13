@@ -1,8 +1,8 @@
 import asyncio
 import datetime
 import json
-from typing import Any
-
+import time
+from functools import wraps
 from django.http import HttpRequest
 from logger import logger, setup_logging
 
@@ -240,3 +240,14 @@ class Utils:
         except json.JSONDecodeError as exc:
             logger.exception(exc)
         return data
+
+    @staticmethod
+    def timeit(f):
+        @wraps(f)
+        async def wrapper(*args, **kwargs):
+            start = time.time()
+            result = await f(*args, **kwargs)
+            finish = time.time()
+            logger.debug(f"Затрачено времени: {finish - start}")
+            return result
+        return wrapper
