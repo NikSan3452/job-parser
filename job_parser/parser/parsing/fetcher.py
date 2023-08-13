@@ -1,6 +1,6 @@
 import json
 from parser.parsing.connection import WebClient
-
+from parser.utils import Utils
 from loguru import logger
 
 
@@ -71,6 +71,7 @@ class Fetcher:
         Returns:
             dict: Словарь с данными.
         """
+        await self.set_delay()
         try:
             response = await self.client.create_client(url, self.params)
             data = response.content.decode()
@@ -124,3 +125,17 @@ class Fetcher:
         if vacancy_id:
             details = await self.get_data(f"{self.url}/{vacancy_id}")
         return details
+
+    async def set_delay(self) -> None:
+        """
+        Асинхронный метод для установки задержки перед выполнением запроса.
+        Задержка устанавливается с помощью метода `set_delay` класса `Utils`.
+        """
+        if self.items == 'items' and self.job_board == 'HeadHunter':
+                await Utils.set_delay(0.25)
+        if self.items == 'items' and self.job_board == 'Zarplata':
+                await Utils.set_delay(0.2)
+        elif self.items == 'objects':
+            await Utils.set_delay(3)
+        elif self.items == 'results':
+            await Utils.set_delay(1)
