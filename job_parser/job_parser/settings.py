@@ -186,6 +186,10 @@ PARSE_HEADHUNTER = os.getenv("PARSE_HEADHUNTER", 10)
 PARSE_ZARPLATA = os.getenv("PARSE_ZARPLATA", 10)
 PARSE_SUPERJOB = os.getenv("PARSE_SUPERJOB", 10)
 PARSE_TRUDVSEM = os.getenv("PARSE_TRUDVSEM", 10)
+
+SCRAPE_HABR = os.getenv("SCRAPE_HABR", 10)
+SCRAPE_GEEKJOB = os.getenv("SCRAPE_GEEKJOB", 10)
+
 DELETE_OLD_VACANCIES = os.getenv("DELETE_OLD_VACANCIES", 0)
 
 settings_dir = os.path.dirname(os.path.abspath(__file__))
