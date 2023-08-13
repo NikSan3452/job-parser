@@ -130,7 +130,6 @@ class Parser(abc.ABC):
             updated_vacancy_data.description = description
             updated_vacancy_data.schedule = schedule
             updated_vacancy_data.remote = remote
-            await self.config.utils.set_delay(self.config.hh_delay)
 
         if self.job_board == "Zarplata":
             details = await self.fetcher.get_vacancy_details(vacancy)
@@ -141,13 +140,11 @@ class Parser(abc.ABC):
             updated_vacancy_data.description = description
             updated_vacancy_data.schedule = schedule
             updated_vacancy_data.remote = remote
-            await self.config.utils.set_delay(self.config.zp_delay)
 
         if self.job_board == "SuperJob":
             updated_vacancy_data.description = await self.get_description(vacancy)
             updated_vacancy_data.schedule = await self.get_schedule(vacancy)
             updated_vacancy_data.remote = await self.get_remote(vacancy_data.schedule)
-            await self.config.utils.set_delay(self.config.sj_delay)
 
         if self.job_board == "Trudvsem":
             updated_vacancy_data.description = await self.get_description(vacancy)
