@@ -1,5 +1,3 @@
-from parser.models import UserVacancies
-
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
@@ -8,6 +6,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.views.generic import FormView
 from logger import logger, setup_logging
+from parser.models import UserVacancies
 
 from .forms import ProfileForm
 from .models import Profile, User
@@ -81,7 +80,8 @@ class ProfileView(LoginRequiredMixin, FormView):
             **kwargs (dict): Дополнительные аргументы.
 
         Returns:
-            dict[str, str]: Словарь с контекстными данными для отображения страницы профиля.
+            dict[str, str]: Словарь с контекстными данными для отображения
+            страницы профиля.
         """
         context = super().get_context_data(**kwargs)
         user = self.request.user
@@ -98,7 +98,13 @@ class ProfileView(LoginRequiredMixin, FormView):
         )
         return context
 
-    def get_user_vacancies(self, user: AbstractBaseUser | AnonymousUser) -> None:
+    def get_user_vacancies(
+        self, user: AbstractBaseUser | AnonymousUser
+    ) -> tuple[
+        set[UserVacancies] | None,
+        set[UserVacancies] | None,
+        set[UserVacancies] | None,
+    ]:
         """Возвращает списки вакансий пользователя.
 
         Args:
