@@ -74,6 +74,9 @@ class Fetcher:
         await self.set_delay()
         try:
             response = await self.client.create_client(url, self.params)
+            if not response.status_code == 200:
+                logger.debug(f"Error, response status code: {response.status_code}")
+                pass
             data = response.content.decode()
             json_data = json.loads(data)
             return json_data
