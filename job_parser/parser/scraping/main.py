@@ -28,4 +28,4 @@ class StartScrapers:
         Returns:
             None
         """
-        await config.habr_scraper.scrape()
+        await config.geekjob_scraper.scrape()
