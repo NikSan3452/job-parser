@@ -144,7 +144,7 @@ class Parser(abc.ABC):
         if self.job_board == "SuperJob":
             updated_vacancy_data.description = await self.get_description(vacancy)
             updated_vacancy_data.schedule = await self.get_schedule(vacancy)
-            updated_vacancy_data.remote = await self.get_remote(vacancy_data.schedule)
+            updated_vacancy_data.remote = await self.get_remote(vacancy_data.employment)
 
         if self.job_board == "Trudvsem":
             updated_vacancy_data.description = await self.get_description(vacancy)
@@ -313,7 +313,7 @@ class Parser(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_published_at(self, vacancy: dict) -> datetime.date | None:
+    async def get_published_at(self, vacancy: dict) -> datetime.datetime | None:
         """
         Абстрактный асинхронный метод для получения даты публикации вакансии.
 
@@ -321,6 +321,7 @@ class Parser(abc.ABC):
             vacancy (dict): Словарь с информацией о вакансии.
 
         Returns:
-            str | None: Дата публикации вакансии или None, если дата отсутствует.
+            datetime.datetime | None: Дата публикации вакансии или None, если 
+            дата отсутствует.
         """
         pass
