@@ -3,6 +3,7 @@ import datetime
 import json
 import time
 from functools import wraps
+
 from django.http import HttpRequest
 from logger import logger, setup_logging
 
@@ -12,46 +13,56 @@ setup_logging()
 class Utils:
     @staticmethod
     def check_date_from(
-        date_from: str | None | datetime.date,
-    ) -> datetime.date | str:
+        date_from: str | None | datetime.datetime,
+    ) -> datetime.datetime | str:
         """Проверяет дату на пустое значение, если истина, то
         будет установлено значение по умолчанию.
 
         Args:
-            date_from (str | None | datetime.date): Дата от.
+            date_from (str | None | datetime.datetime): Дата от.
 
         Returns:
-            datetime.date | str: Время задаваемое по
+            datetime.datetime | str: Время задаваемое по
             умолчанию.
         """
         if not date_from or date_from == "":
-            new_date_from = datetime.date.today()
+            new_date_from = datetime.datetime.today().replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
         elif isinstance(date_from, str):
-            new_date_from = datetime.datetime.strptime(date_from, "%Y-%m-%d").date()
+            new_date_from = datetime.datetime.strptime(date_from, "%Y-%m-%d").replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
         else:
-            new_date_from = date_from
+            new_date_from = date_from.replace(hour=0, minute=0, second=0, microsecond=0)
         return new_date_from
 
     @staticmethod
     def check_date_to(
-        date_to: str | None | datetime.date,
-    ) -> datetime.date | str:
+        date_to: str | None | datetime.datetime,
+    ) -> datetime.datetime | str:
         """Проверяет дату на пустое значение, если истина, то
         будет установлено значение по умолчанию.
 
         Args:
-            date_to (str | None | datetime.date): Дата до.
+            date_to (str | None | datetime.datetime): Дата до.
 
         Returns:
-            datetime.date | str: Время задаваемое по
+            datetime.datetime | str: Время задаваемое по
             умолчанию.
         """
         if not date_to or date_to == "":
-            new_date_to = datetime.date.today()
+            new_date_to = datetime.datetime.today().replace(
+                hour=23, minute=59, second=59, microsecond=999999
+            )
         elif isinstance(date_to, str):
-            new_date_to = datetime.datetime.strptime(date_to, "%Y-%m-%d").date()
+            new_date_to = datetime.datetime.strptime(date_to, "%Y-%m-%d").replace(
+                hour=23, minute=59, second=59, microsecond=999999
+            )
         else:
-            new_date_to = date_to
+            new_date_to = date_to.replace(
+                hour=23, minute=59, second=59, microsecond=999999
+            )
         return new_date_to
 
     @staticmethod
@@ -250,4 +261,5 @@ class Utils:
             finish = time.time()
             logger.debug(f"Затрачено времени: {finish - start}")
             return result
+
         return wrapper

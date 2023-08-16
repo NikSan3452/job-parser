@@ -6,7 +6,8 @@ from logger import setup_logging
 
 if TYPE_CHECKING:
     from ..config import ParserConfig
-from .base import Parser, Vacancy
+
+from .base import Parser
 
 # Логирование
 setup_logging()
@@ -209,7 +210,6 @@ class SuperJob(Parser):
         """
         schedule = vacancy.get("type_of_work", None)
         schedule = schedule.get("title", None) if schedule else None
-        await self.get_remote(schedule)
         return schedule
 
     async def get_remote(self, schedule: str | None) -> bool:
@@ -262,7 +262,7 @@ class SuperJob(Parser):
             )
         return converted_experience
 
-    async def get_published_at(self, vacancy: dict) -> datetime.date | None:
+    async def get_published_at(self, vacancy: dict) -> datetime.datetime | None:
         """
         Асинхронный метод для получения даты публикации вакансии.
 
@@ -273,8 +273,8 @@ class SuperJob(Parser):
             vacancy (dict): Словарь с информацией о вакансии.
 
         Returns:
-            datetime.date | None: Дата публикации вакансии или None, если дата
+            datetime.datetime | None: Дата публикации вакансии или None, если дата
             отсутствует.
         """
         date = vacancy.get("date_published", None)
-        return datetime.date.fromtimestamp(date) if date else None
+        return datetime.datetime.fromtimestamp(date) if date else None

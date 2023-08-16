@@ -35,7 +35,7 @@ class Vacancies(models.Model):
     remote = models.BooleanField(
         default=False, null=True, blank=True, verbose_name="Удаленная компания"
     )
-    published_at = models.DateField(
+    published_at = models.DateTimeField(
         db_index=True, null=True, blank=True, verbose_name="Дата публикации"
     )
 

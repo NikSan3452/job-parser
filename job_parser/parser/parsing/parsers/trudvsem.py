@@ -289,7 +289,7 @@ class Trudvsem(Parser):
                 )
         return converted_experience
 
-    async def get_published_at(self, vacancy: dict) -> datetime.date:
+    async def get_published_at(self, vacancy: dict) -> datetime.datetime:
         """
         Асинхронный метод для получения даты публикации вакансии.
 
@@ -297,7 +297,7 @@ class Trudvsem(Parser):
             vacancy (dict): Словарь с информацией о вакансии.
 
         Returns:
-            datetime.date | None: Дата публикации вакансии или None, если дата
+            datetime.datetime | None: Дата публикации вакансии или None, если дата
             отсутствует.
         """
-        return datetime.date.today()
+        return datetime.datetime.now()

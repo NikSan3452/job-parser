@@ -1,10 +1,11 @@
 import datetime
 import re
-from parser.scraping.scrapers.base import Scraper
 from typing import TYPE_CHECKING
 
 from bs4 import BeautifulSoup
 from logger import setup_logging
+
+from parser.scraping.scrapers.base import Scraper
 
 if TYPE_CHECKING:
     from parser.scraping.configuration import Config
@@ -289,38 +290,38 @@ class GeekjobScraper(Scraper):
             published_at = await self.convert_date(date.text)
         return published_at
 
-    async def convert_date(self, date: str) -> datetime.date:
+    async def convert_date(self, date: str) -> datetime.datetime:
         """Конвертирует полученное значение даты.
 
         Args:
             date (str): Дата.
 
         Returns:
-            datetime.date: Дата в виде объекта datetime.
+            datetime.datetime: Дата в виде объекта datetime.
         """
         months = {
-            "января": "January",
-            "февраля": "February",
-            "марта": "March",
-            "апреля": "April",
-            "мая": "May",
-            "июня": "June",
-            "июля": "July",
-            "августа": "August",
-            "сентября": "September",
-            "октября": "October",
-            "ноября": "November",
-            "декабря": "December",
+            "января": 1,
+            "февраля": 2,
+            "марта": 3,
+            "апреля": 4,
+            "мая": 5,
+            "июня": 6,
+            "июля": 7,
+            "августа": 8,
+            "сентября": 9,
+            "октября": 10,
+            "ноября": 11,
+            "декабря": 12,
         }
         ru_date_str = date.strip().lower().split()
         if ru_date_str[1] in months:
             if len(ru_date_str) >= 3:
                 en_date_str = (
-                    f"{ru_date_str[0]} {months[ru_date_str[1]]} {ru_date_str[2]}"
+                    f"{ru_date_str[0]}-{months[ru_date_str[1]]:02d}-{ru_date_str[2]}"
                 )
             else:
-                en_date_str = f"{ru_date_str[0]} {months[ru_date_str[1]]} {datetime.datetime.today().year}"
+                en_date_str = f"{ru_date_str[0]}-{months[ru_date_str[1]]:02d}-{datetime.datetime.today().year}"
 
-        date_obj = datetime.datetime.strptime(en_date_str, "%d %B %Y").date()
-
-        return date_obj
+        en_date = datetime.datetime.strptime(en_date_str, "%d-%m-%Y")
+        
+        return en_date

@@ -283,7 +283,7 @@ class HabrScraper(Scraper):
                 return True
         return False
 
-    async def get_published_at(self, soup: BeautifulSoup) -> datetime.date | None:
+    async def get_published_at(self, soup: BeautifulSoup) -> datetime.datetime | None:
         """Извлекает дату публикации вакансии из объекта BeautifulSoup.
 
         Ищет тег `time` на странице и анализирует значение его атрибута `datetime`.
@@ -294,15 +294,14 @@ class HabrScraper(Scraper):
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
         Returns:
-            datetime.date | None: Дата публикации вакансии или None, если информация
+            datetime.datetime | None: Дата публикации вакансии или None, если информация
             отсутствует.
 
         """
         published_at = None
         time_element = soup.find("time")
         if time_element:
-            datetime_object = datetime.datetime.strptime(
+            published_at = datetime.datetime.strptime(
                 time_element["datetime"], "%Y-%m-%dT%H:%M:%S%z"
             )
-            published_at = datetime_object.date()
         return published_at

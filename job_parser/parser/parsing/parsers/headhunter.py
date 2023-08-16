@@ -7,7 +7,7 @@ from logger import setup_logging
 if TYPE_CHECKING:
     from ..config import ParserConfig
 
-from .base import Parser, Vacancy
+from .base import Parser
 
 # Логирование
 setup_logging()
@@ -251,7 +251,7 @@ class Headhunter(Parser):
         experience = vacancy.get("experience", None)
         return experience.get("name", None) if experience else None
 
-    async def get_published_at(self, vacancy: dict) -> datetime.date | None:
+    async def get_published_at(self, vacancy: dict) -> datetime.datetime | None:
         """
         Асинхронный метод для получения даты публикации вакансии.
 
@@ -262,12 +262,8 @@ class Headhunter(Parser):
             vacancy (dict): Словарь с информацией о вакансии.
 
         Returns:
-            datetime.date | None: Дата публикации вакансии или None, если дата
+            datetime.datetime | None: Дата публикации вакансии или None, если дата
             отсутствует.
         """
         date = vacancy.get("published_at", None)
-        return (
-            datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z").date()
-            if date
-            else None
-        )
+        return datetime.datetime.strptime(date, "%Y-%m-%dT%H:%M:%S%z") if date else None
