@@ -126,55 +126,58 @@
         {% endfor %}
 
         {% if object_list %}
-    <div class="row justify-content-center">
-        <div class="col paginator-wrap">
-            <nav aria-label="Page navigation example">
-                <ul class="pagination overflow-auto justify-content-center">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?{{ request.GET.urlencode }}&page=1" aria-label="Previous">
-                                <span aria-hidden="true">«</span>
-                            </a>
-                        </li>
-                    {% endif %}
-
-                    {% if page_obj.number|add:"-4" > 1 %}
-                        <li class="page-item disabled"><a class="page-link">...</a></li>
-                    {% endif %}
-
-                    {% for i in page_obj.paginator.page_range %}
-                        {% if page_obj.number == i %}
-                            <li class="page-item active">
-                                <span class="page-link">{{ i }}</span>
-                            </li>
-                        {% elif i > page_obj.number|add:"-5" and i < page_obj.number|add:"5" %}
+        <div class="row justify-content-center">
+            <div class="col paginator-wrap">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination overflow-auto justify-content-center">
+                        {% if page_obj.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ i }}">{{ i }}</a>
+                                <a class="page-link" href="?{{ form.data.urlencode }}&page=1" aria-label="Previous">
+                                    <span aria-hidden="true">«</span>
+                                </a>
                             </li>
                         {% endif %}
-                    {% endfor %}
-
-                    {% if page_obj.number|add:"4" < page_obj.paginator.num_pages %}
+        
+                        {% if page_obj.number|add:"-4" > 1 %}
+                            <li class="page-item disabled"><a class="page-link">...</a></li>
+                        {% endif %}
+        
+                        {% for i in page_obj.paginator.page_range %}
+                            {% if page_obj.number == i %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ i }}</span>
+                                </li>
+                            {% elif i > page_obj.number|add:"-5" and i < page_obj.number|add:"5" %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?{{ form.data.urlencode }}&page={{ i }}">{{ i }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+        
+                        {% if page_obj.number|add:"4" < page_obj.paginator.num_pages %}
                         <li class="page-item disabled"><a class="page-link">...</a></li>
-                    <li>
-                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }}</a>
-                    </li>
-                    {% endif %}
-
-                    {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?{{ request.GET.urlencode }}&page={{ page_obj.next_page_number }}" aria-label="Next">
-                                <span aria-hidden="true">»</span>
-                            </a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </nav>
+                            <li>
+                                <a class="page-link" href="?{{ form.data.urlencode }}&page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                                {{ page_obj.paginator.num_pages }}
+                                </a>
+                            </li>
+                        {% endif %}
+        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{{ form.data.urlencode }}&page={{ page_obj.next_page_number }}" aria-label="Next">
+                                    <span aria-hidden="true">»</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
         </div>
-    </div>
-    <a name="down"></a>
-    <p class="scroll"><a href="#top"><i class="fa-solid fa-arrow-up"></i></a></p>
-{% endif %}
+        <a name="down"></a>
+        <p class="scroll"><a href="#top"><i class="fa-solid fa-arrow-up"></i></a></p>
+        {% endif %}
+        
 
 </div>
 <script src="{% static 'js/vacancyManipulations.js' %}"></script>
