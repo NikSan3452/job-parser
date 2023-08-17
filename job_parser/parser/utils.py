@@ -26,15 +26,20 @@ class Utils:
             умолчанию.
         """
         if not date_from or date_from == "":
-            new_date_from = datetime.datetime.today().replace(
-                hour=0, minute=0, second=0, microsecond=0
+            new_date_from = datetime.datetime.combine(
+                datetime.datetime.today().date(), datetime.time.min
             )
         elif isinstance(date_from, str):
-            new_date_from = datetime.datetime.strptime(date_from, "%Y-%m-%d").replace(
-                hour=0, minute=0, second=0, microsecond=0
+            new_date_from = datetime.datetime.combine(
+                datetime.datetime.strptime(date_from, "%Y-%m-%d").date(),
+                datetime.time.min,
+            )
+        elif isinstance(date_from, datetime.datetime):
+            new_date_from = datetime.datetime.combine(
+                date_from.date(), datetime.time.min
             )
         else:
-            new_date_from = date_from.replace(hour=0, minute=0, second=0, microsecond=0)
+            new_date_from = datetime.datetime.combine(date_from, datetime.time.min)
         return new_date_from
 
     @staticmethod
@@ -52,17 +57,18 @@ class Utils:
             умолчанию.
         """
         if not date_to or date_to == "":
-            new_date_to = datetime.datetime.today().replace(
-                hour=23, minute=59, second=59, microsecond=999999
+            new_date_to = datetime.datetime.combine(
+                datetime.datetime.today().date(), datetime.time.max
             )
         elif isinstance(date_to, str):
-            new_date_to = datetime.datetime.strptime(date_to, "%Y-%m-%d").replace(
-                hour=23, minute=59, second=59, microsecond=999999
+            new_date_to = datetime.datetime.combine(
+                datetime.datetime.strptime(date_to, "%Y-%m-%d").date(),
+                datetime.time.max,
             )
+        elif isinstance(date_to, datetime.datetime):
+            new_date_to = datetime.datetime.combine(date_to.date(), datetime.time.max)
         else:
-            new_date_to = date_to.replace(
-                hour=23, minute=59, second=59, microsecond=999999
-            )
+            new_date_to = datetime.datetime.combine(date_to, datetime.time.max)
         return new_date_to
 
     @staticmethod
