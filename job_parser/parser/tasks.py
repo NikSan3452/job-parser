@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+from parser.scraping.main import StartScrapers
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
@@ -8,8 +9,6 @@ from huey import crontab
 from huey.contrib.djhuey import periodic_task
 from logger import logger, setup_logging
 from profiles.models import Profile
-
-from parser.scraping.main import StartScrapers
 
 from .models import Vacancies
 from .parsing.main import JobParser
@@ -143,8 +142,8 @@ def scrape_habr_task() -> None:
     """
     Запуск скрапера habr.
     """
-    parser = StartScrapers()
-    asyncio.run(parser.scrape_habr())
+    scraper = StartScrapers()
+    asyncio.run(scraper.scrape_habr())
 
 
 @periodic_task(crontab(minute=f"*/{settings.SCRAPE_GEEKJOB}"))
@@ -152,8 +151,17 @@ def scrape_geekjob_task() -> None:
     """
     Запуск скрапера geekjob.
     """
-    parser = StartScrapers()
-    asyncio.run(parser.scrape_geekjob())
+    scraper = StartScrapers()
+    asyncio.run(scraper.scrape_geekjob())
+
+
+@periodic_task(crontab(minute=f"*/{settings.SCRAPE_CAREERIST}"))
+def scrape_careerist_task() -> None:
+    """
+    Запуск парсера careerist.
+    """
+    scraper = StartScrapers()
+    asyncio.run(scraper.scrape_careerist())
 
 
 @periodic_task(crontab(minute=f"*/{settings.PARSE_HEADHUNTER}"))

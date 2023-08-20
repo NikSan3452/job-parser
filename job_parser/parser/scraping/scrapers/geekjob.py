@@ -1,12 +1,11 @@
 import datetime
 import re
+from parser.scraping.scrapers.base import Scraper
 from typing import TYPE_CHECKING
 
 from bs4 import BeautifulSoup
 from django.utils import timezone
 from logger import setup_logging
-
-from parser.scraping.scrapers.base import Scraper
 
 if TYPE_CHECKING:
     from parser.scraping.configuration import Config
@@ -24,15 +23,17 @@ class GeekjobScraper(Scraper):
         self.selector = "title"
         super().__init__(config, "geekjob")
 
-    async def scrape(self) -> None:
+    async def scrape(
+        self, selector: str | None = None, domain: str | None = None
+    ) -> None:
         """
         Асинхронный метод для сбора данных о вакансиях с указанной площадки.
 
-        В этом методе вызывается родительский метод `scrape` с передачей ему аргументов
-        в виде HTML-класса и домена сайта.
+        Args:
+            selector (str | None): HTML - класс.
+            domain: (str | None): Домен сайта.
 
-        Returns:
-            None
+        Returns: None
         """
         return await super().scrape(self.config.geekjob_domain, self.selector)
 
@@ -226,13 +227,13 @@ class GeekjobScraper(Scraper):
                 return True
         return False
 
-    async def get_published_at(self, soup: BeautifulSoup) -> datetime.date | None:
+    async def get_published_at(self, soup: BeautifulSoup) -> datetime.datetime | None:
         """Извлекает дату публикации вакансии из объекта BeautifulSoup.
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns (datetime.date | None): Дата публикации вакансии или None, если
+        Returns (datetime.datetime | None): Дата публикации вакансии или None, если
         информация отсутствует.
 
         """

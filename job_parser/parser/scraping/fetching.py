@@ -67,6 +67,8 @@ class Fetcher:
                     params=params,
                     headers=headers,
                 ) as response:
+                    if not response.status == 200:
+                        logger.debug(f"Error, response status code {response.status}")
                     return await response.text(), str(response.url)
         except Exception as exc:
             return logger.exception(exc)
@@ -133,26 +135,17 @@ class Fetcher:
             results.append((text, url))
         return results
 
-    async def get_vacancy_links(self, selector: str, domain: str) -> list[str]:
+    async def get_vacancy_links(
+        self, domain: str, selector: str | None = None, tag: str | None = None
+    ) -> list[str]:
         """
         Асинхронный метод для получения ссылок на вакансии с указанной площадки.
 
-        В этом методе сначала вызывается метод `self.fetch_pagination_pages()`
-        для получения данных со всех страниц пагинации.
-        Затем создается пустой список ссылок.
-
-        Далее выполняется цикл по всем полученным страницам пагинации.
-        Для каждой страницы создается объект `BeautifulSoup` для парсинга
-        HTML-кода страницы.
-        Затем выполняется поиск ссылок на вакансии на странице
-        с использованием метода `find_all` объекта `BeautifulSoup`.
-        Найденные ссылки добавляются в список ссылок.
-
-        В конце метода возвращается список собранных ссылок.
-
         Args:
-            selector (str): Название html-класса, по которому будет осуществлен поиск
-            domain (str): Домен сайта
+            domain (str): Домен сайта.
+            selector (str | None ): Название html-класса, по которому будет
+            осуществлен поиск.
+            tag: (str | None ): HTML-тег.
         Returns:
             list[str]: Список ссылок на вакансии.
         """
@@ -161,6 +154,14 @@ class Fetcher:
 
         for html in html_pages:
             soup = BeautifulSoup(html[0], "lxml")
-            page_links = soup.find_all("a", class_=selector)
-            links += [domain + link.get("href") for link in page_links]
+            if tag:
+                page_links = soup.find_all(name=tag)
+            if selector:
+                page_links = soup.find_all("a", class_=selector)
+            for link in page_links:
+                href = link.get("href")
+                if href.startswith("http") or href.startswith("https"):
+                    links.append(href)
+                else:
+                    links.append(domain + href)
         return links

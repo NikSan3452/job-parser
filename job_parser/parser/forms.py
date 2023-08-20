@@ -44,6 +44,7 @@ class SearchingForm(forms.Form):
         ("Trudvsem", "Trudvsem"),
         ("Habr", "Habr"),
         ("Geekjob", "Geekjob"),
+        ("Careerist", "Careerist")
     )
 
     title = forms.CharField(

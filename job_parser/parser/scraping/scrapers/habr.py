@@ -1,8 +1,7 @@
 import datetime
 import re
-from typing import TYPE_CHECKING
-
 from parser.scraping.scrapers.base import Scraper
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from parser.scraping.configuration import Config
@@ -14,7 +13,7 @@ setup_logging()
 
 
 class HabrScraper(Scraper):
-    """Класс HabrParser предназначен для извлечения информации о вакансиях с сайта
+    """Класс HabrScraper предназначен для извлечения информации о вакансиях с сайта
     career.habr.com. Наследуется от базового класса Scraper.
     """
 
@@ -23,71 +22,60 @@ class HabrScraper(Scraper):
         self.selector = "vacancy-card__title-link"
         super().__init__(config, "habr")
 
-    async def scrape(self) -> None:
+    async def scrape(
+        self, selector: str | None = None, domain: str | None = None
+    ) -> None:
         """
         Асинхронный метод для сбора данных о вакансиях с указанной площадки.
 
-        В этом методе вызывается родительский метод `scrape` с передачей ему аргументов
-        в виде HTML-класса и домена сайта.
+        Args:
+            selector (str | None): HTML - класс.
+            domain: (str | None): Домен сайта.
 
-        Returns:
-            None
+        Returns: None
         """
-        return await super().scrape(self.selector, self.config.habr_domain)
+        return await super().scrape(self.config.habr_domain, self.selector)
 
-    async def get_title(self, soup: BeautifulSoup) -> str:
+    async def get_title(self, soup: BeautifulSoup) -> str | None:
         """Извлекает название вакансии из объекта BeautifulSoup.
-
-        Ищет тег `h1` с классом `page-title__title` на странице и возвращает его
-        текстовое содержимое. Если тег не найден, возвращает строку "Не указано".
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            str: Название вакансии.
+        Returns str | None: Название вакансии.
 
         """
-        title = "Не указано"
+        title = None
         h1 = soup.find("h1", class_="page-title__title")
         if h1:
             title = h1.text.strip()
         return title
 
-    async def get_description(self, soup: BeautifulSoup) -> str:
+    async def get_description(self, soup: BeautifulSoup) -> str | None:
         """Извлекает описание вакансии из объекта BeautifulSoup.
-
-        Ищет элемент с классом `vacancy-description__text` на странице и возвращает
-        его HTML-код. Если элемент не найден, возвращает строку "Не указано".
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            str: Описание вакансии.
+        Returns (str | None): Описание вакансии.
 
         """
-        description = "Не указано"
+        description = None
         vacancy_description = soup.find("div", class_="vacancy-description__text")
         if vacancy_description:
             description = vacancy_description.prettify()
         return description
 
-    async def get_city(self, soup: BeautifulSoup) -> str:
+    async def get_city(self, soup: BeautifulSoup) -> str | None:
         """Извлекает город вакансии из объекта BeautifulSoup.
-
-        Ищет тег `a` с атрибутом `href`, содержащим подстроку `/vacancies?city_id=`
-        на странице и возвращает его текстовое содержимое. Если тег не найден,
-        возвращает строку "Не указано".
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            str: Город вакансии.
+        Returns (str | None): Город вакансии.
 
         """
-        city = "Не указано"
+        city = None
 
         location = soup.find(
             "a", href=lambda href: href and "/vacancies?city_id=" in href
@@ -99,16 +87,11 @@ class HabrScraper(Scraper):
     async def get_salary_from(self, soup: BeautifulSoup) -> int | None:
         """Извлекает минимальную зарплату из объекта BeautifulSoup.
 
-        Ищет тег `div` с классом `basic-salary basic-salary--appearance-vacancy-header`
-        на странице и извлекает из его текстового содержимого минимальную зарплату с
-        помощью регулярного выражения. Если тег не найден или информация о зарплате
-        отсутствует, возвращает None.
-
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            int | None: Минимальная зарплата или None, если информация отсутствует.
+        Returns (int | None): Минимальная зарплата или None, если
+        информация отсутствует.
 
         """
         vacancy_salary = soup.find(
@@ -127,16 +110,11 @@ class HabrScraper(Scraper):
     async def get_salary_to(self, soup: BeautifulSoup) -> int | None:
         """Извлекает максимальную зарплату из объекта BeautifulSoup.
 
-        Ищет тег `div` с классом `basic-salary basic-salary--appearance-vacancy-header`
-        на странице и извлекает из его текстового содержимого максимальную зарплату с
-        помощью регулярного выражения. Если тег не найден или информация о зарплате
-        отсутствует, возвращает None.
-
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            int | None: Максимальная зарплата или None, если информация отсутствует.
+        Returns (int | None): Максимальная зарплата или None, если
+        информация отсутствует.
 
         """
         vacancy_salary = soup.find(
@@ -155,15 +133,10 @@ class HabrScraper(Scraper):
     async def get_salary_currency(self, soup: BeautifulSoup) -> str | None:
         """Извлекает валюту зарплаты из объекта BeautifulSoup.
 
-        Ищет тег `div` с классом `basic-salary basic-salary--appearance-vacancy-header`
-        на странице и извлекает из его текстового содержимого символ валюты. Если тег
-        не найден или информация о зарплате отсутствует, возвращает None.
-
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            str | None: Символ валюты или None, если информация отсутствует.
+        Returns (str | None): Символ валюты или None, если информация отсутствует.
 
         """
         vacancy_salary = soup.find(
@@ -180,18 +153,13 @@ class HabrScraper(Scraper):
                     break
         return currency
 
-    async def get_company(self, soup: BeautifulSoup) -> str:
+    async def get_company(self, soup: BeautifulSoup) -> str | None:
         """Извлекает название компании из объекта BeautifulSoup.
-
-        Ищет тег `div` с классом `company_name` на странице и возвращает текстовое
-        содержимое его дочернего тега `a`. Если тег не найден, возвращает строку
-        "Не указано".
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            str: Название компании.
+        Returns (str | None): Название компании.
 
         """
         company = "Не указано"
@@ -200,19 +168,13 @@ class HabrScraper(Scraper):
             company = company_name.find("a").text.strip()
         return company
 
-    async def get_experience(self, soup: BeautifulSoup) -> str:
+    async def get_experience(self, soup: BeautifulSoup) -> str | None:
         """Извлекает требуемый опыт работы из объекта BeautifulSoup.
-
-        Ищет тег `a` с атрибутом `href`, содержащим подстроку `/vacancies?qid=` на
-        странице и анализирует его текстовое содержимое. В зависимости от текста
-        возвращает строку с требуемым опытом работы. Если тег не найден или информация
-        отсутствует, возвращает строку "Нет опыта".
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            str: Требуемый опыт работы.
+        Returns (str | None): Требуемый опыт работы.
 
         """
         experience = "Не указано"
@@ -237,20 +199,13 @@ class HabrScraper(Scraper):
 
         return experience
 
-    async def get_schedule(self, soup: BeautifulSoup) -> str:
+    async def get_schedule(self, soup: BeautifulSoup) -> str | None:
         """Извлекает график работы из объекта BeautifulSoup.
-
-        Ищет все элементы текста на странице, содержащие подстроки
-        "Полный рабочий день", "Неполный рабочий день" или "Можно удаленно", и
-        объединяет их в строку с разделителем ", ". Возвращает полученную строку.
-        Если элементы не найдены или информация отсутствует, возвращает строку
-        "Не указано".
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            str: График работы.
+        Returns (str | None): График работы.
 
         """
         self.schedule = "Не указано"
@@ -270,12 +225,7 @@ class HabrScraper(Scraper):
     async def get_remote(self) -> bool:
         """Определяет, является ли вакансия удаленной.
 
-        Анализирует строку с графиком работы, полученную методом get_schedule.
-        Если в строке присутствует подстрока "Можно удаленно", возвращает True.
-        В противном случае возвращает False.
-
-        Returns:
-            bool: True, если вакансия является удаленной, иначе False.
+        Returns (bool): True, если вакансия является удаленной, иначе False.
 
         """
         if self.schedule:
@@ -286,16 +236,11 @@ class HabrScraper(Scraper):
     async def get_published_at(self, soup: BeautifulSoup) -> datetime.datetime | None:
         """Извлекает дату публикации вакансии из объекта BeautifulSoup.
 
-        Ищет тег `time` на странице и анализирует значение его атрибута `datetime`.
-        Преобразует значение атрибута в объект datetime.date и возвращает его.
-        Если тег не найден или информация отсутствует, возвращает None.
-
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            datetime.datetime | None: Дата публикации вакансии или None, если информация
-            отсутствует.
+        Returns (datetime.datetime | None): Дата публикации вакансии или None,
+        если информация отсутствует.
 
         """
         published_at = None

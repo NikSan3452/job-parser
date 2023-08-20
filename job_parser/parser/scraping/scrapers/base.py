@@ -17,13 +17,13 @@ setup_logging()
 class Vacancy:
     job_board: str
     url: str
-    title: str
-    city: str
-    description: str
+    title: str | None
+    city: str | None
+    description: str | None
     salary_from: int | None
     salary_to: int | None
     salary_currency: str | None
-    company: str
+    company: str | None
     experience: str | None
     schedule: str | None
     remote: bool
@@ -99,38 +99,38 @@ class Scraper(abc.ABC):
         await self.config.db.record(parsed_vacancy_list)
 
     @abc.abstractmethod
-    async def get_title(self, soup: BeautifulSoup) -> str:
+    async def get_title(self, soup: BeautifulSoup) -> str | None:
         """Извлекает название вакансии со страницы вакансии.
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
         Returns:
-            str: Название вакансии.
+            str | None: Название вакансии.
         """
         pass
 
     @abc.abstractmethod
-    async def get_description(self, soup: BeautifulSoup) -> str:
+    async def get_description(self, soup: BeautifulSoup) -> str | None:
         """Извлекает описание вакансии со страницы вакансии.
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
         Returns:
-            str: Описание вакансии.
+            str | None: Описание вакансии.
         """
         pass
 
     @abc.abstractmethod
-    async def get_city(self, soup: BeautifulSoup) -> str:
+    async def get_city(self, soup: BeautifulSoup) -> str | None:
         """Извлекает город вакансии со страницы вакансии.
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
         Returns:
-            str: Город вакансии.
+            str | None: Город вакансии.
         """
         pass
 
@@ -171,14 +171,14 @@ class Scraper(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_company(self, soup: BeautifulSoup) -> str:
+    async def get_company(self, soup: BeautifulSoup) -> str | None:
         """Извлекает название компании со страницы вакансии.
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
         Returns:
-            str: Название компании.
+            str | None: Название компании.
         """
         pass
 
@@ -190,7 +190,7 @@ class Scraper(abc.ABC):
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
         Returns:
-            str: Требуемый опыт работы.
+            str | None: Требуемый опыт работы.
         """
         pass
 
@@ -210,20 +210,19 @@ class Scraper(abc.ABC):
     async def get_remote(self) -> bool:
         """Определяет, является ли вакансия удаленной.
 
-        Returns:
-            bool: True, если вакансия удаленная, иначе False.
+        Returns (bool): True, если вакансия удаленная, иначе False.
         """
         pass
 
     @abc.abstractmethod
-    async def get_published_at(self, soup: BeautifulSoup) -> datetime.date | None:
+    async def get_published_at(self, soup: BeautifulSoup) -> datetime.datetime | None:
         """Извлекает дату публикации вакансии со страницы вакансии.
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
         Returns:
-            datetime.date | None: Дата публикации вакансии или None, если дата
+            datetime.datetime | None: Дата публикации вакансии или None, если дата
             публикации не указана.
         """
         pass

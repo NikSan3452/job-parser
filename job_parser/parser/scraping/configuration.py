@@ -4,6 +4,7 @@ from parser.scraping.db import Database
 from parser.scraping.fetching import Fetcher
 from parser.scraping.scrapers.geekjob import GeekjobScraper
 from parser.scraping.scrapers.habr import HabrScraper
+from parser.scraping.scrapers.careerist import CareeristScraper
 from parser.utils import Utils
 
 from fake_useragent import UserAgent
@@ -27,6 +28,13 @@ class Config:
     habr_job_board: str = "Habr"
     habr_pages_count: int = int(os.getenv("HABR_PAGES_COUNT", 10))
 
+    # CAREERIST
+    careerist_domain: str = "https://careerist.ru/"
+    careerist_uri: str = "search/?category=vacancy&region=all&sort_mode=time&page="
+    careerist_url: str = f"{careerist_domain}/{careerist_uri}"
+    careerist_job_board: str = "Careerist"
+    careerist_pages_count: int = int(os.getenv("CAREERIST_PAGES_COUNT", 10))
+
     # ПРОЧИЕ ПАРАМЕТРЫ
     download_delay: int = int(os.getenv("DOWNLOAD_DELAY", 5))
     ua: UserAgent = UserAgent()
@@ -49,10 +57,17 @@ class Config:
             self.habr_pages_count,
         )
 
+        self.careerist_fetcher = Fetcher(
+            self,
+            self.careerist_url,
+            self.careerist_pages_count,
+        )
+
         self.geekjob_scraper = GeekjobScraper(self)
         self.habr_scraper = HabrScraper(self)
+        self.careerist_scraper = CareeristScraper(self)
 
-        self.scrapers = [self.geekjob_scraper, self.habr_scraper]
+        self.scrapers = [self.geekjob_scraper, self.habr_scraper, self.careerist_scraper]
 
     def update_headers(self) -> dict:
         """Обновляет заголовки запроса.

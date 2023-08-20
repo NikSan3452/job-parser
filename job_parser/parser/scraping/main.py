@@ -29,3 +29,13 @@ class StartScrapers:
             None
         """
         await config.geekjob_scraper.scrape()
+
+    @config.utils.timeit
+    async def scrape_careerist(self) -> None:
+        """
+        Асинхронный метод для скрапинга вакансий с сайта Careerist.
+
+        Returns:
+            None
+        """
+        await config.careerist_scraper.scrape()
