@@ -68,7 +68,9 @@ class Fetcher:
                     headers=headers,
                 ) as response:
                     if not response.status == 200:
-                        logger.debug(f"Error, response status code {response.status}")
+                        logger.debug(
+                            f"Error {str(response.url)}, response status code {response.status}"
+                        )
                     return await response.text(), str(response.url)
         except Exception as exc:
             return logger.exception(exc)

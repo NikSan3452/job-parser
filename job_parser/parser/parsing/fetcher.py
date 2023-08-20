@@ -1,13 +1,16 @@
 import json
+
+from loguru import logger
+
 from parser.parsing.connection import WebClient
 from parser.utils import Utils
-from loguru import logger
 
 
 class Fetcher:
     """
     Класс для выборки вакансий из полученных от API данных.
     """
+
     def __init__(
         self,
         job_board: str,
@@ -75,7 +78,9 @@ class Fetcher:
         try:
             response = await self.client.create_client(url, self.params)
             if not response.status_code == 200:
-                logger.debug(f"Error, response status code: {response.status_code}")
+                logger.debug(
+                    f"Error {str(response.url)}, response status code: {response.status_code}"
+                )
                 pass
             data = response.content.decode()
             json_data = json.loads(data)
@@ -134,11 +139,11 @@ class Fetcher:
         Асинхронный метод для установки задержки перед выполнением запроса.
         Задержка устанавливается с помощью метода `set_delay` класса `Utils`.
         """
-        if self.items == 'items' and self.job_board == 'HeadHunter':
-                await Utils.set_delay(0.25)
-        if self.items == 'items' and self.job_board == 'Zarplata':
-                await Utils.set_delay(0.20)
-        elif self.items == 'objects':
+        if self.items == "items" and self.job_board == "HeadHunter":
+            await Utils.set_delay(0.25)
+        if self.items == "items" and self.job_board == "Zarplata":
+            await Utils.set_delay(0.20)
+        elif self.items == "objects":
             await Utils.set_delay(3)
-        elif self.items == 'results':
+        elif self.items == "results":
             await Utils.set_delay(1)
