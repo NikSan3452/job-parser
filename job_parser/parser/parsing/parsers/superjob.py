@@ -2,6 +2,7 @@ import datetime
 import re
 from typing import TYPE_CHECKING
 
+from django.utils import timezone
 from logger import setup_logging
 
 if TYPE_CHECKING:
@@ -266,9 +267,6 @@ class SuperJob(Parser):
         """
         Асинхронный метод для получения даты публикации вакансии.
 
-        Метод получает значение ключа "date_published" из словаря vacancy и преобразует
-        его в формат даты. Возвращает эту дату.
-
         Args:
             vacancy (dict): Словарь с информацией о вакансии.
 
@@ -277,4 +275,9 @@ class SuperJob(Parser):
             отсутствует.
         """
         date = vacancy.get("date_published", None)
-        return datetime.datetime.fromtimestamp(date) if date else None
+        if date:
+            naive_datetime = datetime.datetime.fromtimestamp(date)
+            aware_datetime = timezone.make_aware(naive_datetime)
+            return aware_datetime
+        else:
+            return None
