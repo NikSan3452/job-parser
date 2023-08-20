@@ -1,7 +1,7 @@
 import datetime
 import re
 from typing import TYPE_CHECKING
-
+from django.utils import timezone
 from logger import setup_logging
 
 if TYPE_CHECKING:
@@ -300,4 +300,4 @@ class Trudvsem(Parser):
             datetime.datetime | None: Дата публикации вакансии или None, если дата
             отсутствует.
         """
-        return datetime.datetime.now()
+        return timezone.now()
