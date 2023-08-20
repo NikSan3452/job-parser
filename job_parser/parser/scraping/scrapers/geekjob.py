@@ -3,6 +3,7 @@ import re
 from typing import TYPE_CHECKING
 
 from bs4 import BeautifulSoup
+from django.utils import timezone
 from logger import setup_logging
 
 from parser.scraping.scrapers.base import Scraper
@@ -14,7 +15,7 @@ setup_logging()
 
 
 class GeekjobScraper(Scraper):
-    """Класс GeekjobParser предназначен для извлечения информации о вакансиях
+    """Класс GeekjobScraper предназначен для извлечения информации о вакансиях
     с сайта geekjob.ru. Наследуется от базового класса Scraper.
     """
 
@@ -33,60 +34,48 @@ class GeekjobScraper(Scraper):
         Returns:
             None
         """
-        return await super().scrape(self.selector, self.config.geekjob_domain)
+        return await super().scrape(self.config.geekjob_domain, self.selector)
 
-    async def get_title(self, soup: BeautifulSoup) -> str:
+    async def get_title(self, soup: BeautifulSoup) -> str | None:
         """Извлекает название вакансии из объекта BeautifulSoup.
-
-        Ищет тег `h1` на странице и возвращает его текстовое содержимое.
-        Если тег не найден, возвращает строку "Не указано".
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            str: Название вакансии.
+        Returns (str | None): Название вакансии.
 
         """
-        title = "Не указано"
+        title = None
         h1 = soup.find("h1")
         if h1:
             title = h1.text.strip()
         return title
 
-    async def get_city(self, soup: BeautifulSoup) -> str:
+    async def get_city(self, soup: BeautifulSoup) -> str | None:
         """Извлекает город вакансии из объекта BeautifulSoup.
-
-        Ищет тег `div` с классом `location` на странице и возвращает его
-        текстовое содержимое. Если тег не найден, возвращает строку "Не указано".
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            str: Город вакансии.
+        Returns (str | None): Город вакансии.
 
         """
-        city = "Не указано"
+        city = None
         location = soup.find("div", class_="location")
         if location:
             city = location.text.strip()
         return city
 
-    async def get_description(self, soup: BeautifulSoup) -> str:
+    async def get_description(self, soup: BeautifulSoup) -> str | None:
         """Извлекает описание вакансии из объекта BeautifulSoup.
-
-        Ищет элемент с идентификатором `vacancy-description` на странице и возвращает
-        его HTML-код. Если элемент не найден, возвращает строку "Не указано".
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            str: Описание вакансии.
+        Returns (str | None): Описание вакансии.
 
         """
-        description = "Не указано"
+        description = None
         vacancy_description = soup.find(id="vacancy-description")
         if vacancy_description:
             description = vacancy_description.prettify()
@@ -95,15 +84,11 @@ class GeekjobScraper(Scraper):
     async def get_salary_from(self, soup: BeautifulSoup) -> int | None:
         """Извлекает минимальную зарплату из объекта BeautifulSoup.
 
-        Ищет тег `span` с классом `salary` на странице и извлекает из его текстового
-        содержимого минимальную зарплату с помощью регулярного выражения. Если тег не
-        найден или информация о зарплате отсутствует, возвращает None.
-
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            int | None: Минимальная зарплата или None, если информация отсутствует.
+        Returns (int | None): Минимальная зарплата или None, если
+        информация отсутствует.
 
         """
         vacancy_salary = soup.find("span", class_="salary")
@@ -120,15 +105,11 @@ class GeekjobScraper(Scraper):
     async def get_salary_to(self, soup: BeautifulSoup) -> int | None:
         """Извлекает максимальную зарплату из объекта BeautifulSoup.
 
-        Ищет тег `span` с классом `salary` на странице и извлекает из его
-        текстового содержимого максимальную зарплату с помощью регулярного выражения.
-        Если тег не найден или информация о зарплате отсутствует, возвращает None.
-
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            int | None: Максимальная зарплата или None, если информация отсутствует.
+        Returns (int | None): Максимальная зарплата или None, если
+        информация отсутствует.
 
         """
         vacancy_salary = soup.find("span", class_="salary")
@@ -145,15 +126,10 @@ class GeekjobScraper(Scraper):
     async def get_salary_currency(self, soup: BeautifulSoup) -> str | None:
         """Извлекает валюту зарплаты из объекта BeautifulSoup.
 
-        Ищет тег `span` с классом `salary` на странице и извлекает из его текстового
-        содержимого символ валюты. Если тег не найден или информация о зарплате
-        отсутствует, возвращает None.
-
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            str | None: Символ валюты или None, если информация отсутствует.
+        Returns (str | None): Символ валюты или None, если информация отсутствует.
 
         """
         vacancy_salary = soup.find("span", class_="salary")
@@ -169,21 +145,16 @@ class GeekjobScraper(Scraper):
 
         return currency
 
-    async def get_company(self, soup: BeautifulSoup) -> str:
+    async def get_company(self, soup: BeautifulSoup) -> str | None:
         """Извлекает название компании из объекта BeautifulSoup.
-
-        Ищет тег `h5` с классом `company-name` на странице и возвращает текстовое
-        содержимое его дочернего тега `a`. Если тег не найден, возвращает строку
-        "Не указано".
 
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            str: Название компании.
+        Returns (str | None): Название компании.
 
         """
-        company = "Не указано"
+        company = None
         company_name = soup.find("h5", class_="company-name")
         if company_name:
             company = company_name.find("a").text.strip()
@@ -192,15 +163,10 @@ class GeekjobScraper(Scraper):
     async def get_experience(self, soup: BeautifulSoup) -> str | None:
         """Извлекает требуемый опыт работы из объекта BeautifulSoup.
 
-        Ищет тег `span` с классом `jobformat` на странице и анализирует его текстовое
-        содержимое. В зависимости от текста возвращает строку с требуемым опытом работы.
-        Если тег не найден или информация отсутствует, возвращает строку "Нет опыта".
-
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            str: Требуемый опыт работы.
+        Returns (str | None): Требуемый опыт работы.
 
         """
         experience = None
@@ -230,15 +196,10 @@ class GeekjobScraper(Scraper):
     async def get_schedule(self, soup: BeautifulSoup) -> str | None:
         """Извлекает график работы из объекта BeautifulSoup.
 
-        Ищет тег `span` с классом `jobformat` на странице и анализирует его текстовое
-        содержимое. Возвращает строку с графиком работы. Если тег не найден или
-        информация отсутствует, возвращает None.
-
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            str | None: График работы или None, если информация отсутствует.
+        Returns (str | None): График работы или None, если информация отсутствует.
 
         """
         self.schedule = None
@@ -256,10 +217,6 @@ class GeekjobScraper(Scraper):
     async def get_remote(self) -> bool:
         """Определяет, является ли вакансия удаленной.
 
-        Анализирует строку с графиком работы, полученную методом get_schedule.
-        Если в строке присутствует слово "Удаленная" или "Удаленно", возвращает True.
-        В противном случае возвращает False.
-
         Returns:
             bool: True, если вакансия является удаленной, иначе False.
 
@@ -272,16 +229,11 @@ class GeekjobScraper(Scraper):
     async def get_published_at(self, soup: BeautifulSoup) -> datetime.date | None:
         """Извлекает дату публикации вакансии из объекта BeautifulSoup.
 
-        Ищет тег `div` с классом `time` на странице и анализирует
-        его текстовое содержимое. Преобразует текст в объект datetime.date и возвращает
-        его. Если тег не найден или информация отсутствует, возвращает None.
-
         Args:
             soup (BeautifulSoup): Объект BeautifulSoup со страницей вакансии.
 
-        Returns:
-            datetime.date | None: Дата публикации вакансии или None, если информация
-            отсутствует.
+        Returns (datetime.date | None): Дата публикации вакансии или None, если
+        информация отсутствует.
 
         """
         published_at = None
@@ -296,8 +248,7 @@ class GeekjobScraper(Scraper):
         Args:
             date (str): Дата.
 
-        Returns:
-            datetime.datetime: Дата в виде объекта datetime.
+        Returns (datetime.datetime): Дата в виде объекта datetime.
         """
         months = {
             "января": 1,
@@ -322,6 +273,7 @@ class GeekjobScraper(Scraper):
             else:
                 en_date_str = f"{ru_date_str[0]}-{months[ru_date_str[1]]:02d}-{datetime.datetime.today().year}"
 
-        en_date = datetime.datetime.strptime(en_date_str, "%d-%m-%Y")
-        
-        return en_date
+        naive_datetime = datetime.datetime.strptime(en_date_str, "%d-%m-%Y")
+        published_at = timezone.make_aware(naive_datetime)
+
+        return published_at
