@@ -79,7 +79,7 @@ class Fetcher:
             response = await self.client.create_client(url, self.params)
             if not response.status_code == 200:
                 logger.debug(
-                    f"Error {str(response.url)}, response status code: {response.status_code}"
+                    f"Error from {str(response.url)}, response status code: {response.status_code}\n {response.text}"
                 )
                 pass
             data = response.content.decode()
